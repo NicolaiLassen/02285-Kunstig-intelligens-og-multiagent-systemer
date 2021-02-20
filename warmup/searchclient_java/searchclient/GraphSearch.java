@@ -31,7 +31,6 @@ public class GraphSearch {
                 if (++iterations % 1000 == 0) {
                     printSearchStatus(explored, frontier);
                 }
-
                 // if the frontier is empty then return failure
                 if (frontier.isEmpty()) {
                     return null;
