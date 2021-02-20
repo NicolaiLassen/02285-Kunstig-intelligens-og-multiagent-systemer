@@ -4,36 +4,35 @@ import java.util.Comparator;
 
 public abstract class Heuristic
         implements Comparator<State> {
+
     public Heuristic(State initialState) {
         // Here's a chance to pre-process the static parts of the level.
     }
 
     public int h(State s) {
-        // TODO
         int r = 0;
         for (int row = 0; row < State.goals.length; row++) {
             for (int col = 0; col < State.goals[row].length; col++) {
 
-                if (State.goals[row][col] == 0 || State.walls[row][col]){
+                char goalTile = State.goals[row][col];
+                if (goalTile == 0 || State.walls[row][col]) {
                     continue;
                 }
 
-                // Check color?
-                if (s.boxes[row][col] == State.goals[row][col]) {
-                    r++;
+                if (s.boxes[row][col] == goalTile) {
+                    r--;
                 }
-                // Check color?
+
                 for (int k = 0; k < s.agentRows.length; k++) {
                     if (s.agentRows[k] == row && s.agentCols[k] == col) {
-                        if (k == State.goals[row][col]) {
-                            r++;
+                        if (k == Character.getNumericValue(State.goals[row][col])) {
+                            r--;
                         }
                     }
                 }
 
             }
         }
-        System.err.println(r);
         return r;
     }
 

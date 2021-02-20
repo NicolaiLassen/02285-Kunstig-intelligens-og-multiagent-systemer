@@ -107,7 +107,7 @@ class FrontierBestFirst
 
     public FrontierBestFirst(Heuristic h) {
         this.heuristic = h;
-        priorityQueue = new PriorityQueue<>(65536, h);
+        priorityQueue = new PriorityQueue<>(65536,h);
     }
 
     @Override
