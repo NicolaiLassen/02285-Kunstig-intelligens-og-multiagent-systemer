@@ -9,6 +9,10 @@ public abstract class Heuristic
         // Here's a chance to pre-process the static parts of the level.
     }
 
+//    public int h(State s) {
+//
+//    }
+
     public int h(State s) {
         int r = 0;
         for (int row = 0; row < State.goals.length; row++) {
