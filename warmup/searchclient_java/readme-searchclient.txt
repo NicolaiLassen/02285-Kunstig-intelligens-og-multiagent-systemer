@@ -16,7 +16,7 @@ You can read about the server options using the -h argument:
     $ java -jar ../server.jar -h
 
 Compiling the searchclient:
-    $ javac searchclient/SearchClient.java
+    $ javac searchclient/SearchClient.java -d out
 
 Starting the server using the searchclient:
     $ java -jar ../server.jar -l ../levels/SAD1.lvl -c "java searchclient.SearchClient" -g -s 150 -t 180
