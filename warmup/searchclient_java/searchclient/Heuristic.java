@@ -25,12 +25,11 @@ public abstract class Heuristic
 
                 for (int k = 0; k < s.agentRows.length; k++) {
                     if (s.agentRows[k] == row && s.agentCols[k] == col) {
-                        if (k == Character.getNumericValue(State.goals[row][col])) {
+                        if (k == Character.getNumericValue(goalTile)) {
                             r--;
                         }
                     }
                 }
-
             }
         }
         return r;
