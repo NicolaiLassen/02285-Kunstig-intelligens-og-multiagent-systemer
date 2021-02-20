@@ -1,43 +1,65 @@
 package searchclient;
 
+import java.util.ArrayDeque;
 import java.util.Comparator;
+import java.util.HashMap;
 
 public abstract class Heuristic
         implements Comparator<State> {
 
+    private final HashMap<Character, int[]> GoalState = new HashMap<>(65536);
+    private final HashMap<Character, int[]> ObservableElements = new HashMap<>(65536);
+    private final ArrayDeque<Character> Elements = new ArrayDeque<Character>(65536);
+
     public Heuristic(State initialState) {
-        // Here's a chance to pre-process the static parts of the level.
-    }
 
-//    public int h(State s) {
-//
-//    }
-
-    public int h(State s) {
-        int r = 0;
         for (int row = 0; row < State.goals.length; row++) {
             for (int col = 0; col < State.goals[row].length; col++) {
 
-                char goalTile = State.goals[row][col];
-                if (goalTile == 0 || State.walls[row][col]) {
-                    continue;
-                }
-
-                if (s.boxes[row][col] == goalTile) {
-                    r--;
-                }
-
-                for (int k = 0; k < s.agentRows.length; k++) {
-                    if (s.agentRows[k] == row && s.agentCols[k] == col) {
-                        if (k == Character.getNumericValue(goalTile)) {
-                            r--;
-                        }
-                    }
-                }
             }
+        }
+
+    }
+
+    private int CalcManhattan(int p1r, int p1c, int p2r, int p2c) {
+        return Math.abs(p1r - p2r) + Math.abs(p1c - p2c);
+    }
+
+
+    public int h(State s) {
+        int r = 0;
+        for (int i = 0; i < Elements.size(); i++) {
+
         }
         return r;
     }
+
+    // GOAL COUNT
+//    public int h(State s) {
+//        int r = 0;
+//        for (int row = 0; row < State.goals.length; row++) {
+//            for (int col = 0; col < State.goals[row].length; col++) {
+//
+//                char goalTile = State.goals[row][col];
+//                if (goalTile == 0 || State.walls[row][col]) {
+//                    continue;
+//                }
+//
+//                if (s.boxes[row][col] == goalTile) {
+//                    r--;
+//                }
+//
+//                for (int k = 0; k < s.agentRows.length; k++) {
+//                    if (s.agentRows[k] == row && s.agentCols[k] == col) {
+//                        if (k == Character.getNumericValue(goalTile)) {
+//                            r--;
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        return r;
+//    }
 
     public abstract int f(State s);
 
