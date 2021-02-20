@@ -16,10 +16,10 @@ You can read about the server options using the -h argument:
     $ java -jar ../server.jar -h
 
 Compiling the searchclient:
-    $ javac searchclient/SearchClient.java
+    $ javac searchclient/SearchClient.java -d out
 
 Starting the server using the searchclient:
-    $ java -jar ../server.jar -l ../levels/SAD1.lvl -c "java searchclient.SearchClient" -g -s 150 -t 180
+    $ java -jar ../server.jar -l ../levels/SAD1.lvl -c "java -cp out searchclient.SearchClient" -g -s 150 -t 180
 
 The searchclient uses the BFS strategy by default. Use arguments -dfs, -astar, -wastar, or -greedy to set alternative search strategies (after you implement them). For instance, to use DFS on the same level as above:
     $ java -jar ../server.jar -l ../levels/SAD1.lvl -c "java searchclient.SearchClient -dfs" -g -s 150 -t 180
