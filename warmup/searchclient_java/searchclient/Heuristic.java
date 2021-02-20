@@ -7,8 +7,13 @@ import java.util.HashMap;
 public abstract class Heuristic
         implements Comparator<State> {
 
+    // keep all goal state col and row
+    // int[] where [0] = row and [1] = col
     private final HashMap<Character, int[]> GoalState = new HashMap<>(65536);
+    // keep all boxes and agents
+    // int[] where [0] = row and [1] = col
     private final HashMap<Character, int[]> ObservableElements = new HashMap<>(65536);
+    // keep names of all movable elements that need a goal cell
     private final ArrayDeque<Character> Elements = new ArrayDeque<>(65536);
 
     public Heuristic(State initialState) {
