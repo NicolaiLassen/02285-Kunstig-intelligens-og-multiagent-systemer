@@ -1,45 +1,78 @@
 package searchclient;
 
-import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 
-public abstract class Heuristic
-        implements Comparator<State> {
 
-    // keep all goal state col and row
-    // int[] where [0] = row and [1] = col
-    private final int[][][] informedGraph;
-    private final HashMap<Character, ArrayDeque<int[]>> goalCol = new HashMap<>(65536);
+class Item {
+    public char id;
+    public int row;
+    public int col;
+
+    Item(char id, int row, int col) {
+        this.id = id;
+        this.row = row;
+        this.col = col;
+    }
+}
+
+
+public abstract class Heuristic implements Comparator<State> {
+
+
+    private ArrayList<Item> allGoals = new ArrayList<>();
+    private HashMap<Character, int[][]> informedMap = new HashMap<>();
+
 
     public Heuristic(State initialState) {
         // init informed search graph for every client
-        informedGraph = new int[initialState.agentCols.length][State.goals.length][State.goals[0].length];
+        var rowCount = initialState.getRowCount();
+        var colCount = initialState.getColCount();
 
-        // Set all goal positions
-        for (int row = 0; row < State.goals.length; row++) {
-            for (int col = 0; col < State.goals[row].length; col++) {
-                // discard non goal object
-                if (State.goals[row][col] == 0 || State.walls[row][col]) {
-                    return;
+
+        for (int row = 0; row < rowCount; row++) {
+            for (int col = 0; col < colCount; col++) {
+                var id = State.goals[row][col];
+                if (State.walls[row][col] || id == 0) {
+                    continue;
+                }
+                var item = new Item(id, row, col);
+                allGoals.add(item);
+            }
+        }
+
+        for (Item item : allGoals) {
+            informedMap.put(item.id, new int[rowCount][colCount]);
+        }
+
+
+        for (int row = 0; row < rowCount; row++) {
+            for (int col = 0; col < colCount; col++) {
+                if (State.walls[row][col]) {
+                    continue;
+                }
+
+                for (Item item : allGoals) {
+                    var rowDiff = Math.abs(item.row - row);
+                    var colDiff = Math.abs(item.col - col);
+                    var diff = rowDiff + colDiff;
+                    informedMap.get(item.id)[row][col] = diff;
                 }
             }
         }
 
-        // create informed graph for each agent
-        for (int k = 0; k < initialState.agentRows.length; k++) {
-            // fill in informed graph
-            for (int row = 0; row < State.goals.length; row++) {
-                for (int col = 0; col < State.goals[row].length; col++) {
 
-                    // push state with walls to back'
-                    // these can't be reached
-                    if (State.walls[row][col]) {
-                        informedGraph[k][row][col] = 10000;
-                    }
+        for (Item item : allGoals) {
+            System.err.println("");
+            System.err.println("ITEM: " + item.id);
 
-
+            for (int row = 0; row < rowCount; row++) {
+                for (int col = 0; col < colCount; col++) {
+                    var val = informedMap.get(item.id)[row][col];
+                    System.err.print("" + val + "\t");
                 }
+                System.err.println("");
             }
         }
 
@@ -47,12 +80,25 @@ public abstract class Heuristic
 
     // use minimum computation to find level path
     public int h(State s) {
+        return hDistance(s);
+    }
+
+    public int hDistance(State s) {
         int r = 0;
-        // For each of the clients find the min value of the level
-        // using the informed Graph
-        for (int k = 0; k < s.agentRows.length; k++) {
-            r += informedGraph[k][s.agentRows[k]][s.agentCols[k]];
+        var rowCount = s.getRowCount();
+        var colCount = s.getColCount();
+        for (int row = 0; row < rowCount; row++) {
+            for (int col = 0; col < colCount; col++) {
+                if (State.walls[row][col]) {
+                    continue;
+                }
+
+                for (Item item : allGoals) {
+                    r += informedMap.get(item.id)[row][col];
+                }
+            }
         }
+
         return r;
     }
 
@@ -62,33 +108,33 @@ public abstract class Heuristic
         return Math.abs(p1r - p2r) + Math.abs(p1c - p2c);
     }
 
-//    public int h(State s) {
-//        // goal count
-//        int r = 0;
-//        // loop over the map
-//        for (int row = 0; row < State.goals.length; row++) {
-//            for (int col = 0; col < State.goals[row].length; col++) {
-//                // check if tile is a wall or a empty tile
-//                char goalTile = State.goals[row][col];
-//                if (goalTile == 0 || State.walls[row][col]) {
-//                    continue;
-//                }
-//                // is box and in goal position
-//                if (s.boxes[row][col] == goalTile) {
-//                    r--;
-//                }
-//                // is agent and in goal position
-//                for (int k = 0; k < s.agentRows.length; k++) {
-//                    if (s.agentRows[k] == row && s.agentCols[k] == col) {
-//                        if (k == Character.getNumericValue(goalTile)) {
-//                            r--;
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        return r;
-//    }
+    public int hGoalCount(State s) {
+        // goal count
+        int r = 0;
+        // loop over the map
+        for (int row = 0; row < State.goals.length; row++) {
+            for (int col = 0; col < State.goals[row].length; col++) {
+                // check if tile is a wall or a empty tile
+                char goalTile = State.goals[row][col];
+                if (goalTile == 0 || State.walls[row][col]) {
+                    continue;
+                }
+                // is box and in goal position
+                if (s.boxes[row][col] == goalTile) {
+                    r--;
+                }
+                // is agent and in goal position
+                for (int k = 0; k < s.agentRows.length; k++) {
+                    if (s.agentRows[k] == row && s.agentCols[k] == col) {
+                        if (k == Character.getNumericValue(goalTile)) {
+                            r--;
+                        }
+                    }
+                }
+            }
+        }
+        return r;
+    }
 
     public abstract int f(State s);
 

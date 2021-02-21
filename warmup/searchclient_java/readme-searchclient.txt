@@ -3,6 +3,8 @@
 |                        README                         |
 \*******************************************************/
 
+$ javac searchclient/SearchClient.java -d out && java -jar ../server.jar -l ../levels/SAD1.lvl -c "java -cp out -Xmx8g searchclient.SearchClient -greedy" -g -t 180
+
 This readme describes how to use the included Java searchclient with the server that is contained in server.jar.
 
 The search client requires at least a JDK for Java 11, and has been tested with OpenJDK.
@@ -20,6 +22,7 @@ Compiling the searchclient:
 
 Starting the server using the searchclient:
     $ java -jar ../server.jar -l ../levels/SAD1.lvl -c "java -cp out searchclient.SearchClient" -g -s 150 -t 180
+    $ java -jar ../server.jar -l ../levels/SAD1.lvl -c "java -cp out -Xmx8g searchclient.SearchClient -greedy" -g -t 180
 
 The searchclient uses the BFS strategy by default. Use arguments -dfs, -astar, -wastar, or -greedy to set alternative search strategies (after you implement them). For instance, to use DFS on the same level as above:
     $ java -jar ../server.jar -l ../levels/SAD1.lvl -c "java searchclient.SearchClient -dfs" -g -s 150 -t 180
