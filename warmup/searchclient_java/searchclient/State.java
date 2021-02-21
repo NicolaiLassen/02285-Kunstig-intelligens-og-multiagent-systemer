@@ -8,10 +8,18 @@ import java.util.Random;
 public class State {
     private static final Random RNG = new Random(1);
 
+    public int getRowCount() {
+        return State.goals.length;
+    }
+
+    public int getColCount() {
+        return State.goals[0].length;
+    }
+
     /*
-        The agent rows, columns, and colors are indexed by the agent number.
-        For example, this.agentRows[0] is the row location of agent '0'.
-    */
+            The agent rows, columns, and colors are indexed by the agent number.
+            For example, this.agentRows[0] is the row location of agent '0'.
+        */
     public int[] agentRows;
     public int[] agentCols;
     public static Color[] agentColors;
