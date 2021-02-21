@@ -81,8 +81,13 @@ public abstract class Heuristic implements Comparator<State> {
         }
 
         // check same color
-        // TODO
+        // TODO: This should messure the distance from
+        // agent to box
+        // if box is at goal pos the don't do this
         for (int i = 0; i < s.agentCols.length; i++) {
+            // Should count the box that is close as a more valid target
+            // if the box is has a distance of 0 from goal then
+            // don't count the box
             int distanceMin = 100;
             for (Item targetsBox : targetsBoxes) {
                 var distance = calcManhattan(targetsBox.row, s.agentRows[i], targetsBox.col, s.agentRows[i]);
