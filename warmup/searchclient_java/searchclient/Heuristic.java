@@ -1,6 +1,7 @@
 package searchclient;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 
@@ -9,20 +10,28 @@ public abstract class Heuristic
 
     // keep all goal state col and row
     // int[] where [0] = row and [1] = col
-    private final int[][][] informedGraph;
-    private final HashMap<Character, ArrayDeque<int[]>> goalCol = new HashMap<>(65536);
+    private final HashMap<Character, HashMap<int[], Integer>> informedGraph = new HashMap<>();
+    private final HashMap<Character, ArrayList<int[]>> goalRowCol = new HashMap<>(65536);
 
     public Heuristic(State initialState) {
         // init informed search graph for every client
-        informedGraph = new int[initialState.agentCols.length][State.goals.length][State.goals[0].length];
+        // informedGraph = new int[initialState.agentCols.length][State.goals.length][State.goals[0].length];
 
         // Set all goal positions
         for (int row = 0; row < State.goals.length; row++) {
             for (int col = 0; col < State.goals[row].length; col++) {
                 // discard non goal object
-                if (State.goals[row][col] == 0 || State.walls[row][col]) {
+                char goalTile = State.goals[row][col];
+                if (goalTile == 0 || State.walls[row][col]) {
                     return;
                 }
+                // does goalRowCol contain the char
+                if (!goalRowCol.containsKey(goalTile)) {
+                    // init new map of goal pos
+                    goalRowCol.put(State.goals[row][col], new ArrayList<>());
+                }
+                // add goal pos
+                goalRowCol.get(goalTile).add(new int[]{row, col});
             }
         }
 
@@ -37,12 +46,9 @@ public abstract class Heuristic
                     if (State.walls[row][col]) {
                         informedGraph[k][row][col] = 10000;
                     }
-
-
                 }
             }
         }
-
     }
 
     // use minimum computation to find level path
