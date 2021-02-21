@@ -102,11 +102,13 @@ class FrontierDFS
 class FrontierBestFirst
         implements Frontier {
     private final Heuristic heuristic;
+    // use data struct for prioritising heuristic
     private final PriorityQueue<State> priorityQueue;
     private final HashSet<State> set = new HashSet<>(65536);
 
     public FrontierBestFirst(Heuristic h) {
         this.heuristic = h;
+        // set heuristic as a Comparator for the PriorityQueue
         priorityQueue = new PriorityQueue<>(65536,h);
     }
 

@@ -331,7 +331,7 @@ public class State {
 
     // use trick to convert char to int
     // and normalize it around zero
-    private boolean isBoxAndAgentSameColor(char box, Color agentColor) {
+    public static boolean isBoxAndAgentSameColor(char box, Color agentColor) {
         if (box == 0) {
             return false;
         }

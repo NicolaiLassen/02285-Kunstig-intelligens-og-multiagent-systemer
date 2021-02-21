@@ -9,63 +9,86 @@ public abstract class Heuristic
 
     // keep all goal state col and row
     // int[] where [0] = row and [1] = col
-    private final HashMap<Character, int[]> GoalState = new HashMap<>(65536);
-    // keep all boxes and agents
-    // int[] where [0] = row and [1] = col
-    private final HashMap<Character, int[]> ObservableElements = new HashMap<>(65536);
-    // keep names of all movable elements that need a goal cell
-    private final ArrayDeque<Character> Elements = new ArrayDeque<>(65536);
+    private final int[][][] informedGraph;
+    private final HashMap<Character, ArrayDeque<int[]>> goalCol = new HashMap<>(65536);
 
     public Heuristic(State initialState) {
+        // init informed search graph for every client
+        informedGraph = new int[initialState.agentCols.length][State.goals.length][State.goals[0].length];
 
+        // Set all goal positions
         for (int row = 0; row < State.goals.length; row++) {
             for (int col = 0; col < State.goals[row].length; col++) {
+                // discard non goal object
+                if (State.goals[row][col] == 0 || State.walls[row][col]) {
+                    return;
+                }
+            }
+        }
 
+        // create informed graph for each agent
+        for (int k = 0; k < initialState.agentRows.length; k++) {
+            // fill in informed graph
+            for (int row = 0; row < State.goals.length; row++) {
+                for (int col = 0; col < State.goals[row].length; col++) {
+
+                    // push state with walls to back'
+                    // these can't be reached
+                    if (State.walls[row][col]) {
+                        informedGraph[k][row][col] = 10000;
+                    }
+
+
+                }
             }
         }
 
     }
 
+    // use minimum computation to find level path
+    public int h(State s) {
+        int r = 0;
+        // For each of the clients find the min value of the level
+        // using the informed Graph
+        for (int k = 0; k < s.agentRows.length; k++) {
+            r += informedGraph[k][s.agentRows[k]][s.agentCols[k]];
+        }
+        return r;
+    }
+
+    // diagonal moves ar not possible
+    // therefore use the manhattan distance
     private int CalcManhattan(int p1r, int p1c, int p2r, int p2c) {
         return Math.abs(p1r - p2r) + Math.abs(p1c - p2c);
     }
 
-
 //    public int h(State s) {
+//        // goal count
 //        int r = 0;
-//        for (int i = 0; i < Elements.size(); i++) {
-//
+//        // loop over the map
+//        for (int row = 0; row < State.goals.length; row++) {
+//            for (int col = 0; col < State.goals[row].length; col++) {
+//                // check if tile is a wall or a empty tile
+//                char goalTile = State.goals[row][col];
+//                if (goalTile == 0 || State.walls[row][col]) {
+//                    continue;
+//                }
+//                // is box and in goal position
+//                if (s.boxes[row][col] == goalTile) {
+//                    r--;
+//                }
+//                // is agent and in goal position
+//                for (int k = 0; k < s.agentRows.length; k++) {
+//                    if (s.agentRows[k] == row && s.agentCols[k] == col) {
+//                        if (k == Character.getNumericValue(goalTile)) {
+//                            r--;
+//                        }
+//                    }
+//                }
+//            }
 //        }
 //        return r;
 //    }
-
-    // GOAL COUNT
-    // TODO: implement color!
-    public int h(State s) {
-        int r = 0;
-        for (int row = 0; row < State.goals.length; row++) {
-            for (int col = 0; col < State.goals[row].length; col++) {
-
-                char goalTile = State.goals[row][col];
-                if (goalTile == 0 || State.walls[row][col]) {
-                    continue;
-                }
-
-                if (s.boxes[row][col] == goalTile) {
-                    r--;
-                }
-
-                for (int k = 0; k < s.agentRows.length; k++) {
-                    if (s.agentRows[k] == row && s.agentCols[k] == col) {
-                        if (k == Character.getNumericValue(goalTile)) {
-                            r--;
-                        }
-                    }
-                }
-            }
-        }
-        return r;
-    }
 
     public abstract int f(State s);
 
