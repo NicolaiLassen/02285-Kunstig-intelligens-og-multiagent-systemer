@@ -29,7 +29,8 @@ if __name__ == '__main__':
     envWrapper = EnvWrapper(initial_state.num_agents,
                             initial_state.level_matrix,
                             initial_state.color_matrix,
-                            {},
+                            initial_state.agent_places,
+                            initial_state.box_places,
                             goal_state.level_matrix,
                             nn.Linear(200, 200))
 

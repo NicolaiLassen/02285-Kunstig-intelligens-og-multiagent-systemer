@@ -1,9 +1,12 @@
+from typing import List
+
 import torch
 import torch.nn as nn
 from numba import jit
 from torch import Tensor
 
 from environment.action import Action
+from utils.preprocess import Entity
 
 
 class EnvWrapper:
@@ -12,7 +15,8 @@ class EnvWrapper:
                  agents_n,
                  initial_state_m: Tensor,
                  initial_state_m_color: Tensor,
-                 initial_state_v: dict,
+                 initial_agent_places: List[Entity],
+                 initial_box_places: List[Entity],
                  goal_state_m: Tensor,
                  reward_model: nn.Module
                  ) -> None:
@@ -20,18 +24,20 @@ class EnvWrapper:
         self.agents = agents_n
         self.t0_map = initial_state_m
         self.t0_map_color = initial_state_m_color
-        self.t0_v = initial_state_v
+        self.t0_agent_places = initial_agent_places
+        self.t0_box_places = initial_box_places
+
         self.t_T = goal_state_m
         self.reward_model = reward_model
 
     @jit(nopython=True)
-    def step(self, actions: Action):
+    def step(self, actions: List[Action]):
 
         if self.__is_not_applicable(actions) or \
                 self.__is_conflict(actions):
             return None
 
-        t1_map, t1_map_color, t1_state_v = self.__act(actions)
+        t1_map, t1_map_color = self.__act(actions)
 
         reward = self.reward_model(t1_map)
         done = self.__check_done(t1_map)
