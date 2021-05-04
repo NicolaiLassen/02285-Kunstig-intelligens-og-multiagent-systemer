@@ -13,8 +13,7 @@ if __name__ == '__main__':
     strategy_group.add_argument('-bfs', action='store_true', dest='bfs', help='Use the BFS strategy.')
     strategy_group.add_argument('-dfs', action='store_true', dest='dfs', help='Use the DFS strategy.')
     strategy_group.add_argument('-astar', action='store_true', dest='astar', help='Use the A* strategy.')
-    strategy_group.add_argument('-wastar', action='store', dest='wastar', nargs='?', type=int, default=False, const=5,
-                                help='Use the WA* strategy.')
+    strategy_group.add_argument('-wastar', action='store', dest='wastar', nargs='?', type=int, default=False, const=5, help='Use the WA* strategy.')
     strategy_group.add_argument('-greedy', action='store_true', dest='greedy', help='Use the Greedy strategy.')
 
     args = parser.parse_args()
