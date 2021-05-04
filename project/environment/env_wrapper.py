@@ -1,30 +1,36 @@
+import sys
 from typing import List
 
 import torch
-import torch.nn as nn
 from numba import jit
 from torch import Tensor
 
 from environment.action import Action
+
+
+def debug_print(message):
+    print(message, file=sys.stderr, flush=True)
+
+
 from utils.preprocess import Entity
 
 
 class EnvWrapper:
 
     def __init__(self,
-                 agents_n,
-                 action_space_n,
+                 agents_n: int,
+                 action_space_n: int,
                  initial_state_m: Tensor,
                  initial_state_m_color: Tensor,
                  initial_agent_places: List[Entity],
                  initial_box_places: List[Entity],
                  goal_state_m: Tensor,
                  reward_func,
-                 mask = None
+                 mask=None
                  ) -> None:
 
         self.agents = agents_n
-        self.action_space_n = action_space_n,
+        self.action_space_n = action_space_n
         self.t0_map = initial_state_m
         self.t0_map_color = initial_state_m_color
 
@@ -73,4 +79,3 @@ class EnvWrapper:
     @jit(nopython=True)
     def __act(self, action) -> Tensor:
         return
-

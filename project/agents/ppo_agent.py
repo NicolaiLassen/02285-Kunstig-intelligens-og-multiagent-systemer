@@ -32,7 +32,7 @@ class PPOAgent(BaseAgent):
         self.actor_old.load_state_dict(actor.state_dict())
         self.critic = critic
         self.optimizer = optimizer
-        self.action_space_n = env.action_space.n
+        self.action_space_n = env.action_space_n
         # Curiosity
         self.ICM = ICM()
         # Hyper n

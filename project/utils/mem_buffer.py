@@ -13,10 +13,10 @@ class AgentMemBuffer:
         self.width = width
         self.height = height
 
-        self.states = torch.zeros(self.max_length, self.height, self.width, dtype=torch.float).cuda()
+        self.states = torch.zeros(self.max_length, self.height, self.width, dtype=torch.float)
         self.rewards = torch.zeros(self.max_length, dtype=torch.float)
-        self.actions = torch.zeros(self.max_length, dtype=torch.int).cuda()
-        self.action_log_probs = torch.zeros(self.max_length, dtype=torch.float).cuda()
+        self.actions = torch.zeros(self.max_length, dtype=torch.int)
+        self.action_log_probs = torch.zeros(self.max_length, dtype=torch.float)
         self.done = torch.zeros(self.max_length, dtype=torch.int)
 
 
@@ -33,10 +33,10 @@ class AgentMemBuffer:
 
     def clear(self):
         self.t = 0
-        self.states = torch.zeros(self.max_length, self.motion_blur, self.height, self.width, dtype=torch.float).cuda()
+        self.states = torch.zeros(self.max_length, self.motion_blur, self.height, self.width, dtype=torch.float)
         self.rewards = torch.zeros(self.max_length, dtype=torch.float)
-        self.actions = torch.zeros(self.max_length, dtype=torch.int).cuda()
-        self.action_log_probs = torch.zeros(self.max_length, dtype=torch.float).cuda()
+        self.actions = torch.zeros(self.max_length, dtype=torch.int)
+        self.action_log_probs = torch.zeros(self.max_length, dtype=torch.float)
         self.done = torch.zeros(self.max_length, dtype=torch.int)
 
     def get_mask(self, skip=False):
