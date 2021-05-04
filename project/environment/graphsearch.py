@@ -1,8 +1,9 @@
-import memory
+import environment.memory as memory
 import time
 import sys
 
-from action import Action
+from environment.action import Action
+
 globals().update(Action.__members__)
 
 start_time = time.perf_counter()
@@ -17,10 +18,10 @@ def search(initial_state, frontier):
         # Try to solve a few levels such as SAD1 and SAD2 by hand and entering them below:
 
         return [
-            [MoveS],
-            [MoveE],
-            [MoveE],
-            [MoveS],
+            [Action.MoveS],
+            [Action.MoveE],
+            [Action.MoveE],
+            [Action.MoveS],
         ]
 
     else:

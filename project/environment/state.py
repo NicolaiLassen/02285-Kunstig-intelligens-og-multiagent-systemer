@@ -1,6 +1,6 @@
 import random
 
-from action import Action, ActionType
+from environment.action import Action, ActionType
 
 class State:
     _RNG = random.Random(1)

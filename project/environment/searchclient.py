@@ -5,12 +5,12 @@ import time
 
 import cProfile
 
-import memory
-from color import Color
-from state import State
-from frontier import FrontierBFS, FrontierDFS, FrontierBestFirst
-from heuristic import HeuristicAStar, HeuristicWeightedAStar, HeuristicGreedy
-from graphsearch import search
+import environment.memory as memory
+from environment.color import Color
+from environment.state import State
+from environment.frontier import FrontierBFS, FrontierDFS, FrontierBestFirst
+from environment.heuristic import HeuristicAStar, HeuristicWeightedAStar, HeuristicGreedy
+from environment.graphsearch import search
 
 class SearchClient:
     @staticmethod
