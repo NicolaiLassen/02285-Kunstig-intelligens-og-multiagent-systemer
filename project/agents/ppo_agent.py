@@ -8,6 +8,7 @@ from torch.distributions import Categorical
 from agents.agent_base import BaseAgent
 from environment.env_wrapper import EnvWrapper
 from models.curiosity import ICM
+from models.policy_models import PolicyModelEncoder
 from utils import mem_buffer
 # PPO Actor Critic
 from utils.mem_buffer import AgentMemBuffer
@@ -126,3 +127,12 @@ class PPOAgent(BaseAgent):
         r_T_theta = torch.exp(actions_log_probs - self.mem_buffer.action_log_probs)
         r_T_c_theta = torch.clamp(r_T_theta, min=1 - self.eps_c, max=1 + self.eps_c)
         return torch.min(r_T_theta * R_T, r_T_c_theta * R_T).mean()  # E
+
+
+if __name__ == '__main__':
+    a = torch.randn(50, 50)
+    b = torch.randn(8, 2)
+    m = torch.randn(50, 50)
+    model = PolicyModelEncoder(50, 50, 29)
+
+    print(model(a,b,m))
