@@ -1,27 +1,20 @@
-import argparse
 import sys
 
-from environment import memory
+import torch.nn as nn
+
+from environment.EnvWrapper import EnvWrapper
+from environment.action import Action
 from utils.preprocess import parse_level_file
 
 
-def log(message):
+def debug_print(message):
     print(message, file=sys.stderr, flush=True)
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Simple client based on state-space graph search.')
-    parser.add_argument('--max-memory', metavar='<MB>', type=float, default=2048.0,
-                        help='The maximum memory usage allowed in MB (soft limit, default 2048).')
-    args = parser.parse_args()
-
-    # Set max memory usage allowed (soft limit).
-    memory.max_usage = args.max_memory
-
-    # Use stderr to print to the console.
-    print('SearchClient initializing.', file=sys.stderr, flush=True)
 
     # Send client name to server.
+
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding='ASCII')
     print('SearchClient', flush=True)
@@ -30,7 +23,26 @@ if __name__ == '__main__':
     if hasattr(server_messages, "reconfigure"):
         server_messages.reconfigure(encoding='ASCII')
 
-    state = parse_level_file(server_messages)
-    log('#This is a comment.')
-    log(state.level_matrix)
+    initial_state, goal_state = parse_level_file(server_messages)
+    debug_print(initial_state.level_matrix)
 
+    envWrapper = EnvWrapper(initial_state.num_agents,
+                            initial_state.level_matrix,
+                            initial_state.color_matrix,
+                            {},
+                            goal_state.level_matrix,
+                            nn.Linear(200, 200))
+
+    plan = [[Action.PushWW]]
+
+    # Print plan to server.
+    if plan is None:
+        print('Unable to solve level.', file=sys.stderr, flush=True)
+        sys.exit(0)
+    else:
+        print('Found solution of length {}.'.format(len(plan)), file=sys.stderr, flush=True)
+
+        for joint_action in plan:
+            print("|".join(a.name_ for a in joint_action), flush=True)
+            # We must read the server's response to not fill up the stdin buffer and block the server.
+            response = server_messages.readline()

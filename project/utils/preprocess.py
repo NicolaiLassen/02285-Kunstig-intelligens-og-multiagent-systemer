@@ -1,11 +1,11 @@
-# from torch import Tensor
-
-
-# def map_to_idx() -> Tensor:
-#    return
 import torch
 
 from environment.color import Color
+
+
+def normalize_dist(t):
+    # Normalize  # PLZ DON'T BLOW MY GRADIENT
+    return (t - t.mean()) / (t.std() + 1e-10)
 
 
 class Entity:
@@ -44,14 +44,13 @@ def parse_level_file(level_file):
 
     # Read initial state.
     initial_level_lines = read_level_lines(level_file)
-    state = State(initial_level_lines, color_dict)
-    #    initial_level_matrix = parse_level_lines(initial_level_lines, color_dict)
+    initial_state = State(initial_level_lines, color_dict)
 
     # Read goal state.
-    #    goal_level_lines = read_level_lines(level_file)
-    #    goal_level_matrix = parse_level_lines(initial_level_lines, color_dict)
+    goal_level_lines = read_level_lines(level_file)
+    goal_state = State(goal_level_lines, color_dict)
 
-    return state
+    return initial_state, goal_state
 
 
 def read_level_lines(file):
@@ -63,38 +62,13 @@ def read_level_lines(file):
     return level_lines
 
 
-def parse_level_lines(level_lines, color_dict):
-    num_rows = len(level_lines)
-    num_cols = len(level_lines[0])
-    level_matrix = [[Entity.empty() for _ in range(num_cols)] for _ in range(num_rows)]
-    for row, line in enumerate(level_lines):
-        for col, char in enumerate(line):
-            if '0' <= char <= '9':
-                level_matrix[row][col] = Entity('agent', char, color_dict[char])
-            elif 'A' <= char <= 'Z':
-                level_matrix[row][col] = Entity('box', char, color_dict[char])
-            elif char == '+':
-                level_matrix[row][col] = Entity.wall()
-            else:
-                level_matrix[row][col] = Entity.empty()
-    return level_matrix
-
-
-def normalize_dist(t):
-    # Normalize  # PLZ DON'T BLOW MY GRADIENT
-    return (t - t.mean()) / (t.std() + 1e-10)
-
 
 class State:
-    level_matrix = None
-    color_matrix = None
-    num_agents = 0
-
     def __init__(self, level_lines, color_dict):
-
-        num_rows = len(level_lines)
-        num_cols = len(level_lines[0])
-        # [[Entity.empty() for _ in range(num_cols)] for _ in range(num_rows)]
+        self.num_rows = len(level_lines)
+        self.num_cols = len(level_lines[0])
+        self.num_agents = 0
+        self.places_v = {}
         self.level_matrix = torch.zeros(50, 50, dtype=torch.float)
         self.color_matrix = torch.zeros(50, 50, dtype=torch.float)
         for row, line in enumerate(level_lines):
@@ -115,12 +89,3 @@ class State:
         #                    level_matrix[row][col] = Entity.wall()
         #                else:
         #                    level_matrix[row][col] = Entity.empty()
-
-
-"""
-{
-	type: empty|wall|agent|box
-	number: 1-100
-	color: ''
-}
-"""
