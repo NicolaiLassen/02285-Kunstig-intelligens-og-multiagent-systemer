@@ -10,9 +10,6 @@ from utils.preprocess import Entity, LevelState
 
 class EnvWrapper:
 
-    # agents = [Entity]
-    # matrix = [[Entity]]
-
     def __init__(self,
                  initial_state: LevelState,
                  goal_state: LevelState,
@@ -178,5 +175,38 @@ class EnvWrapper:
         return agent.row, agent.col
 
     @jit(nopython=True)
-    def __act(self, action) -> Tensor:
-        return
+    def __act(self, actions: List[Action]) -> Tensor:
+
+        for index, action in enumerate(actions):
+            # Update agent location
+            agent = self.t0_state.agents[index]
+            prev_agent_row = agent.row
+            prev_agent_col = agent.col
+            agent.row = agent.row + action.agent_row_delta
+            agent.col = agent.col + action.agent_col_delta
+            self.t0_state.agents[index] = agent
+
+            # Update level matrix
+            if action.type is ActionType.NoOp:
+                continue
+            elif action.type is ActionType.Move:
+                self.t0_state.matrix[prev_agent_row][prev_agent_col] = Entity(' ', prev_agent_row, prev_agent_col, None)
+                self.t0_state.matrix[agent.row][agent.col] = agent
+            elif action.type is ActionType.Push:
+                box = self.t0_state.matrix[agent.row][agent.col]
+                box.row = box.row + action.box_row_delta
+                box.col = box.row + action.box_col_delta
+                self.t0_state.matrix[prev_agent_row][prev_agent_col] = Entity(' ', prev_agent_row, prev_agent_col, None)
+                self.t0_state.matrix[agent.row][agent.col] = agent
+                self.t0_state.matrix[agent.row + action.box_row_delta][agent.col + action.box_col_delta] = box
+            elif action.type is ActionType.Pull:
+                prev_box_row = prev_agent_row + (action.box_row_delta * -1)
+                prev_box_col = prev_agent_col + (action.box_col_delta * -1)
+                box = self.t0_state.matrix[prev_box_row][prev_box_col]
+                box.row = box.row + action.box_row_delta
+                box.col = box.row + action.box_col_delta
+                self.t0_state.matrix[prev_box_row][prev_box_col] = Entity(' ', prev_agent_row, prev_agent_col, None)
+                self.t0_state.matrix[prev_agent_row][prev_agent_col] = box
+                self.t0_state.matrix[agent.row][agent.col] = agent
+
+        return None
