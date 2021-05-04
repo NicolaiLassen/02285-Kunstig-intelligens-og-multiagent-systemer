@@ -9,21 +9,12 @@ def normalize_dist(t):
 
 
 class Entity:
-    def __init__(self, type, char, color):
+    def __init__(self, col: int, row: int, type, char, color):
+        self.col = col
+        self.row = row
         self.type = type
         self.char = char
         self.color = color
-
-    @staticmethod
-    def wall():
-        return Entity('wall', '+', None)
-
-    @staticmethod
-    def empty():
-        return Entity('empty', ' ', None)
-
-    def __repr__(self):
-        return "{}".format(ord(self.char))
 
 
 def parse_level_file(level_file):
@@ -68,13 +59,15 @@ class State:
         self.num_rows = len(level_lines)
         self.num_cols = len(level_lines[0])
         self.num_agents = 0
-        self.places_v = {}
+        self.agent_places = []
+        self.agent_places = []
+
+        # max lvl size 50x50
         self.level_matrix = torch.zeros(50, 50, dtype=torch.float)
         self.color_matrix = torch.zeros(50, 50, dtype=torch.float)
         for row, line in enumerate(level_lines):
             for col, char in enumerate(line):
                 self.level_matrix[row][col] = ord(char)
-
                 if '0' <= char <= '9' or 'A' <= char <= 'Z':
                     self.color_matrix[row][col] = Color.from_string(color_dict[char]).value
                 else:
@@ -82,10 +75,6 @@ class State:
 
                 if '0' <= char <= '9':
                     self.num_agents += 1
-        #                    level_matrix[row][col] = Entity('agent', char, color_dict[char])
-        #                elif 'A' <= char <= 'Z':
-        #                    level_matrix[row][col] = Entity('box', char, color_dict[char])
-        #                elif char == '+':
-        #                    level_matrix[row][col] = Entity.wall()
-        #                else:
-        #                    level_matrix[row][col] = Entity.empty()
+                    self.agent_places[char] = Entity(col, row, 'box', char, color_dict[char])
+                elif 'A' <= char <= 'Z':
+                    self.agent_places[char] = Entity(col, row, 'box', char, color_dict[char])
