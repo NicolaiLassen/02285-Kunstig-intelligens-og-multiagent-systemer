@@ -54,18 +54,18 @@ class PPOAgent(BaseAgent):
             for ep_T in range(max_Time + 1):
                 t += 1
                 s = s1
-                action, log_probs = self.act(s)
-                s1, r, d, _ = self.env.step(action)
-                self.mem_buffer.set_next(s, r, action, log_probs, d, self.mem_buffer.get_mask(d))
+                actions, log_probs = self.act(s)
+                s1, r, d, _ = self.env.step(actions)
+                self.mem_buffer.set_next(s, r, actions, log_probs, d, self.mem_buffer.get_mask(d))
                 if t % update_every == 0:
                     self.__update()
 
     def act(self, state):
-        action_logs_prob = self.actor_old(state)
-        action_dist = Categorical(action_logs_prob)
-        action = action_dist.sample()
-        action_dist_log_prob = action_dist.log_prob(action)
-        return action.detach().item(), action_dist_log_prob.detach()
+        actions_logs_prob = self.actor_old(state, self.env.mask)
+        actions_dist = Categorical(actions_logs_prob)
+        actions = actions_dist.sample()
+        action_dist_log_probs = actions_dist.log_prob(actions)
+        return actions.detach().item(), action_dist_log_probs.detach()
 
     def save_actor(self):
         print("save_actor")
@@ -103,8 +103,8 @@ class PPOAgent(BaseAgent):
         self.mem_buffer.clear()
 
     def __eval(self):
-        action_prob = self.actor(self.mem_buffer.states)
-        dist = Categorical(action_prob)
+        actions_prob = self.actor(self.mem_buffer.states, self.env.mask)
+        dist = Categorical(actions_prob)
         action_log_probs = dist.log_prob(self.mem_buffer.actions)
         state_values = self.critic(self.mem_buffer.states)
         return action_log_probs, state_values, dist.entropy()  # Bregman divergence
@@ -122,7 +122,7 @@ class PPOAgent(BaseAgent):
     def __intrinsic_curiosity(self, state_values):
         return self.ICM(state_values)
 
-    def __clipped_surrogate_objective(self, action_log_probs, R_T):
-        r_T_theta = torch.exp(action_log_probs - self.mem_buffer.action_log_probs)
+    def __clipped_surrogate_objective(self, actions_log_probs, R_T):
+        r_T_theta = torch.exp(actions_log_probs - self.mem_buffer.action_log_probs)
         r_T_c_theta = torch.clamp(r_T_theta, min=1 - self.eps_c, max=1 + self.eps_c)
         return torch.min(r_T_theta * R_T, r_T_c_theta * R_T).mean()  # E

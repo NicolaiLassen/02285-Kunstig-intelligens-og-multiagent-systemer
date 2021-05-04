@@ -61,6 +61,10 @@ class State:
         self.agent_places = []
         self.box_places = []
 
+        init_mask = torch.zeros(20, 20)
+        init_mask[:self.num_rows,:self.num_cols] = 1
+        self.mask = init_mask
+
         # max lvl size 50x50
         self.level_matrix = torch.zeros(50, 50, dtype=torch.float)
         self.color_matrix = torch.zeros(50, 50, dtype=torch.float)

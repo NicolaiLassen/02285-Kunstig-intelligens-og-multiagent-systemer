@@ -6,7 +6,7 @@ import torch.nn as nn
 from agents.ppo_agent import PPOAgent
 from environment.action import Action, action_dict
 from environment.env_wrapper import EnvWrapper
-from models.policy_models import PolicyModel
+from models.policy_models import PolicyModel, PolicyModelEncoder
 from utils.preprocess import parse_level_file
 
 
@@ -46,7 +46,9 @@ if __name__ == '__main__':
                              initial_state.agent_places,
                              initial_state.box_places,
                              goal_state.level_matrix,
-                             nn.Linear(200, 200))
+                             nn.Linear(200, 200),
+                             initial_state.mask
+                             )
 
     actor = PolicyModelEncoder(width, height, env_wrapper.action_space_n).cuda()
     critic = PolicyModel(width, height).cuda()

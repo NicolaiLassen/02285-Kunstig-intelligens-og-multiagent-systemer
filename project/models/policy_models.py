@@ -1,5 +1,6 @@
 from torch import nn
-
+# Ref https://github.com/lukemelas/EfficientNet-PyTorch
+from efficientnet_pytorch import EfficientNet
 
 class PolicyModel(nn.Module):
     def __init__(self, width: int, height: int, action_dim: int = 1):
@@ -32,19 +33,25 @@ class PolicyModelEncoder(nn.Module):
         self.width = width
         self.height = height
 
-        self.map_layer = nn.TransformerEncoderLayer(d_model=width * 8, nhead=2)
-        self.map_encoder = nn.TransformerEncoder(self.map_layer, num_layers=3)
+        self.scale_down_encoder_eff = EfficientNet.from_name('efficientnet-b0', in_channels=1, num_classes=width)
+        self.map_encoder_layer = nn.TransformerEncoderLayer(d_model=width, nhead=2)
+        self.map_encoder = nn.TransformerEncoder(self.map_encoder_layer, num_layers=3)
+
+        self.agent_encoder_layer = nn.TransformerEncoderLayer(d_model=width, nhead=2)
+        self.agent_encoder = nn.TransformerEncoder(self.map_encoder_layer, num_layers=3)
 
         self.fc_out = nn.Linear(width * 8, action_dim)
         self.activation = nn.ReLU()
-        self.log_softmax = nn.LogSoftmax(dim=-1)
+        self.log_softmax = nn.LogSoftmax(dim=0)
 
-    def forward(self, map, agent_map, mask=None):
+    def forward(self, map, agent_map, map_mask=None):
 
-        out = self.scale_down_encoder_eff(out)
-        out = out.unsqueeze(0).permute(1, 0, 2)
-        out = self.map_encoder(out, mask)
+        map_out = self.scale_down_encoder_eff(map)
+        map_out = map_out.unsqueeze(0).permute(1, 0, 2)
+        map_out = self.map_encoder(map_out, map_mask)
+
+        agent_map_out = self.agent_encoder(agent_map)
+
+
         out = self.fc_out(out)
-
-
         return self.log_softmax(out)

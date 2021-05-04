@@ -19,18 +19,21 @@ class EnvWrapper:
                  initial_agent_places: List[Entity],
                  initial_box_places: List[Entity],
                  goal_state_m: Tensor,
-                 reward_func
+                 reward_func,
+                 mask = None
                  ) -> None:
 
         self.agents = agents_n
         self.action_space_n = action_space_n,
         self.t0_map = initial_state_m
         self.t0_map_color = initial_state_m_color
+
         self.t0_agent_places = initial_agent_places
         self.t0_box_places = initial_box_places
 
         self.t_T = goal_state_m
         self.reward_func = reward_func
+        self.mask = mask
 
     @jit(nopython=True)
     def step(self, actions: List[Action]):
