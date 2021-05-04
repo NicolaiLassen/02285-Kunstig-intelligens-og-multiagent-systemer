@@ -5,7 +5,7 @@ import torch
 from numba import jit
 from torch import Tensor
 
-from environment.action import Action
+from environment.action import Action, ActionType
 from utils.preprocess import Entity
 
 
@@ -51,7 +51,7 @@ class EnvWrapper:
         done = self.__check_done(t1_map)
         self.t0_map = t1_map
 
-        return [t1_map, reward, done]
+        return t1_map, reward, done
 
     def reset(self):
         return
@@ -125,7 +125,6 @@ class EnvWrapper:
                 next_agent_cols[i] = agent_col + action.agent_col_delta
                 box_rows[i] = next_agent_rows[i]
                 box_cols[i] = next_agent_cols[i]
-
             elif action.type is ActionType.Pull:
                 next_agent_rows[i] = agent_row + action.agent_row_delta
                 next_agent_cols[i] = agent_col + action.agent_col_delta
