@@ -53,14 +53,17 @@ def read_level_lines(file):
     return level_lines
 
 
-
 class State:
     def __init__(self, level_lines, color_dict):
         self.num_rows = len(level_lines)
         self.num_cols = len(level_lines[0])
         self.num_agents = 0
         self.agent_places = []
-        self.agent_places = []
+        self.box_places = []
+
+        init_mask = torch.zeros(20, 20)
+        init_mask[:self.num_rows,:self.num_cols] = 1
+        self.mask = init_mask
 
         # max lvl size 50x50
         self.level_matrix = torch.zeros(50, 50, dtype=torch.float)
@@ -75,6 +78,6 @@ class State:
 
                 if '0' <= char <= '9':
                     self.num_agents += 1
-                    self.agent_places[char] = Entity(col, row, 'box', char, color_dict[char])
+                    self.agent_places.append(Entity(col, row, 'box', char, color_dict[char]))
                 elif 'A' <= char <= 'Z':
-                    self.agent_places[char] = Entity(col, row, 'box', char, color_dict[char])
+                    self.box_places.append(Entity(col, row, 'box', char, color_dict[char]))
