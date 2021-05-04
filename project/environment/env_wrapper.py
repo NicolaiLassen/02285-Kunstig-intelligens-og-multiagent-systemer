@@ -5,12 +5,17 @@ from numba import jit
 from torch import Tensor
 
 from environment.action import Action, ActionType
-from utils.preprocess import Entity
+from utils.preprocess import Entity, LevelState
 
 
 class EnvWrapper:
 
+    # agents = [Entity]
+    # matrix = [[Entity]]
+
     def __init__(self,
+                 initial_state: LevelState,
+                 goal_state: LevelState,
                  agents_n: int,
                  action_space_n: int,
                  initial_state_m: Tensor,
@@ -20,6 +25,9 @@ class EnvWrapper:
                  goal_state_m: Tensor,
                  reward_func,
                  mask=None) -> None:
+
+        self.initial_state = initial_state
+        self.t0_state = initial_state
 
         self.initial_state_m = initial_state_m
         self.initial_state_m_color = initial_state_m_color
@@ -157,19 +165,16 @@ class EnvWrapper:
         return False
 
     def __is_same_color(self, a_row, a_col, b_row, b_col):
-        # TODO
-        return True
+        return self.t0_state.matrix[a_row][a_col].color == self.t0_state.matrix[b_row][b_col].color
 
     def __is_box(self, row, col):
-        # TODO
-        return True
+        return self.t0_state.matrix[row][col].is_box()
 
     def __is_free(self, row, col):
-        # TODO
-        return True
+        return self.t0_state.matrix[row][col].is_free()
 
     def __agent_row_col(self, index: int):
-        agent = self.t0_agent_places[index]
+        agent = self.t0_state.agents[index]
         return agent.row, agent.col
 
     @jit(nopython=True)
