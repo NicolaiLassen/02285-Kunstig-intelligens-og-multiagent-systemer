@@ -1,4 +1,3 @@
-
 class Entity:
     def __init__(self, char, col: int, row: int, color):
         self.col = col
@@ -6,7 +5,7 @@ class Entity:
         self.char = char
         self.color = color
 
-    def is_box(self):
+    def is_wall(self):
         return self.char == '+'
 
     def is_free(self):
@@ -17,3 +16,6 @@ class Entity:
 
     def is_box(self):
         return 'A' <= self.char <= 'Z'
+
+    def __repr__(self):
+        return self.char

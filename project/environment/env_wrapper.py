@@ -1,31 +1,12 @@
+import sys
 from typing import List
 
-import torch
-from numba import jit
 from torch import Tensor
 
 from environment.action import Action, ActionType
 from utils.preprocess import Entity, LevelState
 
-
-class EnvWrapper:
-
-    def __init__(self,
-                 initial_state: LevelState,
-                 goal_state: LevelState,
-                 agents_n: int,
-                 action_space_n: int,
-                 initial_state_m: Tensor,
-                 initial_state_m_color: Tensor,
-                 initial_agent_places: List[Entity],
-                 initial_box_places: List[Entity],
-                 goal_state_m: Tensor,
-                 reward_func,
-                 mask=None) -> None:
-
-        self.initial_state = initial_state
-        self.t0_state = initial_state
-
+"""
         self.initial_state_m = initial_state_m
         self.initial_state_m_color = initial_state_m_color
         self.initial_agent_places = initial_agent_places
@@ -42,37 +23,52 @@ class EnvWrapper:
         self.t_T = goal_state_m
         self.reward_func = reward_func
         self.mask = mask
+"""
 
-    @jit(nopython=True)
+
+class EnvWrapper:
+
+    def __init__(
+            self,
+            initial_state: LevelState,
+            goal_state: LevelState
+    ) -> None:
+        self.agents_n = len(initial_state.agents)
+
+        self.initial_state = initial_state
+        self.t0_state = initial_state
+
     def step(self, actions: List[Action]):
 
-        for action in actions:
-            if not self.__is_applicable(action):
+        for index, action in enumerate(actions):
+            if not self.__is_applicable(index, action):
+                print('#action not applicable\n{}: {}'.format(index, action), file=sys.stderr, flush=True)
                 return None
 
         if self.__is_conflict(actions):
+            print('#actions contain conflict\n{}'.format(actions), file=sys.stderr, flush=True)
             return None
 
-        t1_map, t1_map_color = self.__act(actions)
+        self.__act(actions)
 
-        reward = self.reward_func(t1_map)
-        done = self.__check_done(t1_map)
-        self.t0_map = t1_map
+    # reward = self.reward_func(t1_map)
+    #        reward = 0
+    #        done = self.__check_done(t1_map)
+    #        self.t0_map = t1_map
 
-        return t1_map, reward, done
+    #       return t1_map, reward, done
 
     def reset(self):
-        self.t0_map = self.initial_state_m
-        self.t0_map_color = self.initial_state_m_color
-        self.t0_agent_places = self.initial_agent_places
-        self.t0_box_places = self.initial_box_places
+        # self.t0_map = self.initial_state_m
+        # self.t0_map_color = self.initial_state_m_color
+        # self.t0_agent_places = self.initial_agent_places
+        # self.t0_box_places = self.initial_box_places
         return
 
-    @jit(nopython=True)
     def __check_done(self, next_state: Tensor):
-        return torch.eq(next_state, self.t_T)
+        return False
+        # return torch.eq(next_state, self.t_T)
 
-    @jit(nopython=True)
     def __is_applicable(self, index: int, action: Action):
         agent_row, agent_col = self.__agent_row_col(index)
 
@@ -115,14 +111,13 @@ class EnvWrapper:
         else:
             return False
 
-    @jit(nopython=True)
     def __is_conflict(self, actions: List[Action]):
         num_agents = self.agents_n
 
-        next_agent_rows = [0 for _ in range(num_agents)]
-        next_agent_cols = [0 for _ in range(num_agents)]
-        box_rows = [0 for _ in range(num_agents)]
-        box_cols = [0 for _ in range(num_agents)]
+        next_agent_rows = [-1 for _ in range(num_agents)]
+        next_agent_cols = [-1 for _ in range(num_agents)]
+        box_rows = [-1 for _ in range(num_agents)]
+        box_cols = [-1 for _ in range(num_agents)]
 
         for i in range(num_agents):
             agent_row, agent_col = self.__agent_row_col(i)
@@ -148,15 +143,19 @@ class EnvWrapper:
                 continue
 
             for a2 in range(num_agents):
+                if a1 == a2:
+                    continue
                 if actions[a2].type is ActionType.NoOp:
                     continue
 
                 # is moving same box
                 if box_rows[a1] == box_rows[a2] and box_cols[a1] == box_cols[a2]:
+                    print('# actions.conflict\nis moving same box', file=sys.stderr, flush=True)
                     return True
 
                 # is moving into same position
                 if next_agent_rows[a1] == next_agent_rows[a2] and next_agent_cols[a1] == next_agent_cols[a2]:
+                    print('# actions.conflict\nis moving into same position', file=sys.stderr, flush=True)
                     return True
 
         return False
@@ -174,9 +173,7 @@ class EnvWrapper:
         agent = self.t0_state.agents[index]
         return agent.row, agent.col
 
-    @jit(nopython=True)
     def __act(self, actions: List[Action]) -> Tensor:
-
         for index, action in enumerate(actions):
             # Update agent location
             agent = self.t0_state.agents[index]
