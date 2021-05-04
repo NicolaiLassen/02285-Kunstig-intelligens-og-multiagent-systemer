@@ -26,7 +26,7 @@ class EnvWrapper:
         self.initial_agent_places = initial_agent_places
         self.initial_box_places = initial_box_places
 
-        self.agents = agents_n
+        self.agents_n = agents_n
         self.action_space_n = action_space_n
 
         self.t0_map = initial_state_m
@@ -112,7 +112,7 @@ class EnvWrapper:
 
     @jit(nopython=True)
     def __is_conflict(self, actions: List[Action]):
-        num_agents = 0
+        num_agents = self.agents_n
 
         next_agent_rows = [0 for _ in range(num_agents)]
         next_agent_cols = [0 for _ in range(num_agents)]
