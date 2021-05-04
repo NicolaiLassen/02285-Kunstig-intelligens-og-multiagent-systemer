@@ -23,3 +23,28 @@ class PolicyModel(nn.Module):
         out = self.fc_3(out)
         out = self.activation(out)
         return self.fc_out(out)
+
+
+class PolicyModelEncoder(nn.Module):
+    def __init__(self, width: int, height: int, action_dim: int):
+        super(PolicyModelEncoder, self).__init__()
+
+        self.width = width
+        self.height = height
+
+        self.map_layer = nn.TransformerEncoderLayer(d_model=width * 8, nhead=2)
+        self.map_encoder = nn.TransformerEncoder(self.map_layer, num_layers=3)
+
+        self.fc_out = nn.Linear(width * 8, action_dim)
+        self.activation = nn.ReLU()
+        self.log_softmax = nn.LogSoftmax(dim=-1)
+
+    def forward(self, map, agent_map, mask=None):
+
+        out = self.scale_down_encoder_eff(out)
+        out = out.unsqueeze(0).permute(1, 0, 2)
+        out = self.map_encoder(out, mask)
+        out = self.fc_out(out)
+
+
+        return self.log_softmax(out)

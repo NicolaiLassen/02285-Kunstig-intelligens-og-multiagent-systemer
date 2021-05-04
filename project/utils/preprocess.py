@@ -76,4 +76,4 @@ class State:
                     self.num_agents += 1
                     self.agent_places.append(Entity(col, row, 'box', char, color_dict[char]))
                 elif 'A' <= char <= 'Z':
-                    self.box_places[char].append(Entity(col, row, 'box', char, color_dict[char]))
+                    self.box_places.append(Entity(col, row, 'box', char, color_dict[char]))

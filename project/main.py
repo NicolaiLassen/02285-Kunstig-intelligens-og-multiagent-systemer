@@ -1,9 +1,12 @@
 import sys
 
+import torch
 import torch.nn as nn
 
+from agents.ppo_agent import PPOAgent
+from environment.action import Action, action_dict
 from environment.env_wrapper import EnvWrapper
-from environment.action import Action
+from models.policy_models import PolicyModel
 from utils.preprocess import parse_level_file
 
 
@@ -23,16 +26,38 @@ if __name__ == '__main__':
     if hasattr(server_messages, "reconfigure"):
         server_messages.reconfigure(encoding='ASCII')
 
-    initial_state, goal_state = parse_level_file(server_messages)
-    debug_print(initial_state.level_matrix)
+    bach_size = 1
+    width = 50
+    height = 50
 
-    envWrapper = EnvWrapper(initial_state.num_agents,
-                            initial_state.level_matrix,
-                            initial_state.color_matrix,
-                            initial_state.agent_places,
-                            initial_state.box_places,
-                            goal_state.level_matrix,
-                            nn.Linear(200, 200))
+    lr_actor = 0.0005
+    lr_critic = 0.001
+
+    initial_state, goal_state = parse_level_file(server_messages)
+
+    # PRINT STUFF
+    debug_print(initial_state.level_matrix)
+    debug_print(initial_state.box_places)
+
+    env_wrapper = EnvWrapper(initial_state.num_agents,
+                             len(action_dict),
+                             initial_state.level_matrix,
+                             initial_state.color_matrix,
+                             initial_state.agent_places,
+                             initial_state.box_places,
+                             goal_state.level_matrix,
+                             nn.Linear(200, 200))
+
+    actor = PolicyModelEncoder(width, height, env_wrapper.action_space_n).cuda()
+    critic = PolicyModel(width, height).cuda()
+
+    optimizer = torch.optim.Adam([
+        {'params': actor.parameters(), 'lr': lr_actor},
+        {'params': critic.parameters(), 'lr': lr_critic}
+    ])
+
+    agent = PPOAgent(env_wrapper, actor, critic, optimizer)
+    agent.train(150, 100000)
 
     plan = [[Action.PushWW]]
 
