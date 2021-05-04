@@ -70,12 +70,13 @@ class PPOAgent(BaseAgent):
 
                 s1, r, d = temp
 
+                ## TODO BUFFER NEW
                 # self.mem_buffer.set_next(s, r, actions, log_probs, d, self.mem_buffer.get_mask(d))
                 # if t % update_every == 0:
                 #     self.__update()
 
     def act(self, state):
-        actions_logs_prob = self.actor_old(state[0], state[1], self.env.mask)
+        actions_logs_prob = self.actor_old(state[0].unsqueeze(0), state[1].unsqueeze(0), self.env.mask)
         actions_dist = Categorical(actions_logs_prob)
         actions = actions_dist.sample()
         action_dist_log_probs = actions_dist.log_prob(actions)

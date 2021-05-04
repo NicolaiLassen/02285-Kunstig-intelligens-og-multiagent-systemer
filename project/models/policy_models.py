@@ -33,11 +33,9 @@ class PolicyModelEncoder(nn.Module):
 
         self.width = width
         self.height = height
-
         self.d_model = 64
 
         self.fc_map_1 = nn.Linear(width * height, self.d_model * width)
-
         self.map_encoder_layer = nn.TransformerEncoderLayer(d_model=self.d_model, nhead=2)
         self.map_encoder = nn.TransformerEncoder(self.map_encoder_layer, num_layers=3)
 
@@ -52,13 +50,14 @@ class PolicyModelEncoder(nn.Module):
     def forward(self, map, agent_map, map_mask=None):
         map_out = map.view(-1, self.width * self.height)
         map_out = self.fc_map_1(map_out)
-
+        map_out = self.activation(map_out)
         map_out = map_out.view(self.width, -1, self.d_model)
-        map_out = self.map_encoder(map_out, src_key_padding_mask=None).transpose(0, 1)  # MASK
+        map_out = self.map_encoder(map_out, src_key_padding_mask=None).transpose(0, 1)
 
         agent_map_out = self.fc_agent_1(agent_map)
-        self.activation(agent_map_out)
+        agent_map_out = self.activation(agent_map_out)
         agent_map_out = self.fc_agent_2(agent_map_out)
+        agent_map_out = self.activation(agent_map_out)
         agent_map_out = agent_map_out.view(-1, self.width, self.d_model)
 
         # Feed attention weights to agents
