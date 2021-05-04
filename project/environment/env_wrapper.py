@@ -1,4 +1,3 @@
-import sys
 from typing import List
 
 import torch
@@ -20,14 +19,18 @@ class EnvWrapper:
                  initial_box_places: List[Entity],
                  goal_state_m: Tensor,
                  reward_func,
-                 mask=None
-                 ) -> None:
+                 mask=None) -> None:
+
+        self.initial_state_m = initial_state_m
+        self.initial_state_m_color = initial_state_m_color
+        self.initial_agent_places = initial_agent_places
+        self.initial_box_places = initial_box_places
 
         self.agents = agents_n
         self.action_space_n = action_space_n
+
         self.t0_map = initial_state_m
         self.t0_map_color = initial_state_m_color
-
         self.t0_agent_places = initial_agent_places
         self.t0_box_places = initial_box_places
 
@@ -54,6 +57,10 @@ class EnvWrapper:
         return t1_map, reward, done
 
     def reset(self):
+        self.t0_map = self.initial_state_m
+        self.t0_map_color = self.initial_state_m_color
+        self.t0_agent_places = self.initial_agent_places
+        self.t0_box_places = self.initial_box_places
         return
 
     @jit(nopython=True)
@@ -162,8 +169,8 @@ class EnvWrapper:
         return True
 
     def __agent_row_col(self, index: int):
-        # TODO
-        return 0, 0
+        agent = self.t0_agent_places[index]
+        return agent.row, agent.col
 
     @jit(nopython=True)
     def __act(self, action) -> Tensor:
