@@ -1,7 +1,11 @@
 import torch
 
 
-class MemBuffer:
+class EnvPlanMemBuffer:
+    t=0
+
+
+class AgentMemBuffer:
     t = 0
 
     def __init__(self, max_time, width=50, height=50):
