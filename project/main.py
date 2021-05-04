@@ -1,17 +1,13 @@
 import sys
 
-import torch
-import torch.nn as nn
-
-from agents.ppo_agent import PPOAgent
 from environment.action import Action, action_dict
 from environment.env_wrapper import EnvWrapper
-from models.policy_models import PolicyModel, PolicyModelEncoder
 from utils.preprocess import parse_level_file
 
 
 def debug_print(message):
-    print(message, file=sys.stderr, flush=True)
+    if message is not None:
+        print(message, file=sys.stderr, flush=True)
 
 
 if __name__ == '__main__':
@@ -36,23 +32,25 @@ if __name__ == '__main__':
     initial_state, goal_state = parse_level_file(server_messages)
 
     # PRINT STUFF
-    debug_print(initial_state.level_matrix)
-    debug_print(initial_state.box_places)
-
+    debug_print(initial_state)
     action_space_n = int(len(action_dict))
-    env_wrapper = EnvWrapper(
-        initial_state,
-        goal_state,
-        action_space_n,
-        initial_state.level_matrix,
-        initial_state.color_matrix,
-        initial_state.agent_places,
-        initial_state.box_places,
-        goal_state.level_matrix,
-        nn.Linear(200, 200),
-        initial_state.mask
-    )
+    env_wrapper = EnvWrapper(initial_state, goal_state)
 
+    env_wrapper.t0_state.print()
+    env_wrapper.step([Action.MoveE])
+
+    env_wrapper.t0_state.print()
+    env_wrapper.step([Action.MoveE])
+
+    env_wrapper.t0_state.print()
+    env_wrapper.step([Action.MoveE])
+
+    env_wrapper.t0_state.print()
+    env_wrapper.step([Action.MoveE])
+
+    exit(0)
+
+"""
     debug_print(env_wrapper.action_space_n)
     actor = PolicyModelEncoder(width, height, env_wrapper.action_space_n)
     critic = PolicyModel(width, height)
@@ -78,3 +76,4 @@ if __name__ == '__main__':
             print("|".join(a.name_ for a in joint_action), flush=True)
             # We must read the server's response to not fill up the stdin buffer and block the server.
             response = server_messages.readline()
+"""

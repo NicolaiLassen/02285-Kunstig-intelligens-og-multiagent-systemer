@@ -1,3 +1,4 @@
+import sys
 from typing import List
 
 from environment.entity import Entity
@@ -10,3 +11,8 @@ class LevelState:
         self.matrix = matrix
         self.agents = agents
         self.agents_n = len(agents)
+
+    def print(self):
+        for row in self.matrix:
+            print(row, file=sys.stderr, flush=True)
+        print('', file=sys.stderr, flush=True)
