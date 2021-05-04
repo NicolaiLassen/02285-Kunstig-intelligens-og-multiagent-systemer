@@ -5,6 +5,9 @@ from enum import Enum, unique
 class ActionType(Enum):
     NoOp = 0
     Move = 1
+    Push = 2
+    Pull = 3
+
 
 
 @unique
@@ -48,6 +51,7 @@ class Action(Enum):
     PullWS = ("Pull(W,S)", ActionType.Pull, 0, -1, 1, 0)
     PullWN = ("Pull(W,N)", ActionType.Pull, 0, -1, -1, 0)
 
+
     def __init__(self, name, type, ard, acd, brd, bcd):
         self.name_ = name
         self.type = type
@@ -89,5 +93,4 @@ action_dict = {
     26: Action.PullWW,
     27: Action.PullWN,
     28: Action.PullWS,
-
 }
