@@ -6,7 +6,7 @@ import environment.memory as memory
 from environment.frontier import FrontierBFS, FrontierDFS, FrontierBestFirst
 from environment.graphsearch import search
 from environment.heuristic import HeuristicAStar, HeuristicWeightedAStar, HeuristicGreedy
-from environment.EnvWrapper import State
+from environment.env_wrapper import State
 
 
 class SearchClient:

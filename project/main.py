@@ -2,7 +2,7 @@ import sys
 
 import torch.nn as nn
 
-from environment.EnvWrapper import EnvWrapper
+from environment.env_wrapper import EnvWrapper
 from environment.action import Action
 from utils.preprocess import parse_level_file
 
