@@ -5,12 +5,14 @@ from numba import jit
 from torch import Tensor
 
 from environment.action import Action, ActionType
-from utils.preprocess import Entity
+from utils.preprocess import Entity, LevelState
 
 
 class EnvWrapper:
 
     def __init__(self,
+                 initial_state: LevelState,
+                 goal_state: LevelState,
                  agents_n: int,
                  action_space_n: int,
                  initial_state_m: Tensor,
@@ -20,6 +22,9 @@ class EnvWrapper:
                  goal_state_m: Tensor,
                  reward_func,
                  mask=None) -> None:
+
+        self.initial_state = initial_state
+        self.t0_state = initial_state
 
         self.initial_state_m = initial_state_m
         self.initial_state_m_color = initial_state_m_color
@@ -157,21 +162,51 @@ class EnvWrapper:
         return False
 
     def __is_same_color(self, a_row, a_col, b_row, b_col):
-        # TODO
-        return True
+        return self.t0_state.matrix[a_row][a_col].color == self.t0_state.matrix[b_row][b_col].color
 
     def __is_box(self, row, col):
-        # TODO
-        return True
+        return self.t0_state.matrix[row][col].is_box()
 
     def __is_free(self, row, col):
-        # TODO
-        return True
+        return self.t0_state.matrix[row][col].is_free()
 
     def __agent_row_col(self, index: int):
-        agent = self.t0_agent_places[index]
+        agent = self.t0_state.agents[index]
         return agent.row, agent.col
 
     @jit(nopython=True)
-    def __act(self, action) -> Tensor:
-        return
+    def __act(self, actions: List[Action]) -> Tensor:
+
+        for index, action in enumerate(actions):
+            # Update agent location
+            agent = self.t0_state.agents[index]
+            prev_agent_row = agent.row
+            prev_agent_col = agent.col
+            agent.row = agent.row + action.agent_row_delta
+            agent.col = agent.col + action.agent_col_delta
+            self.t0_state.agents[index] = agent
+
+            # Update level matrix
+            if action.type is ActionType.NoOp:
+                continue
+            elif action.type is ActionType.Move:
+                self.t0_state.matrix[prev_agent_row][prev_agent_col] = Entity(' ', prev_agent_row, prev_agent_col, None)
+                self.t0_state.matrix[agent.row][agent.col] = agent
+            elif action.type is ActionType.Push:
+                box = self.t0_state.matrix[agent.row][agent.col]
+                box.row = box.row + action.box_row_delta
+                box.col = box.row + action.box_col_delta
+                self.t0_state.matrix[prev_agent_row][prev_agent_col] = Entity(' ', prev_agent_row, prev_agent_col, None)
+                self.t0_state.matrix[agent.row][agent.col] = agent
+                self.t0_state.matrix[agent.row + action.box_row_delta][agent.col + action.box_col_delta] = box
+            elif action.type is ActionType.Pull:
+                prev_box_row = prev_agent_row + (action.box_row_delta * -1)
+                prev_box_col = prev_agent_col + (action.box_col_delta * -1)
+                box = self.t0_state.matrix[prev_box_row][prev_box_col]
+                box.row = box.row + action.box_row_delta
+                box.col = box.row + action.box_col_delta
+                self.t0_state.matrix[prev_box_row][prev_box_col] = Entity(' ', prev_agent_row, prev_agent_col, None)
+                self.t0_state.matrix[prev_agent_row][prev_agent_col] = box
+                self.t0_state.matrix[agent.row][agent.col] = agent
+
+        return None

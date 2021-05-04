@@ -40,16 +40,18 @@ if __name__ == '__main__':
     debug_print(initial_state.box_places)
 
     action_space_n = int(len(action_dict))
-    env_wrapper = EnvWrapper(initial_state.num_agents,
-                             action_space_n,
-                             initial_state.level_matrix,
-                             initial_state.color_matrix,
-                             initial_state.agent_places,
-                             initial_state.box_places,
-                             goal_state.level_matrix,
-                             nn.Linear(200, 200),
-                             initial_state.mask
-                             )
+    env_wrapper = EnvWrapper(
+        initial_state,
+        goal_state,
+        action_space_n,
+        initial_state.level_matrix,
+        initial_state.color_matrix,
+        initial_state.agent_places,
+        initial_state.box_places,
+        goal_state.level_matrix,
+        nn.Linear(200, 200),
+        initial_state.mask
+    )
 
     debug_print(env_wrapper.action_space_n)
     actor = PolicyModelEncoder(width, height, env_wrapper.action_space_n)

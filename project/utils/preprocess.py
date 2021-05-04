@@ -1,20 +1,10 @@
-import torch
-
-from environment.color import Color
+from environment.entity import Entity
+from environment.level_state import LevelState
 
 
 def normalize_dist(t):
     # Normalize  # PLZ DON'T BLOW MY GRADIENT
     return (t - t.mean()) / (t.std() + 1e-10)
-
-
-class Entity:
-    def __init__(self, col: int, row: int, type, char, color):
-        self.col = col
-        self.row = row
-        self.type = type
-        self.char = char
-        self.color = color
 
 
 def parse_level_file(level_file):
@@ -24,6 +14,7 @@ def parse_level_file(level_file):
     level_file.readline()  # <name>
     level_file.readline()  # #colors
 
+    # Read color dictionary
     color_dict = {}
     line = level_file.readline()
     while not line.startswith('#'):
@@ -33,13 +24,13 @@ def parse_level_file(level_file):
             color_dict[e] = color
         line = level_file.readline()
 
-    # Read initial state.
+    # parse initial state
     initial_level_lines = read_level_lines(level_file)
-    initial_state = State(initial_level_lines, color_dict)
+    initial_state = parse_level_lines(color_dict, initial_level_lines)
 
-    # Read goal state.
+    # parse goal state
     goal_level_lines = read_level_lines(level_file)
-    goal_state = State(goal_level_lines, color_dict)
+    goal_state = parse_level_lines(color_dict, goal_level_lines)
 
     return initial_state, goal_state
 
@@ -53,31 +44,21 @@ def read_level_lines(file):
     return level_lines
 
 
-class State:
-    def __init__(self, level_lines, color_dict):
-        self.num_rows = len(level_lines)
-        self.num_cols = len(level_lines[0])
-        self.num_agents = 0
-        self.agent_places = []
-        self.box_places = []
+def parse_level_lines(color_dict, level_lines):
+    num_rows = len(level_lines)
+    num_cols = len(level_lines[0])
+    num_agents = 0
+    matrix = [[None for _ in range(num_cols)] for _ in range(num_rows)]
+    agents = []
+    for row, line in enumerate(level_lines):
+        for col, char in enumerate(line):
+            if '0' <= char <= '9':
+                matrix[row][col] = Entity(char, row, col, color_dict[char])
+                agents.append(Entity(char, row, col, color_dict[char]))
+                num_agents += 1
+            elif 'A' <= char <= 'Z':
+                matrix[row][col] = Entity(char, row, col, color_dict[char])
+            else:
+                matrix[row][col] = Entity(char, row, col, None)
 
-        init_mask = torch.zeros(20, 20)
-        init_mask[:self.num_rows,:self.num_cols] = 1
-        self.mask = init_mask
-
-        # max lvl size 50x50
-        self.level_matrix = torch.zeros(50, 50, dtype=torch.float)
-        self.color_matrix = torch.zeros(50, 50, dtype=torch.float)
-        for row, line in enumerate(level_lines):
-            for col, char in enumerate(line):
-                self.level_matrix[row][col] = ord(char)
-                if '0' <= char <= '9' or 'A' <= char <= 'Z':
-                    self.color_matrix[row][col] = Color.from_string(color_dict[char]).value
-                else:
-                    self.color_matrix[row][col] = 0
-
-                if '0' <= char <= '9':
-                    self.num_agents += 1
-                    self.agent_places.append(Entity(col, row, 'box', char, color_dict[char]))
-                elif 'A' <= char <= 'Z':
-                    self.box_places.append(Entity(col, row, 'box', char, color_dict[char]))
+    return LevelState(num_rows, num_cols, matrix, agents)
