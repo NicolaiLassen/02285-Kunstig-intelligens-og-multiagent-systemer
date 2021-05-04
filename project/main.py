@@ -1,25 +1,36 @@
 import argparse
+import sys
 
 from environment import memory
-from environment.searchclient import SearchClient
+from utils.preprocess import parse_level_file
+
+
+def log(message):
+    print(message, file=sys.stderr, flush=True)
+
 
 if __name__ == '__main__':
-    # Program arguments.
     parser = argparse.ArgumentParser(description='Simple client based on state-space graph search.')
     parser.add_argument('--max-memory', metavar='<MB>', type=float, default=2048.0,
                         help='The maximum memory usage allowed in MB (soft limit, default 2048).')
-
-    strategy_group = parser.add_mutually_exclusive_group()
-    strategy_group.add_argument('-bfs', action='store_true', dest='bfs', help='Use the BFS strategy.')
-    strategy_group.add_argument('-dfs', action='store_true', dest='dfs', help='Use the DFS strategy.')
-    strategy_group.add_argument('-astar', action='store_true', dest='astar', help='Use the A* strategy.')
-    strategy_group.add_argument('-wastar', action='store', dest='wastar', nargs='?', type=int, default=False, const=5, help='Use the WA* strategy.')
-    strategy_group.add_argument('-greedy', action='store_true', dest='greedy', help='Use the Greedy strategy.')
-
     args = parser.parse_args()
 
     # Set max memory usage allowed (soft limit).
     memory.max_usage = args.max_memory
 
-    # Run client.
-    SearchClient.main(args)
+    # Use stderr to print to the console.
+    print('SearchClient initializing.', file=sys.stderr, flush=True)
+
+    # Send client name to server.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding='ASCII')
+    print('SearchClient', flush=True)
+
+    server_messages = sys.stdin
+    if hasattr(server_messages, "reconfigure"):
+        server_messages.reconfigure(encoding='ASCII')
+
+    state = parse_level_file(server_messages)
+    log('#This is a comment.')
+    log(state.level_matrix)
+
