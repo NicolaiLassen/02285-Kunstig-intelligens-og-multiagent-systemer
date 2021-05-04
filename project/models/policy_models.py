@@ -52,6 +52,6 @@ class PolicyModelEncoder(nn.Module):
 
         agent_map_out = self.agent_encoder(agent_map)
 
-
-        out = self.fc_out(out)
+        # TODO
+        out = self.fc_out(map_out)
         return self.log_softmax(out)

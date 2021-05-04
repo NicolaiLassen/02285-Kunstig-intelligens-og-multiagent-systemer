@@ -39,8 +39,9 @@ if __name__ == '__main__':
     debug_print(initial_state.level_matrix)
     debug_print(initial_state.box_places)
 
+    action_space_n = int(len(action_dict))
     env_wrapper = EnvWrapper(initial_state.num_agents,
-                             len(action_dict),
+                             action_space_n,
                              initial_state.level_matrix,
                              initial_state.color_matrix,
                              initial_state.agent_places,
@@ -50,8 +51,9 @@ if __name__ == '__main__':
                              initial_state.mask
                              )
 
-    actor = PolicyModelEncoder(width, height, env_wrapper.action_space_n).cuda()
-    critic = PolicyModel(width, height).cuda()
+    debug_print(env_wrapper.action_space_n)
+    actor = PolicyModelEncoder(width, height, env_wrapper.action_space_n)
+    critic = PolicyModel(width, height)
 
     optimizer = torch.optim.Adam([
         {'params': actor.parameters(), 'lr': lr_actor},
@@ -61,7 +63,7 @@ if __name__ == '__main__':
     agent = PPOAgent(env_wrapper, actor, critic, optimizer)
     agent.train(150, 100000)
 
-    plan = [[Action.PushWW]]
+    plan = [[Action.MoveE]]
 
     # Print plan to server.
     if plan is None:

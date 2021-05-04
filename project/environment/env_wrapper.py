@@ -4,16 +4,15 @@ import torch
 from numba import jit
 from torch import Tensor
 
-from environment.action import Action
-from environment.action import ActionType
+from environment.action import Action, ActionType
 from utils.preprocess import Entity
 
 
 class EnvWrapper:
 
     def __init__(self,
-                 agents_n,
-                 action_space_n,
+                 agents_n: int,
+                 action_space_n: int,
                  initial_state_m: Tensor,
                  initial_state_m_color: Tensor,
                  initial_agent_places: List[Entity],
@@ -24,7 +23,7 @@ class EnvWrapper:
                  ) -> None:
 
         self.agents_n = agents_n
-        self.action_space_n = action_space_n,
+        self.action_space_n = action_space_n
         self.t0_map = initial_state_m
         self.t0_map_color = initial_state_m_color
 
