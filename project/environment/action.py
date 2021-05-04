@@ -1,4 +1,7 @@
 from enum import Enum, unique
+from typing import List
+
+from torch import Tensor
 
 
 @unique
@@ -92,3 +95,6 @@ action_dict = {
     27: Action.PullWN,
     28: Action.PullWS,
 }
+
+def idxs_to_actions(actions: List[Tensor]) -> List[Action]:
+    return [action_dict[a.item()] for a in actions]

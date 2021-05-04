@@ -36,42 +36,40 @@ class PolicyModelEncoder(nn.Module):
         self.width = width
         self.height = height
 
-        self.scale_down_encoder = SqueezeNet(1, width * height)
-        self.embed = nn.Embedding(32, 64)
+        self.d_model = 64
 
-        self.map_encoder_layer = nn.TransformerEncoderLayer(d_model=64, nhead=2)
+        self.fc_map_1 = nn.Linear(width * height, self.d_model * width)
+
+        self.map_encoder_layer = nn.TransformerEncoderLayer(d_model=self.d_model, nhead=2)
         self.map_encoder = nn.TransformerEncoder(self.map_encoder_layer, num_layers=3)
 
         self.fc_agent_1 = nn.Linear(2, width * height)
-        self.fc_agent_2 = nn.Linear(width * height, width * height)
+        self.fc_agent_2 = nn.Linear(width * height, width * self.d_model)
 
-        self.fc_1 = nn.Linear(width * height, width)
+        self.fc_1 = nn.Linear(width * self.d_model, width)
         self.fc_out = nn.Linear(width, action_dim)
         self.activation = nn.ReLU()
         self.log_softmax = nn.LogSoftmax(dim=1)
 
     def forward(self, map, agent_map, map_mask=None):
-        map_out = self.embed(map)
-        print(map_out.shape)
+
+        map_out = map.view(-1)
+        map_out = self.fc_map_1(map_out)
 
         if map_mask is not None:
             map_mask = map_mask.view(1, self.width * self.height)
 
-        map_out = map.view(1, -1, self.width * self.height)
-        map_out = map_out.permute(1, 0, 2)
-        print(map_out.shape)
-        print(map_mask.shape)
-        map_out = self.map_encoder(map_out, src_key_padding_mask=map_mask)
-        map_out = map_out.view(self.width, self.height)
+        map_out = map_out.view(self.width, -1, self.d_model)
+        map_out = self.map_encoder(map_out, src_key_padding_mask=None).squeeze(1) # map_mask)
 
         agent_map_out = self.fc_agent_1(agent_map)
         self.activation(agent_map_out)
         agent_map_out = self.fc_agent_2(agent_map_out)
-        agent_map_out = agent_map_out.view(-1, self.width, self.height)
+        agent_map_out = agent_map_out.view(-1, self.width, self.d_model)
 
         # Feed attention weights to agents
         out = torch.einsum("jk,tjk -> tjk", map_out, agent_map_out)
-        out = out.view(-1, self.width * self.height)
+        out = out.view(-1, self.width * self.d_model)
         out = self.fc_1(out)
         out = self.activation(out)
         out = self.fc_out(out)

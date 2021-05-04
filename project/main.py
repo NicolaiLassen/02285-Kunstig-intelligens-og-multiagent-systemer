@@ -1,7 +1,11 @@
 import sys
 
+import torch
+
+from agents.ppo_agent import PPOAgent
 from environment.action import Action, action_dict
 from environment.env_wrapper import EnvWrapper
+from models.policy_models import PolicyModelEncoder, PolicyModel
 from utils.preprocess import parse_level_file
 
 
@@ -34,23 +38,8 @@ if __name__ == '__main__':
     # PRINT STUFF
     debug_print(initial_state)
     action_space_n = int(len(action_dict))
-    env_wrapper = EnvWrapper(initial_state, goal_state)
+    env_wrapper = EnvWrapper(len(action_dict), initial_state, goal_state)
 
-    env_wrapper.t0_state.print()
-    env_wrapper.step([Action.MoveE])
-
-    env_wrapper.t0_state.print()
-    env_wrapper.step([Action.MoveE])
-
-    env_wrapper.t0_state.print()
-    env_wrapper.step([Action.MoveE])
-
-    env_wrapper.t0_state.print()
-    env_wrapper.step([Action.MoveE])
-
-    exit(0)
-
-"""
     debug_print(env_wrapper.action_space_n)
     actor = PolicyModelEncoder(width, height, env_wrapper.action_space_n)
     critic = PolicyModel(width, height)
@@ -61,9 +50,11 @@ if __name__ == '__main__':
     ])
 
     agent = PPOAgent(env_wrapper, actor, critic, optimizer)
-    agent.train(150, 100000)
+    agent.train(100,10000)
 
     plan = [[Action.MoveE]]
+
+    # train
 
     # Print plan to server.
     if plan is None:
@@ -76,4 +67,3 @@ if __name__ == '__main__':
             print("|".join(a.name_ for a in joint_action), flush=True)
             # We must read the server's response to not fill up the stdin buffer and block the server.
             response = server_messages.readline()
-"""

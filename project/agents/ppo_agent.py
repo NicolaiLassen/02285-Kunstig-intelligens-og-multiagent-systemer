@@ -1,4 +1,5 @@
 import copy
+import sys
 
 import torch
 import torch.nn as nn
@@ -6,6 +7,7 @@ import torch.optim as optim
 from torch.distributions import Categorical
 
 from agents.agent_base import BaseAgent
+from environment.action import idxs_to_actions
 from environment.env_wrapper import EnvWrapper
 from models.curiosity import ICM
 from models.policy_models import PolicyModelEncoder
@@ -55,18 +57,31 @@ class PPOAgent(BaseAgent):
             for ep_T in range(max_Time + 1):
                 t += 1
                 s = s1
-                actions, log_probs = self.act(s)
-                s1, r, d, _ = self.env.step(actions)
-                self.mem_buffer.set_next(s, r, actions, log_probs, d, self.mem_buffer.get_mask(d))
-                if t % update_every == 0:
-                    self.__update()
+                action_idxs, log_probs = self.act(s)
+
+                actions = idxs_to_actions(action_idxs)
+
+                print(actions[0]._name_, file=sys.stderr, flush=True)
+
+                temp = self.env.step(actions)
+                if temp is None:
+                    continue
+
+                s1, r, d = temp
+
+                ## TODO
+
+                # self.mem_buffer.set_next(s, r, actions, log_probs, d, self.mem_buffer.get_mask(d))
+                # if t % update_every == 0:
+                #     self.__update()
 
     def act(self, state):
-        actions_logs_prob = self.actor_old(state, self.env.mask)
+        actions_logs_prob = self.actor_old(state[0], state[1], self.env.mask)
+
         actions_dist = Categorical(actions_logs_prob)
         actions = actions_dist.sample()
         action_dist_log_probs = actions_dist.log_prob(actions)
-        return actions.detach().item(), action_dist_log_probs.detach()
+        return actions.detach(), action_dist_log_probs.detach()
 
     def save_actor(self):
         print("save_actor")
@@ -131,8 +146,15 @@ class PPOAgent(BaseAgent):
 
 if __name__ == '__main__':
     a = torch.randn(50, 50)
+    a[20:50, 20:50] = 0
     b = torch.randn(8, 2)
     m = torch.randn(50, 50)
     model = PolicyModelEncoder(50, 50, 29)
 
-    print(model(a,b,m))
+    log_probs = model(a, b, m)
+
+    actions_dist = Categorical(log_probs)
+    actions = actions_dist.sample()
+    action_dist_log_probs = actions_dist.log_prob(actions)
+
+    print(actions)

@@ -1,3 +1,6 @@
+import torch
+from numba import jit
+
 from environment.entity import Entity
 from environment.level_state import LevelState
 
@@ -44,21 +47,27 @@ def read_level_lines(file):
     return level_lines
 
 
-def parse_level_lines(color_dict, level_lines):
+def parse_level_lines(color_dict, level_lines, width=50, height=50):
     num_rows = len(level_lines)
     num_cols = len(level_lines[0])
-    num_agents = 0
-    matrix = [[None for _ in range(num_cols)] for _ in range(num_rows)]
+    level = [[None for _ in range(num_cols)] for _ in range(num_rows)]
+    level_t = torch.zeros(width, height)
     agents = []
+
     for row, line in enumerate(level_lines):
         for col, char in enumerate(line):
+            level_t[row][col] = ord(char)
             if '0' <= char <= '9':
-                matrix[row][col] = Entity(char, row, col, color_dict[char])
+                level[row][col] = Entity(char, row, col, color_dict[char])
                 agents.append(Entity(char, row, col, color_dict[char]))
-                num_agents += 1
-            elif 'A' <= char <= 'Z':
-                matrix[row][col] = Entity(char, row, col, color_dict[char])
-            else:
-                matrix[row][col] = Entity(char, row, col, None)
 
-    return LevelState(num_rows, num_cols, matrix, agents)
+            elif 'A' <= char <= 'Z':
+                level[row][col] = Entity(char, row, col, color_dict[char])
+            else:
+                level[row][col] = Entity(char, row, col, None)
+
+    agents_t = torch.zeros(len(agents), 2)
+    for i, agent in enumerate(agents):
+        agents_t[i] = torch.tensor([agent.col, agent.row])
+
+    return LevelState(num_rows, num_cols, level, agents, level_t, agents_t)

@@ -1,6 +1,7 @@
 import sys
-from typing import List
+from typing import List, Tuple
 
+import torch
 from torch import Tensor
 
 from environment.action import Action, ActionType
@@ -30,44 +31,42 @@ class EnvWrapper:
 
     def __init__(
             self,
+            action_space_n: int,
             initial_state: LevelState,
             goal_state: LevelState
     ) -> None:
+
+        self.action_space_n = action_space_n
         self.agents_n = len(initial_state.agents)
+        self.mask = None
 
         self.initial_state = initial_state
+        self.goal_state = goal_state
+
         self.t0_state = initial_state
 
-    def step(self, actions: List[Action]):
+    def step(self, actions: List[Action]) -> Tuple[List[Tensor], int, int]:
 
         for index, action in enumerate(actions):
             if not self.__is_applicable(index, action):
-                print('#action not applicable\n{}: {}'.format(index, action), file=sys.stderr, flush=True)
+                # print('#action not applicable\n{}: {}'.format(index, action), file=sys.stderr, flush=True)
                 return None
 
         if self.__is_conflict(actions):
-            print('#actions contain conflict\n{}'.format(actions), file=sys.stderr, flush=True)
+            # print('#actions contain conflict\n{}'.format(actions), file=sys.stderr, flush=True)
             return None
 
-        self.__act(actions)
+        level_s1, agents_s1 = self.__act(actions)
+        done = self.__check_done(level_s1)
+        reward = 0
+        return [level_s1, agents_s1], reward, done
 
-    # reward = self.reward_func(t1_map)
-    #        reward = 0
-    #        done = self.__check_done(t1_map)
-    #        self.t0_map = t1_map
+    def reset(self) -> List[Tensor]:
+        self.t0_state = self.initial_state
+        return [self.t0_state.level_t, self.t0_state.agents_t]
 
-    #       return t1_map, reward, done
-
-    def reset(self):
-        # self.t0_map = self.initial_state_m
-        # self.t0_map_color = self.initial_state_m_color
-        # self.t0_agent_places = self.initial_agent_places
-        # self.t0_box_places = self.initial_box_places
-        return
-
-    def __check_done(self, next_state: Tensor):
-        return False
-        # return torch.eq(next_state, self.t_T)
+    def __check_done(self, s1: Tensor) -> bool:
+        return torch.equal(s1, self.goal_state.level_t)
 
     def __is_applicable(self, index: int, action: Action):
         agent_row, agent_col = self.__agent_row_col(index)
@@ -92,20 +91,17 @@ class EnvWrapper:
             next_box_row = next_agent_row + action.box_row_delta
             next_box_col = next_agent_col + action.box_col_delta
             return self.__is_free(next_box_row, next_box_col)
-
         elif action.type is ActionType.Pull:
             # check that next agent position is free
             next_agent_row = agent_row + action.agent_row_delta
             next_agent_col = agent_col + action.agent_col_delta
             if not self.__is_free(next_agent_row, next_agent_col):
                 return False
-
             # check that next box position is free
             box_row = next_agent_row + (action.box_row_delta * -1)
             box_col = next_agent_col + (action.box_col_delta * -1)
             if not self.__is_box(box_row, box_col):
                 return False
-
             # check that agent and box is same color
             return self.__is_same_color(agent_row, agent_col, box_row, box_col)
         else:
@@ -161,19 +157,19 @@ class EnvWrapper:
         return False
 
     def __is_same_color(self, a_row, a_col, b_row, b_col):
-        return self.t0_state.matrix[a_row][a_col].color == self.t0_state.matrix[b_row][b_col].color
+        return self.t0_state.level[a_row][a_col].color == self.t0_state.level[b_row][b_col].color
 
     def __is_box(self, row, col):
-        return self.t0_state.matrix[row][col].is_box()
+        return self.t0_state.level[row][col].is_box()
 
     def __is_free(self, row, col):
-        return self.t0_state.matrix[row][col].is_free()
+        return self.t0_state.level[row][col].is_free()
 
     def __agent_row_col(self, index: int):
         agent = self.t0_state.agents[index]
         return agent.row, agent.col
 
-    def __act(self, actions: List[Action]) -> Tensor:
+    def __act(self, actions: List[Action]) -> Tuple[Tensor, Tensor]:
         for index, action in enumerate(actions):
             # Update agent location
             agent = self.t0_state.agents[index]
@@ -187,23 +183,24 @@ class EnvWrapper:
             if action.type is ActionType.NoOp:
                 continue
             elif action.type is ActionType.Move:
-                self.t0_state.matrix[prev_agent_row][prev_agent_col] = Entity(' ', prev_agent_row, prev_agent_col, None)
-                self.t0_state.matrix[agent.row][agent.col] = agent
+                self.t0_state.level[prev_agent_row][prev_agent_col] = Entity(' ', prev_agent_row, prev_agent_col, None)
+                self.t0_state.level[agent.row][agent.col] = agent
             elif action.type is ActionType.Push:
-                box = self.t0_state.matrix[agent.row][agent.col]
+                box = self.t0_state.level[agent.row][agent.col]
                 box.row = box.row + action.box_row_delta
                 box.col = box.row + action.box_col_delta
-                self.t0_state.matrix[prev_agent_row][prev_agent_col] = Entity(' ', prev_agent_row, prev_agent_col, None)
-                self.t0_state.matrix[agent.row][agent.col] = agent
-                self.t0_state.matrix[agent.row + action.box_row_delta][agent.col + action.box_col_delta] = box
+                self.t0_state.level[prev_agent_row][prev_agent_col] = Entity(' ', prev_agent_row, prev_agent_col, None)
+                self.t0_state.level[agent.row][agent.col] = agent
+                self.t0_state.level[agent.row + action.box_row_delta][agent.col + action.box_col_delta] = box
             elif action.type is ActionType.Pull:
                 prev_box_row = prev_agent_row + (action.box_row_delta * -1)
                 prev_box_col = prev_agent_col + (action.box_col_delta * -1)
-                box = self.t0_state.matrix[prev_box_row][prev_box_col]
+                box = self.t0_state.level[prev_box_row][prev_box_col]
                 box.row = box.row + action.box_row_delta
                 box.col = box.row + action.box_col_delta
-                self.t0_state.matrix[prev_box_row][prev_box_col] = Entity(' ', prev_agent_row, prev_agent_col, None)
-                self.t0_state.matrix[prev_agent_row][prev_agent_col] = box
-                self.t0_state.matrix[agent.row][agent.col] = agent
+                self.t0_state.level[prev_box_row][prev_box_col] = Entity(' ', prev_agent_row, prev_agent_col, None)
+                self.t0_state.level[prev_agent_row][prev_agent_col] = box
+                self.t0_state.level[agent.row][agent.col] = agent
 
-        return None
+        ## TODO
+        return self.t0_state.level_t, self.t0_state.agents_t
