@@ -2,8 +2,6 @@
 import torch
 from torch import nn
 
-from models.SqueezeNet import SqueezeNet
-
 
 class PolicyModel(nn.Module):
     def __init__(self, width: int, height: int, action_dim: int = 1):
@@ -49,18 +47,14 @@ class PolicyModelEncoder(nn.Module):
         self.fc_1 = nn.Linear(width * self.d_model, width)
         self.fc_out = nn.Linear(width, action_dim)
         self.activation = nn.ReLU()
-        self.log_softmax = nn.LogSoftmax(dim=1)
+        self.log_softmax = nn.LogSoftmax(dim=-1)
 
     def forward(self, map, agent_map, map_mask=None):
-
-        map_out = map.view(-1)
+        map_out = map.view(-1, self.width * self.height)
         map_out = self.fc_map_1(map_out)
 
-        if map_mask is not None:
-            map_mask = map_mask.view(1, self.width * self.height)
-
         map_out = map_out.view(self.width, -1, self.d_model)
-        map_out = self.map_encoder(map_out, src_key_padding_mask=None).squeeze(1) # map_mask)
+        map_out = self.map_encoder(map_out, src_key_padding_mask=None).transpose(0, 1)  # MASK
 
         agent_map_out = self.fc_agent_1(agent_map)
         self.activation(agent_map_out)
@@ -68,8 +62,8 @@ class PolicyModelEncoder(nn.Module):
         agent_map_out = agent_map_out.view(-1, self.width, self.d_model)
 
         # Feed attention weights to agents
-        out = torch.einsum("jk,tjk -> tjk", map_out, agent_map_out)
-        out = out.view(-1, self.width * self.d_model)
+        out = torch.einsum("ijk,tjk -> tjk", map_out, agent_map_out)
+        out = out.view(map.size(0), -1, self.width * self.d_model)
         out = self.fc_1(out)
         out = self.activation(out)
         out = self.fc_out(out)

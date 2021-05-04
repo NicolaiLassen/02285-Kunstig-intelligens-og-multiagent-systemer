@@ -58,18 +58,17 @@ class PPOAgent(BaseAgent):
                 t += 1
                 s = s1
                 action_idxs, log_probs = self.act(s)
-
                 actions = idxs_to_actions(action_idxs)
 
                 print(actions[0]._name_, file=sys.stderr, flush=True)
 
+                ## TODO
+                ## FIX THIS SHIT
                 temp = self.env.step(actions)
                 if temp is None:
                     continue
 
                 s1, r, d = temp
-
-                ## TODO
 
                 # self.mem_buffer.set_next(s, r, actions, log_probs, d, self.mem_buffer.get_mask(d))
                 # if t % update_every == 0:
@@ -77,7 +76,6 @@ class PPOAgent(BaseAgent):
 
     def act(self, state):
         actions_logs_prob = self.actor_old(state[0], state[1], self.env.mask)
-
         actions_dist = Categorical(actions_logs_prob)
         actions = actions_dist.sample()
         action_dist_log_probs = actions_dist.log_prob(actions)
@@ -144,14 +142,14 @@ class PPOAgent(BaseAgent):
         return torch.min(r_T_theta * R_T, r_T_c_theta * R_T).mean()  # E
 
 
+# TEST
 if __name__ == '__main__':
-    a = torch.randn(50, 50)
+    a = torch.randn(10, 50, 50)
     a[20:50, 20:50] = 0
-    b = torch.randn(8, 2)
-    m = torch.randn(50, 50)
+    b = torch.randn(10, 8, 2)
     model = PolicyModelEncoder(50, 50, 29)
 
-    log_probs = model(a, b, m)
+    log_probs = model(a, b)
 
     actions_dist = Categorical(log_probs)
     actions = actions_dist.sample()
