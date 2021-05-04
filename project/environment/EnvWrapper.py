@@ -1,9 +1,11 @@
+from typing import List
+
 import torch
 import torch.nn as nn
 from numba import jit
 from torch import Tensor
 
-from environment.action import Action
+from environment.action import Action, ActionType
 
 
 class EnvWrapper:
@@ -25,10 +27,13 @@ class EnvWrapper:
         self.reward_model = reward_model
 
     @jit(nopython=True)
-    def step(self, actions: Action):
+    def step(self, actions: List[Action]):
 
-        if self.__is_not_applicable(actions) or \
-                self.__is_conflict(actions):
+        for action in actions:
+            if not self.__is_applicable(action):
+                return None
+
+        if self.__is_conflict(actions):
             return None
 
         t1_map, t1_map_color, t1_state_v = self.__act(actions)
@@ -44,17 +49,110 @@ class EnvWrapper:
         return torch.eq(next_state, self.t_T)
 
     @jit(nopython=True)
-    def __is_not_applicable(self, actions):
-        return False
+    def __is_applicable(self, index: int, action: Action):
+        agent_row, agent_col = self.__agent_row_col(index)
+
+        if action.type is ActionType.NoOp:
+            return True
+        elif action.type is ActionType.Move:
+            # check that next position is free
+            next_agent_row = agent_row + action.agent_row_delta
+            next_agent_col = agent_col + action.agent_col_delta
+            return self.__is_free(next_agent_row, next_agent_col)
+        elif action.type is ActionType.Push:
+            # check that next agent position is box
+            next_agent_row = agent_row + action.agent_row_delta
+            next_agent_col = agent_col + action.agent_col_delta
+            if not self.__is_box(next_agent_row, next_agent_col):
+                return False
+            # check that agent and box is same color
+            if not self.__is_same_color(agent_row, agent_col, next_agent_row, next_agent_col):
+                return False
+            # check that next box position is free
+            next_box_row = next_agent_row + action.box_row_delta
+            next_box_col = next_agent_col + action.box_col_delta
+            return self.__is_free(next_box_row, next_box_col)
+
+        elif action.type is ActionType.Pull:
+            # check that next agent position is free
+            next_agent_row = agent_row + action.agent_row_delta
+            next_agent_col = agent_col + action.agent_col_delta
+            if not self.__is_free(next_agent_row, next_agent_col):
+                return False
+
+            # check that next box position is free
+            box_row = next_agent_row + (action.box_row_delta * -1)
+            box_col = next_agent_col + (action.box_col_delta * -1)
+            if not self.__is_box(box_row, box_col):
+                return False
+
+            # check that agent and box is same color
+            return self.__is_same_color(agent_row, agent_col, box_row, box_col)
+        else:
+            return False
 
     @jit(nopython=True)
-    def __is_conflict(self, actions):
+    def __is_conflict(self, actions: List[Action]):
+        num_agents = 0
 
-        for a1 in self.agents:
-            for a2 in self.agents:
-                print()
+        next_agent_rows = [0 for _ in range(num_agents)]
+        next_agent_cols = [0 for _ in range(num_agents)]
+        box_rows = [0 for _ in range(num_agents)]
+        box_cols = [0 for _ in range(num_agents)]
+
+        for i in range(num_agents):
+            agent_row, agent_col = self.__agent_row_col(i)
+            action = actions[i]
+            if action.type is ActionType.NoOp:
+                continue
+            elif action.type is ActionType.Move:
+                next_agent_rows[i] = agent_row + action.agent_row_delta
+                next_agent_cols[i] = agent_col + action.agent_col_delta
+            elif action.type is ActionType.Push:
+                next_agent_rows[i] = agent_row + action.agent_row_delta
+                next_agent_cols[i] = agent_col + action.agent_col_delta
+                box_rows[i] = next_agent_rows[i]
+                box_cols[i] = next_agent_cols[i]
+
+            elif action.type is ActionType.Pull:
+                next_agent_rows[i] = agent_row + action.agent_row_delta
+                next_agent_cols[i] = agent_col + action.agent_col_delta
+                box_rows[i] = agent_row + (action.box_row_delta * -1)
+                box_cols[i] = agent_col + (action.box_col_delta * -1)
+
+        for a1 in range(num_agents):
+            if actions[a1].type is ActionType.NoOp:
+                continue
+
+            for a2 in range(num_agents):
+                if actions[a2].type is ActionType.NoOp:
+                    continue
+
+                # is moving same box
+                if box_rows[a1] == box_rows[a2] and box_cols[a1] == box_cols[a2]:
+                    return True
+
+                # is moving into same position
+                if next_agent_rows[a1] == next_agent_rows[a2] and next_agent_cols[a1] == next_agent_cols[a2]:
+                    return True
 
         return False
+
+    def __is_same_color(self, a_row, a_col, b_row, b_col):
+        # TODO
+        return True
+
+    def __is_box(self, row, col):
+        # TODO
+        return True
+
+    def __is_free(self, row, col):
+        # TODO
+        return True
+
+    def __agent_row_col(self, index: int):
+        # TODO
+        return 0, 0
 
     @jit(nopython=True)
     def __act(self, action) -> Tensor:
