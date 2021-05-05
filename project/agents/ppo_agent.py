@@ -69,15 +69,14 @@ class PPOAgent(BaseAgent):
                 actions = idxs_to_actions(action_idxs)
                 ## TODO
                 ## FIX THIS SHIT
+                print(actions[0]._name_, file=sys.stderr, flush=True)
+
                 temp = self.env.step(actions)
                 if temp is None:
                     continue
 
                 s1, r, d = temp
-
-                print(actions[0]._name_, file=sys.stderr, flush=True)
                 print(d, file=sys.stderr, flush=True)
-
 
                 ## TODO BUFFER NEW
                 # self.mem_buffer.set_next(s, r, actions, log_probs, d, self.mem_buffer.get_mask(d))
