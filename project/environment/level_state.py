@@ -21,6 +21,7 @@ class LevelState:
         self.agents = agents
         self.agents_n = len(agents)
 
+        # TODO NAMING
         self.level_t = level_t
         self.agents_t = agents_t
 

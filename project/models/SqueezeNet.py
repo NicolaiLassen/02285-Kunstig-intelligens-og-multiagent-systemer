@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.init as init
 
+
 # https://arxiv.org/abs/1602.07360
 # https://github.com/pytorch/vision/blob/master/torchvision/models/squeezenet.py
 class Fire(nn.Module):
