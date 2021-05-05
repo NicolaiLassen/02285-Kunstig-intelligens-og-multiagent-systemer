@@ -1,30 +1,11 @@
 import sys
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 import torch
 from torch import Tensor
 
 from environment.action import Action, ActionType
 from utils.preprocess import Entity, LevelState
-
-"""
-        self.initial_state_m = initial_state_m
-        self.initial_state_m_color = initial_state_m_color
-        self.initial_agent_places = initial_agent_places
-        self.initial_box_places = initial_box_places
-
-        self.agents_n = agents_n
-        self.action_space_n = action_space_n
-
-        self.t0_map = initial_state_m
-        self.t0_map_color = initial_state_m_color
-        self.t0_agent_places = initial_agent_places
-        self.t0_box_places = initial_box_places
-
-        self.t_T = goal_state_m
-        self.reward_func = reward_func
-        self.mask = mask
-"""
 
 
 class EnvWrapper:
@@ -45,8 +26,9 @@ class EnvWrapper:
 
         self.t0_state = initial_state
 
-    def step(self, actions: List[Action]) -> Tuple[List[Tensor], int, int]:
+    def step(self, actions: List[Action]) -> Optional[Tuple[List[Tensor], int, bool]]:
 
+        # TODO FIX NONE
         for index, action in enumerate(actions):
             if not self.__is_applicable(index, action):
                 # print('#action not applicable\n{}: {}'.format(index, action), file=sys.stderr, flush=True)

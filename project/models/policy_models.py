@@ -1,6 +1,7 @@
 # Ref https://github.com/lukemelas/EfficientNet-PyTorch
 import torch
-from torch import nn
+from torch import nn, Tensor
+import torch.nn.functional as F
 
 
 class PolicyModel(nn.Module):
@@ -37,7 +38,7 @@ class PolicyModelEncoder(nn.Module):
 
         self.fc_map_1 = nn.Linear(width * height, self.d_model * width)
         self.map_encoder_layer = nn.TransformerEncoderLayer(d_model=self.d_model, nhead=2)
-        self.map_encoder = nn.TransformerEncoder(self.map_encoder_layer, num_layers=3)
+        self.map_encoder = nn.TransformerEncoder(self.map_encoder_layer, num_layers=2)
 
         self.fc_agent_1 = nn.Linear(2, width * height)
         self.fc_agent_2 = nn.Linear(width * height, width * self.d_model)
@@ -45,9 +46,8 @@ class PolicyModelEncoder(nn.Module):
         self.fc_1 = nn.Linear(width * self.d_model, width)
         self.fc_out = nn.Linear(width, action_dim)
         self.activation = nn.ReLU()
-        self.log_softmax = nn.LogSoftmax(dim=-1)
 
-    def forward(self, map, agent_map, map_mask=None):
+    def forward(self, map: Tensor, agent_map: Tensor, map_mask=None):
         map_out = map.view(-1, self.width * self.height)
         map_out = self.fc_map_1(map_out)
         map_out = self.activation(map_out)
@@ -60,12 +60,10 @@ class PolicyModelEncoder(nn.Module):
         agent_map_out = self.activation(agent_map_out)
         agent_map_out = agent_map_out.view(-1, self.width, self.d_model)
 
-        # Feed attention weights to agents
+        # Feed attention weights to agent embeds
         out = torch.einsum("ijk,tjk -> tjk", map_out, agent_map_out)
-        out = out.view(map.size(0), -1, self.width * self.d_model)
+        out = out.view(map.shape[0], -1, self.width * self.d_model)
         out = self.fc_1(out)
         out = self.activation(out)
         out = self.fc_out(out)
-        out = self.activation(out)
-
-        return self.log_softmax(out)
+        return F.log_softmax(out, dim=-1)

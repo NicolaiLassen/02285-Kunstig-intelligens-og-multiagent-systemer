@@ -1,5 +1,4 @@
 import torch
-from numba import jit
 
 from environment.entity import Entity
 from environment.level_state import LevelState
@@ -69,5 +68,7 @@ def parse_level_lines(color_dict, level_lines, width=50, height=50):
     agents_t = torch.zeros(len(agents), 2)
     for i, agent in enumerate(agents):
         agents_t[i] = torch.tensor([agent.col, agent.row])
+
+    level_t = normalize_dist(level_t) # NORM
 
     return LevelState(num_rows, num_cols, level, agents, level_t, agents_t)

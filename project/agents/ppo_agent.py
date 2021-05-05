@@ -1,9 +1,11 @@
 import copy
 import sys
+from typing import List, Tuple
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch import Tensor
 from torch.distributions import Categorical
 
 from agents.agent_base import BaseAgent
@@ -16,6 +18,11 @@ from utils import mem_buffer
 from utils.mem_buffer import AgentMemBuffer
 from utils.preprocess import normalize_dist
 
+
+# TODO: WE NEED TO BE DONE
+# TODO: MEM BUFFER
+# TODO: REWARD
+# TODO: Optim code performance
 
 class PPOAgent(BaseAgent):
     mem_buffer: mem_buffer = None
@@ -51,17 +58,15 @@ class PPOAgent(BaseAgent):
         self.mem_buffer = AgentMemBuffer(max_Time)
         update_every = max_Time * self.n_max_Times_update  # TODO: BATCH
         t = 0
-        s1 = self.env.reset()
+
         while t < max_Time_steps:
             self.save_actor()
+            s1 = self.env.reset()
             for ep_T in range(max_Time + 1):
                 t += 1
                 s = s1
                 action_idxs, log_probs = self.act(s)
                 actions = idxs_to_actions(action_idxs)
-
-                print(actions[0]._name_, file=sys.stderr, flush=True)
-
                 ## TODO
                 ## FIX THIS SHIT
                 temp = self.env.step(actions)
@@ -70,20 +75,26 @@ class PPOAgent(BaseAgent):
 
                 s1, r, d = temp
 
+                print(actions[0]._name_, file=sys.stderr, flush=True)
+                print(d, file=sys.stderr, flush=True)
+
+
                 ## TODO BUFFER NEW
                 # self.mem_buffer.set_next(s, r, actions, log_probs, d, self.mem_buffer.get_mask(d))
-                # if t % update_every == 0:
-                #     self.__update()
+                if t % update_every == 0:
+                    self.__update()
 
-    def act(self, state):
-        actions_logs_prob = self.actor_old(state[0].unsqueeze(0), state[1].unsqueeze(0), self.env.mask)
+    def act(self, state) -> Tuple[List[Tensor], List[float]]:
+        actions_logs_prob = self.actor_old(state[0].unsqueeze(0),
+                                           state[1].unsqueeze(0),
+                                           self.env.mask)
         actions_dist = Categorical(actions_logs_prob)
         actions = actions_dist.sample()
         action_dist_log_probs = actions_dist.log_prob(actions)
         return actions.detach(), action_dist_log_probs.detach()
 
     def save_actor(self):
-        print("save_actor")
+        return
         # torch.save(self.actor_old.state_dict(), "encoder_actor.ckpt")
 
     def load_actor(self, path):
@@ -118,11 +129,15 @@ class PPOAgent(BaseAgent):
         self.mem_buffer.clear()
 
     def __eval(self):
-        actions_prob = self.actor(self.mem_buffer.states, self.env.mask)
-        dist = Categorical(actions_prob)
-        action_log_probs = dist.log_prob(self.mem_buffer.actions)
+        ## TODO NOT python lists
+        actions_prob = self.actor(self.mem_buffer.states[0],
+                                  self.mem_buffer.states[1],
+                                  self.env.mask)
+
+        actions_dist = Categorical(actions_prob)
+        action_log_probs = actions_dist.log_prob(self.mem_buffer.actions)
         state_values = self.critic(self.mem_buffer.states)
-        return action_log_probs, state_values, dist.entropy()  # Bregman divergence
+        return action_log_probs, state_values, actions_dist.entropy()  # Bregman divergence
 
     def __advantages(self, state_values):
         discounted_rewards = []
@@ -151,9 +166,9 @@ if __name__ == '__main__':
     model = PolicyModelEncoder(50, 50, 29)
 
     log_probs = model(a, b)
+    print(log_probs)
 
     actions_dist = Categorical(log_probs)
     actions = actions_dist.sample()
     action_dist_log_probs = actions_dist.log_prob(actions)
-
     print(actions)

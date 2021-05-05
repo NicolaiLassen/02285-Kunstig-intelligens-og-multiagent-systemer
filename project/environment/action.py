@@ -96,5 +96,6 @@ action_dict = {
     28: Action.PullWS,
 }
 
+
 def idxs_to_actions(actions: List[Tensor]) -> List[Action]:
     return [action_dict[a.item()] for a in actions]
