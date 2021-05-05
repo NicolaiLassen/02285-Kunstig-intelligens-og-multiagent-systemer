@@ -17,8 +17,8 @@ class PolicyModel(nn.Module):
         self.fc_out = nn.Linear(height, action_dim)
         self.activation = nn.ReLU()
 
-    def forward(self, x):
-        out = x.view(-1, self.motion_blur * self.width * self.height)
+    def forward(self, map: Tensor) -> Tensor:
+        out = map.view(-1, self.width * self.height)
         out = self.fc_1(out)
         out = self.activation(out)
         out = self.fc_2(out)
@@ -47,7 +47,10 @@ class PolicyModelEncoder(nn.Module):
         self.fc_out = nn.Linear(width, action_dim)
         self.activation = nn.ReLU()
 
-    def forward(self, map: Tensor, agent_map: Tensor, color_map: Tensor = None, map_mask: Tensor = None):
+    def forward(self, map: Tensor,
+                agent_map: Tensor,
+                color_map: Tensor = None,
+                map_mask: Tensor = None) -> Tensor:
         # map pass
         map_out = map.view(-1, self.width * self.height)
         map_out = self.fc_map_1(map_out)
