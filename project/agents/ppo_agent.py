@@ -12,7 +12,7 @@ from agents.agent_base import BaseAgent
 from environment.action import idxs_to_actions
 from environment.env_wrapper import EnvWrapper
 from models.curiosity import ICM
-from models.policy_models import PolicyModelEncoder
+from models.policy_models import PolicyModelEncoder, PolicyModel
 from utils import mem_buffer
 # PPO Actor Critic
 from utils.mem_buffer import AgentMemBuffer
@@ -23,6 +23,7 @@ from utils.preprocess import normalize_dist
 # TODO: MEM BUFFER
 # TODO: REWARD
 # TODO: Optim code performance
+# TODO: self.mem_buffer.states [map,agents], [map,colors,agents]
 
 class PPOAgent(BaseAgent):
     mem_buffer: mem_buffer = None
@@ -135,7 +136,9 @@ class PPOAgent(BaseAgent):
 
         actions_dist = Categorical(actions_prob)
         action_log_probs = actions_dist.log_prob(self.mem_buffer.actions)
-        state_values = self.critic(self.mem_buffer.states)
+
+        state_values = self.critic(self.mem_buffer.states[0])
+
         return action_log_probs, state_values, actions_dist.entropy()  # Bregman divergence
 
     def __advantages(self, state_values):
@@ -171,3 +174,7 @@ if __name__ == '__main__':
     actions = actions_dist.sample()
     action_dist_log_probs = actions_dist.log_prob(actions)
     print(actions)
+
+
+    model_c = PolicyModel(50, 50)
+    print(model_c(a))
