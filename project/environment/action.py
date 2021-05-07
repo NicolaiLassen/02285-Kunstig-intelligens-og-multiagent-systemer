@@ -97,5 +97,5 @@ action_dict = {
 }
 
 
-def idxs_to_actions(actions: List[Tensor]) -> List[Action]:
+def idxs_to_actions(actions: Tensor) -> List[Action]:
     return [action_dict[a.item()] for a in actions]
