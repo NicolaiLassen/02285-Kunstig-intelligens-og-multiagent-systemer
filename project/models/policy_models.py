@@ -94,7 +94,10 @@ class PolicyModelEncoder(nn.Module):
         # out pass
         # Feed attention weights to agent embeds
         out = torch.einsum("ijk,tjk -> tjk", map_out, agent_map_out)
+        # Feed color ebmeds to agent embeds
+        # TODO
         out = self.fc_1(out)
         out = self.activation(out)
         out = self.fc_out(out)
+
         return F.log_softmax(out, dim=-1)
