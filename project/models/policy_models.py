@@ -42,6 +42,7 @@ class PolicyModelEncoder(nn.Module):
         # self.fc_map_1 = nn.Linear(width * height, self.d_model * width)
         # self.map_encoder_layer = nn.TransformerEncoderLayer(d_model=self.d_model, nhead=2)
         # self.map_encoder = nn.TransformerEncoder(self.map_encoder_layer, num_layers=2)
+
         # 2d WxH encoder image # https://arxiv.org/abs/2010.11929
         self.map_encoder = ViT(
             image_size=width,
@@ -56,6 +57,7 @@ class PolicyModelEncoder(nn.Module):
             emb_dropout=0.1
         )
 
+        # 2 features [x,y]
         self.fc_agent_1 = nn.Linear(2, self.encoder_out_dim)
         self.fc_agent_2 = nn.Linear(self.encoder_out_dim, self.encoder_out_dim)
 
