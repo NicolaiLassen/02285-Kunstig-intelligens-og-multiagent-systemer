@@ -2,23 +2,25 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
+
 # https://pathak22.github.io/noreward-rl/resources/icml17.pdf
 class ICMHead(nn.Module):
-    def __init__(self, motion_blur=4) -> None:
+    def __init__(self, channels=1) -> None:
         super(ICMHead, self).__init__()
 
-        self.motion_blur = motion_blur
-        self.conv1 = nn.Conv2d(motion_blur, 32, kernel_size=(8, 8), stride=(4, 4))
+        self.conv1 = nn.Conv2d(channels, 32, kernel_size=(8, 8), stride=(4, 4))
         self.conv2 = nn.Conv2d(32, 64, kernel_size=(4, 4), stride=(2, 2))
         self.conv3 = nn.Conv2d(64, 32, kernel_size=(3, 3), stride=(1, 1))
         self.dense = nn.Linear(32 * 4 * self.motion_blur, 512)
         self.activation = nn.ReLU()
 
     def forward(self, state):
+        ## TODO FORMAT STATE map agent # no motion blur
+
         out = self.activation(self.conv1(state))
         out = self.activation(self.conv2(out))
         out = self.activation(self.conv3(out))
-        out = out.view(-1, self.motion_blur * 32 * 4)
+        out = out.view(-1, 32 * 4)
         out = self.activation(self.dense(out))
         return out
 

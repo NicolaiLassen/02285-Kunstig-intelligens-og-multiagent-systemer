@@ -1,3 +1,5 @@
+
+# TODO Entity class to large for the speed of this project
 class Entity:
     def __init__(self, char, col: int, row: int, color):
         self.col = col

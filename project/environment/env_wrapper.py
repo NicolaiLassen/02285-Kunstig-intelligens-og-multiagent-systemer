@@ -8,6 +8,8 @@ from environment.action import Action, ActionType
 from utils.preprocess import Entity, LevelState
 
 
+# TODO convert list to tensor with ORD
+
 class EnvWrapper:
 
     def __init__(
