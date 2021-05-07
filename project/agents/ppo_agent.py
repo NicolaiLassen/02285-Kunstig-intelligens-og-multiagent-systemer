@@ -25,7 +25,7 @@ from utils.mem_buffer import AgentMemBuffer
 # TODO: REWARD
 # TODO: Optim code performance
 # TODO: self.mem_buffer.states [map,agents], [map,colors,agents]
-# TODO: CUDA
+# TODO: CUDA for train
 
 class PPOAgent(BaseAgent):
     mem_buffer: mem_buffer = None
@@ -104,7 +104,7 @@ class PPOAgent(BaseAgent):
         actions_dist = Categorical(actions_logs_prob)
         actions = actions_dist.sample()
         action_dist_log_prob = actions_dist.log_prob(actions)
-        return actions.detach(), actions_dist.probs.detach(), action_dist_log_prob
+        return actions.detach(), actions_dist.probs.detach(), action_dist_log_prob.detach()
 
     def save_actor(self):
         return
@@ -151,7 +151,6 @@ class PPOAgent(BaseAgent):
         self.mem_buffer.clear()
 
     def __eval(self):
-        ## TODO NOT python lists
         actions_prob = self.actor(self.mem_buffer.states[0],
                                   self.mem_buffer.states[1],
                                   self.env.mask)
