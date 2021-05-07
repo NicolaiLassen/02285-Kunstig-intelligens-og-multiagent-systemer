@@ -14,12 +14,12 @@ class AgentMemBuffer:
         self.height = height
         self.action_space_n = action_space_n
 
-        self.states = torch.zeros(self.max_length, self.height, self.width, dtype=torch.float).cuda()
-        self.next_states = torch.zeros(self.max_length, self.height, self.width, dtype=torch.float).cuda()
+        self.states = torch.zeros(self.max_length, self.height, self.width, dtype=torch.float)
+        self.next_states = torch.zeros(self.max_length, self.height, self.width, dtype=torch.float)
         self.rewards = torch.zeros(self.max_length, dtype=torch.float)
-        self.actions = torch.zeros(self.max_length, dtype=torch.long).cuda()
-        self.action_probs = torch.zeros(self.max_length, action_space_n, dtype=torch.float).cuda()
-        self.action_log_prob = torch.zeros(self.max_length, dtype=torch.float).cuda()
+        self.actions = torch.zeros(self.max_length, dtype=torch.long)
+        self.action_probs = torch.zeros(self.max_length, action_space_n, dtype=torch.float)
+        self.action_log_prob = torch.zeros(self.max_length, dtype=torch.float)
         self.done = torch.zeros(self.max_length, dtype=torch.int)
 
     def set_next(self, state, next_state, reward, action, action_probs, action_log_prob, done, mask=None):
@@ -37,12 +37,12 @@ class AgentMemBuffer:
 
     def clear(self):
         self.t = 0
-        self.states = torch.zeros(self.max_length, self.height, self.width, dtype=torch.float).cuda()
-        self.next_states = torch.zeros(self.max_length, self.height, self.width, dtype=torch.float).cuda()
+        self.states = torch.zeros(self.max_length, self.height, self.width, dtype=torch.float)
+        self.next_states = torch.zeros(self.max_length, self.height, self.width, dtype=torch.float)
         self.rewards = torch.zeros(self.max_length, dtype=torch.float)
-        self.actions = torch.zeros(self.max_length, dtype=torch.long).cuda()
-        self.action_probs = torch.zeros(self.max_length, action_space_n, dtype=torch.float).cuda()
-        self.action_log_prob = torch.zeros(self.max_length, dtype=torch.float).cuda()
+        self.actions = torch.zeros(self.max_length, dtype=torch.long)
+        self.action_probs = torch.zeros(self.max_length, self.action_space_n, dtype=torch.float)
+        self.action_log_prob = torch.zeros(self.max_length, dtype=torch.float)
         self.done = torch.zeros(self.max_length, dtype=torch.int)
 
     def get_mask(self, skip=False):

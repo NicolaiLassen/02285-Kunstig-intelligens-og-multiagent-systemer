@@ -25,6 +25,7 @@ from utils.mem_buffer import AgentMemBuffer
 # TODO: REWARD
 # TODO: Optim code performance
 # TODO: self.mem_buffer.states [map,agents], [map,colors,agents]
+# TODO: CUDA
 
 class PPOAgent(BaseAgent):
     mem_buffer: mem_buffer = None
@@ -53,7 +54,7 @@ class PPOAgent(BaseAgent):
         self.optimizer_critic = optimizer_critic
         self.action_space_n = env.action_space_n
         # Curiosity
-        self.ICM = ICM(self.action_space_n).cuda()
+        self.ICM = ICM(self.action_space_n)
         # Hyper n
         self.n_acc_grad = n_acc_gradient
         self.n_max_Times_update = n_max_Times_update
@@ -92,7 +93,7 @@ class PPOAgent(BaseAgent):
                 print(d, file=sys.stderr, flush=True)
 
                 ## TODO BUFFER NEW
-                self.mem_buffer.set_next(s, s1, r, action_idxs, probs, log_prob, d, self.mem_buffer.get_mask(d))
+                # self.mem_buffer.set_next(s, s1, r, action_idxs, probs, log_prob, d, self.mem_buffer.get_mask(d))
                 if t % update_every == 0:
                     self.__update()
 
