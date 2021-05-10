@@ -12,13 +12,15 @@ from utils.preprocess import LevelState
 
 class EnvWrapper:
 
-
     def __init__(
             self,
             action_space_n: int,
             initial_state: LevelState,
             goal_state: LevelState
     ) -> None:
+        self.free_value = 32  # ord(" ")
+        self.box_a_value = 65  # ord("A")
+        self.box_z_value = 90  # ord("Z")
 
         self.action_space_n = action_space_n
         self.initial_state = initial_state
@@ -155,51 +157,47 @@ class EnvWrapper:
         return True
 
     def __is_box(self, row, col):
-        # ord("A"), ord("Z") = 65, 90
-        return 65 <= self.t0_state.level[row][col] <= 90
+        return self.box_a_value <= self.t0_state.level[row][col] <= self.box_z_value
 
     def __is_free(self, row, col):
-        return self.t0_state.level[row][col] == 32
+        return self.t0_state.level[row][col] == self.free_value
 
     def __agent_row_col(self, index: int):
         agent_position = self.t0_state.agents[index]
         return agent_position[0], agent_position[1]
 
     def __act(self, actions: List[Action]) -> Tuple[Tensor, Tensor]:
-        # TODO
-        return self.t0_state.level, self.t0_state.agents
-
-
-"""
         for index, action in enumerate(actions):
             # Update agent location
-            agent = self.t0_state.agents[index]
-            prev_agent_row = agent.row
-            prev_agent_col = agent.col
-            agent.row = agent.row + action.agent_row_delta
-            agent.col = agent.col + action.agent_col_delta
-            self.t0_state.agents[index] = agent
+            agent_positions = self.t0_state.agents[index]
+            prev_agent_row = agent_positions[0]
+            prev_agent_col = agent_positions[1]
+            next_agent_row = prev_agent_row + action.agent_row_delta
+            next_agent_col = prev_agent_col + action.agent_col_delta
+            agent_positions[0] = next_agent_row
+            agent_positions[1] = next_agent_col
+            self.t0_state.agents[index] = agent_positions
+
+            agent_value = self.t0_state.level[prev_agent_row][prev_agent_col]
 
             # Update level matrix
             if action.type is ActionType.NoOp:
                 continue
             elif action.type is ActionType.Move:
-                self.t0_state.level[prev_agent_row][prev_agent_col] = Entity(' ', prev_agent_row, prev_agent_col, None)
-                self.t0_state.level[agent.row][agent.col] = agent
+                self.t0_state.level[next_agent_row][next_agent_col] = agent_value
+                self.t0_state.level[prev_agent_row][prev_agent_col] = self.free_value
             elif action.type is ActionType.Push:
-                box = self.t0_state.level[agent.row][agent.col]
-                box.row = box.row + action.box_row_delta
-                box.col = box.row + action.box_col_delta
-                self.t0_state.level[prev_agent_row][prev_agent_col] = Entity(' ', prev_agent_row, prev_agent_col, None)
-                self.t0_state.level[agent.row][agent.col] = agent
-                self.t0_state.level[agent.row + action.box_row_delta][agent.col + action.box_col_delta] = box
+                box_value = self.t0_state.level[next_agent_row][next_agent_col]
+                next_box_row = next_agent_row + action.box_row_delta
+                next_box_col = next_agent_col + action.box_col_delta
+                self.t0_state.level[next_box_row][next_box_col] = box_value
+                self.t0_state.level[next_agent_row][next_agent_col] = agent_value
+                self.t0_state.level[prev_agent_row][prev_agent_col] = self.free_value
             elif action.type is ActionType.Pull:
                 prev_box_row = prev_agent_row + (action.box_row_delta * -1)
                 prev_box_col = prev_agent_col + (action.box_col_delta * -1)
-                box = self.t0_state.level[prev_box_row][prev_box_col]
-                box.row = box.row + action.box_row_delta
-                box.col = box.row + action.box_col_delta
-                self.t0_state.level[prev_box_row][prev_box_col] = Entity(' ', prev_agent_row, prev_agent_col, None)
-                self.t0_state.level[prev_agent_row][prev_agent_col] = box
-                self.t0_state.level[agent.row][agent.col] = agent
-"""
+                box_value = self.t0_state.level[prev_box_row][prev_box_col]
+                self.t0_state.level[prev_agent_row][prev_agent_col] = box_value
+                self.t0_state.level[next_agent_row][next_agent_col] = agent_value
+                self.t0_state.level[prev_box_row][prev_box_col] = self.free_value
+        return self.t0_state.level, self.t0_state.agents
