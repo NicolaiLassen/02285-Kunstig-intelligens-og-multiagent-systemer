@@ -2,6 +2,10 @@ import os
 from typing import List
 
 import torch
+from torch import Tensor
+
+from environment.env_wrapper import EnvWrapper
+from environment.level_state import LevelState
 
 LEVELS_DIR = './levels'
 
@@ -20,11 +24,11 @@ def read_level_file(index: int):
     return level_file_lines
 
 
-def parse_level_lines(color_dict, level_lines: List[str], width=50, height=50):
+def parse_level_lines(color_dict, level_lines: List[str], width=50, height=50) -> LevelState:
+    num_agents = len([char for char in color_dict.keys() if '0' <= char <= '9'])
     num_rows = len(level_lines)
     num_cols = len(level_lines[0])
-    num_agents = len([char for char in color_dict.keys() if '0' <= char <= '9'])
-    level_matrix = torch.zeros(width, height)
+    level_matrix: Tensor = torch.zeros(width, height)
     agent_positions = torch.zeros(num_agents, 2)
 
     for row, line in enumerate(level_lines):
@@ -36,65 +40,49 @@ def parse_level_lines(color_dict, level_lines: List[str], width=50, height=50):
     # normalize level matrix
     level_matrix = normalize_dist(level_matrix)
 
-    return level_matrix, agent_positions
+    return LevelState(
+        num_rows,
+        num_cols,
+        level_matrix,
+        agent_positions,
+    )
 
 
-def load_level(index: int):
-    level_lines = read_level_file(index)
-    colors_index = level_lines.index("#colors")
-    initial_index = level_lines.index("#initial")
-    goal_index = level_lines.index("#goal")
-    end_index = level_lines.index("#end")
+def load_level(index: int) -> tuple[LevelState, LevelState]:
+    file_lines = read_level_file(index)
+    colors_index = file_lines.index("#colors")
+    initial_index = file_lines.index("#initial")
+    goal_index = file_lines.index("#goal")
+    end_index = file_lines.index("#end")
 
     # parse colors
     color_dict = {}
-    for line in level_lines[colors_index + 1:initial_index]:
+    for line in file_lines[colors_index + 1:initial_index]:
         split = line.split(':')
         color = split[0].strip().lower()
         for e in [e.strip() for e in split[1].split(',')]:
             color_dict[e] = color
 
-    initial_level_lines = level_lines[initial_index + 1:goal_index]
-    initial_level_matrix, initial_agent_positions = parse_level_lines(color_dict, initial_level_lines)
+    # parse initial level state
+    level_initial_lines = file_lines[initial_index + 1:goal_index]
+    level_initial_state = parse_level_lines(color_dict, level_initial_lines)
 
-    goal_level_lines = level_lines[goal_index + 1:end_index]
-    goal_level_matrix, goal_agent_positions = parse_level_lines(color_dict, goal_level_lines)
+    level_goal_lines = file_lines[goal_index + 1:end_index]
+    level_goal_state = parse_level_lines(color_dict, level_goal_lines)
 
-    return initial_level_matrix, initial_agent_positions, goal_level_matrix, goal_agent_positions
+    return level_initial_state, level_goal_state
 
 
 if __name__ == '__main__':
-    a1, a2, b1, b2 = load_level(21)
-    print(a1)
+    initial_state, goal_state = load_level(21)
 
-"""
-def parse_level_lines(level_lines: List[str]):
-    level_line_counter = 5
+    env = EnvWrapper(
+        action_space_n=29,
+        initial_state=initial_state,
+        goal_state=goal_state,
+    )
 
-    # Read color dictionary
-    color_dict = {}
-    line = level_lines[level_line_counter]
-    while not line.startswith('#'):
-        split = line.split(':')
-        color = split[0].strip().lower()
-        for e in [e.strip() for e in split[1].split(',')]:
-            color_dict[e] = color
-        level_line_counter += 1
-        line = level_lines[level_line_counter]
-
-    # parse initial state
-    for line in level_lines:
-        if line.startswith("#initial"):
+    print(env)
 
 
 
-
-    initial_level_lines = level_lines[level_line_counter]
-    initial_state = parse_level_lines(color_dict, initial_level_lines)
-
-    # parse goal state
-    goal_level_lines = read_level_lines(level_file)
-    goal_state = parse_level_lines(color_dict, goal_level_lines)
-
-    return initial_state, goal_state
-"""

@@ -5,7 +5,7 @@ import torch
 from torch import Tensor
 
 from environment.action import Action, ActionType
-from utils.preprocess import Entity, LevelState
+from utils.preprocess import LevelState
 
 
 # TODO convert list to tensor with ORD
@@ -20,13 +20,23 @@ class EnvWrapper:
     ) -> None:
 
         self.action_space_n = action_space_n
-        self.agents_n = len(initial_state.agents)
-        self.mask = None
-
         self.initial_state = initial_state
         self.goal_state = goal_state
 
+        self.agents_n = initial_state.agents_n
+        self.rows_n = initial_state.rows_n
+        self.cols_n = initial_state.cols_n
+
+        self.mask = None
+
+        #        self.initial_state = initial_state
+        #        self.goal_state = goal_state
+
         self.t0_state = initial_state
+
+
+    def __repr__(self):
+        return self.t0_state.__repr__()
 
     def step(self, actions: List[Action]) -> Optional[Tuple[List[Tensor], int, bool]]:
 
@@ -47,10 +57,10 @@ class EnvWrapper:
 
     def reset(self) -> List[Tensor]:
         self.t0_state = self.initial_state
-        return [self.t0_state.level_t, self.t0_state.agents_t]
+        return [self.t0_state.level, self.t0_state.agents]
 
     def __check_done(self, s1: Tensor) -> bool:
-        return torch.equal(s1, self.goal_state.level_t)
+        return torch.equal(s1, self.goal_state.level)
 
     def __is_applicable(self, index: int, action: Action):
         agent_row, agent_col = self.__agent_row_col(index)
@@ -141,19 +151,30 @@ class EnvWrapper:
         return False
 
     def __is_same_color(self, a_row, a_col, b_row, b_col):
-        return self.t0_state.level[a_row][a_col].color == self.t0_state.level[b_row][b_col].color
+        # TODO add color tensor
+        # return self.t0_state.level[a_row][a_col].color == self.t0_state.level[b_row][b_col].color
+        return True
 
     def __is_box(self, row, col):
-        return self.t0_state.level[row][col].is_box()
+        # TODO check if box
+        return True
+        # return self.t0_state.level[row][col].is_box()
 
     def __is_free(self, row, col):
-        return self.t0_state.level[row][col].is_free()
+        # TODO check if box
+        return True
+        # return self.t0_state.level[row][col].is_free()
 
     def __agent_row_col(self, index: int):
-        agent = self.t0_state.agents[index]
-        return agent.row, agent.col
+        agent_position = self.t0_state.agents[index]
+        return agent_position[0], agent_position[1]
 
     def __act(self, actions: List[Action]) -> Tuple[Tensor, Tensor]:
+        # TODO
+        return self.t0_state.level, self.t0_state.agents
+
+
+"""
         for index, action in enumerate(actions):
             # Update agent location
             agent = self.t0_state.agents[index]
@@ -185,6 +206,4 @@ class EnvWrapper:
                 self.t0_state.level[prev_box_row][prev_box_col] = Entity(' ', prev_agent_row, prev_agent_col, None)
                 self.t0_state.level[prev_agent_row][prev_agent_col] = box
                 self.t0_state.level[agent.row][agent.col] = agent
-
-        ## TODO
-        return self.t0_state.level_t, self.t0_state.agents_t
+"""
