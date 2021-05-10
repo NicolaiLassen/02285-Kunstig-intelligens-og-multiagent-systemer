@@ -10,11 +10,6 @@ from environment.level_state import LevelState
 LEVELS_DIR = './levels'
 
 
-def normalize_dist(t):
-    # Normalize  # PLZ DON'T BLOW MY GRADIENT
-    return (t - t.mean()) / (t.std() + 1e-10)
-
-
 def read_level_file(index: int):
     level_names = os.listdir(LEVELS_DIR)[1:]  # skip dir info file ".DS_Store"
     file_name = level_names[index % len(level_names)]
@@ -36,9 +31,6 @@ def parse_level_lines(color_dict, level_lines: List[str], width=50, height=50) -
             level_matrix[row][col] = ord(char)
             if '0' <= char <= '9':
                 agent_positions[int(char)] = torch.tensor([row, col])
-
-    # normalize level matrix
-    level_matrix = normalize_dist(level_matrix)
 
     return LevelState(
         num_rows,
@@ -83,6 +75,3 @@ if __name__ == '__main__':
     )
 
     print(env)
-
-
-
