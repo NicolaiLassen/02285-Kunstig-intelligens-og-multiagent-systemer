@@ -18,9 +18,9 @@ class EnvWrapper:
             initial_state: LevelState,
             goal_state: LevelState
     ) -> None:
-        self.free_value = 32  # ord(" ")
-        self.box_a_value = 65  # ord("A")
-        self.box_z_value = 90  # ord("Z")
+        self.free_value = float(32.)  # ord(" ")
+        self.box_a_value = float(65.)  # ord("A")
+        self.box_z_value = float(90.)  # ord("Z")
 
         self.action_space_n = action_space_n
         self.initial_state = initial_state

@@ -4,6 +4,7 @@ from typing import List
 import torch
 from torch import Tensor
 
+from environment.action import Action
 from environment.env_wrapper import EnvWrapper
 from environment.level_state import LevelState
 
@@ -69,10 +70,8 @@ def load_level(index: int) -> tuple[LevelState, LevelState]:
 
 
 if __name__ == '__main__':
-    print(ord("0"))
-    print(ord("9"))
 
-    initial_state, goal_state = load_level(21)
+    initial_state, goal_state = load_level(41)
 
     env = EnvWrapper(
         action_space_n=29,
@@ -80,4 +79,8 @@ if __name__ == '__main__':
         goal_state=goal_state,
     )
 
-#    print(env)
+    print(env)
+    env.step([Action.MoveE])
+    print(env)
+    env.step([Action.MoveE])
+    print(env)
