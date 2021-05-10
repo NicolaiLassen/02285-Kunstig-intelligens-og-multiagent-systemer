@@ -14,7 +14,7 @@ def read_level_file(index: int):
     level_names = os.listdir(LEVELS_DIR)[1:]  # skip dir info file ".DS_Store"
     file_name = level_names[index % len(level_names)]
     level_file = open(os.path.join(LEVELS_DIR, file_name), 'r')
-    level_file_lines = [l.strip() if l.startswith("#") else l for l in level_file.readlines()]
+    level_file_lines = [l.strip().replace("\n", "") if l.startswith("#") else l.replace("\n", "") for l in level_file.readlines()]
     level_file.close()
     return level_file_lines
 
@@ -62,10 +62,16 @@ def load_level(index: int) -> tuple[LevelState, LevelState]:
     level_goal_lines = file_lines[goal_index + 1:end_index]
     level_goal_state = parse_level_lines(color_dict, level_goal_lines)
 
+    for l in level_initial_lines:
+        print(l)
+
     return level_initial_state, level_goal_state
 
 
 if __name__ == '__main__':
+    print(ord("0"))
+    print(ord("9"))
+
     initial_state, goal_state = load_level(21)
 
     env = EnvWrapper(
@@ -74,4 +80,4 @@ if __name__ == '__main__':
         goal_state=goal_state,
     )
 
-    print(env)
+#    print(env)

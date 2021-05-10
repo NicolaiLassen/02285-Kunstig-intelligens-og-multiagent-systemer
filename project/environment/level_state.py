@@ -22,7 +22,7 @@ class LevelState:
         self.agents = agents
 
     def __repr__(self):
-        return self.level.__repr__()
+        return self.level[:self.rows_n,:self.cols_n].__repr__()
 
 #    def print(self):
 #        for row in self.level:

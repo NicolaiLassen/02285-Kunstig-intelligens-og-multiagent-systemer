@@ -12,6 +12,7 @@ from utils.preprocess import LevelState
 
 class EnvWrapper:
 
+
     def __init__(
             self,
             action_space_n: int,
@@ -33,7 +34,6 @@ class EnvWrapper:
         #        self.goal_state = goal_state
 
         self.t0_state = initial_state
-
 
     def __repr__(self):
         return self.t0_state.__repr__()
@@ -152,18 +152,14 @@ class EnvWrapper:
 
     def __is_same_color(self, a_row, a_col, b_row, b_col):
         # TODO add color tensor
-        # return self.t0_state.level[a_row][a_col].color == self.t0_state.level[b_row][b_col].color
         return True
 
     def __is_box(self, row, col):
-        # TODO check if box
-        return True
-        # return self.t0_state.level[row][col].is_box()
+        # ord("A"), ord("Z") = 65, 90
+        return 65 <= self.t0_state.level[row][col] <= 90
 
     def __is_free(self, row, col):
-        # TODO check if box
-        return True
-        # return self.t0_state.level[row][col].is_free()
+        return self.t0_state.level[row][col] == 32
 
     def __agent_row_col(self, index: int):
         agent_position = self.t0_state.agents[index]
