@@ -45,11 +45,11 @@ class EnvWrapper:
         # TODO FIX NONE
         for index, action in enumerate(actions):
             if not self.__is_applicable(index, action):
-                print('# action not applicable\n{}: {}'.format(index, action), file=sys.stderr, flush=True)
+                # print('# action not applicable\n{}: {}'.format(index, action), file=sys.stderr, flush=True)
                 return None
 
         if self.__is_conflict(actions):
-            print('# actions contain conflict\n{}'.format(actions), file=sys.stderr, flush=True)
+            # print('# actions contain conflict\n{}'.format(actions), file=sys.stderr, flush=True)
             return None
 
         level_s1, agents_s1 = self.__act(actions)
@@ -92,13 +92,13 @@ class EnvWrapper:
             next_agent_row = agent_row + action.agent_row_delta
             next_agent_col = agent_col + action.agent_col_delta
             if not self.__is_free(next_agent_row, next_agent_col):
-                print('# next agent position is NOT free', file=sys.stderr, flush=True)
+                # print('# next agent position is NOT free', file=sys.stderr, flush=True)
                 return False
             # check that box position is box
             box_row = agent_row + (action.box_row_delta * -1)
             box_col = agent_col + (action.box_col_delta * -1)
             if not self.__is_box(box_row, box_col):
-                print('# box position is NOT box', file=sys.stderr, flush=True)
+                # print('# box position is NOT box', file=sys.stderr, flush=True)
                 return False
             # check that agent and box is same color
             return self.__is_same_color(agent_row, agent_col, box_row, box_col)
@@ -144,12 +144,12 @@ class EnvWrapper:
 
                 # is moving same box
                 if box_rows[a1] == box_rows[a2] and box_cols[a1] == box_cols[a2]:
-                    print('# actions.conflict\nis moving same box', file=sys.stderr, flush=True)
+                    # print('# actions.conflict\nis moving same box', file=sys.stderr, flush=True)
                     return True
 
                 # is moving into same position
                 if next_agent_rows[a1] == next_agent_rows[a2] and next_agent_cols[a1] == next_agent_cols[a2]:
-                    print('# actions.conflict\nis moving into same position', file=sys.stderr, flush=True)
+                    # print('# actions.conflict\nis moving into same position', file=sys.stderr, flush=True)
                     return True
 
         return False
