@@ -18,9 +18,9 @@ class EnvWrapper:
             initial_state: LevelState,
             goal_state: LevelState
     ) -> None:
-        self.free_value = float(32.)  # ord(" ")
-        self.box_a_value = float(65.)  # ord("A")
-        self.box_z_value = float(90.)  # ord("Z")
+        self.free_value = 32  # ord(" ")
+        self.box_a_value = 65  # ord("A")
+        self.box_z_value = 90  # ord("Z")
 
         self.action_space_n = action_space_n
         self.initial_state = initial_state
@@ -45,11 +45,11 @@ class EnvWrapper:
         # TODO FIX NONE
         for index, action in enumerate(actions):
             if not self.__is_applicable(index, action):
-                # print('#action not applicable\n{}: {}'.format(index, action), file=sys.stderr, flush=True)
+                print('# action not applicable\n{}: {}'.format(index, action), file=sys.stderr, flush=True)
                 return None
 
         if self.__is_conflict(actions):
-            # print('#actions contain conflict\n{}'.format(actions), file=sys.stderr, flush=True)
+            print('# actions contain conflict\n{}'.format(actions), file=sys.stderr, flush=True)
             return None
 
         level_s1, agents_s1 = self.__act(actions)
@@ -92,11 +92,13 @@ class EnvWrapper:
             next_agent_row = agent_row + action.agent_row_delta
             next_agent_col = agent_col + action.agent_col_delta
             if not self.__is_free(next_agent_row, next_agent_col):
+                print('# next agent position is NOT free', file=sys.stderr, flush=True)
                 return False
-            # check that next box position is free
-            box_row = next_agent_row + (action.box_row_delta * -1)
-            box_col = next_agent_col + (action.box_col_delta * -1)
+            # check that box position is box
+            box_row = agent_row + (action.box_row_delta * -1)
+            box_col = agent_col + (action.box_col_delta * -1)
             if not self.__is_box(box_row, box_col):
+                print('# box position is NOT box', file=sys.stderr, flush=True)
                 return False
             # check that agent and box is same color
             return self.__is_same_color(agent_row, agent_col, box_row, box_col)
@@ -160,23 +162,19 @@ class EnvWrapper:
         return self.box_a_value <= self.t0_state.level[row][col] <= self.box_z_value
 
     def __is_free(self, row, col):
-        return self.t0_state.level[row][col] == self.free_value
+        return self.t0_state.level[row][col].item() == self.free_value
 
     def __agent_row_col(self, index: int):
         agent_position = self.t0_state.agents[index]
-        return agent_position[0], agent_position[1]
+        return int(agent_position[0].detach().item()), int(agent_position[1].detach().item())
 
     def __act(self, actions: List[Action]) -> Tuple[Tensor, Tensor]:
         for index, action in enumerate(actions):
             # Update agent location
-            agent_positions = self.t0_state.agents[index]
-            prev_agent_row = agent_positions[0]
-            prev_agent_col = agent_positions[1]
+            prev_agent_row, prev_agent_col = self.__agent_row_col(index)
             next_agent_row = prev_agent_row + action.agent_row_delta
             next_agent_col = prev_agent_col + action.agent_col_delta
-            agent_positions[0] = next_agent_row
-            agent_positions[1] = next_agent_col
-            self.t0_state.agents[index] = agent_positions
+            self.t0_state.agents[index] = torch.tensor([next_agent_row, next_agent_col])
 
             agent_value = self.t0_state.level[prev_agent_row][prev_agent_col]
 
@@ -197,7 +195,7 @@ class EnvWrapper:
                 prev_box_row = prev_agent_row + (action.box_row_delta * -1)
                 prev_box_col = prev_agent_col + (action.box_col_delta * -1)
                 box_value = self.t0_state.level[prev_box_row][prev_box_col]
-                self.t0_state.level[prev_agent_row][prev_agent_col] = box_value
                 self.t0_state.level[next_agent_row][next_agent_col] = agent_value
+                self.t0_state.level[prev_agent_row][prev_agent_col] = box_value
                 self.t0_state.level[prev_box_row][prev_box_col] = self.free_value
         return self.t0_state.level, self.t0_state.agents

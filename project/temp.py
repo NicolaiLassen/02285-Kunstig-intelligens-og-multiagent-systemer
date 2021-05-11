@@ -24,7 +24,7 @@ def parse_level_lines(color_dict, level_lines: List[str], width=50, height=50) -
     num_agents = len([char for char in color_dict.keys() if '0' <= char <= '9'])
     num_rows = len(level_lines)
     num_cols = len(level_lines[0])
-    level_matrix: Tensor = torch.zeros(width, height)
+    level_matrix: Tensor = torch.zeros(width, height, dtype=torch.long)
     agent_positions = torch.zeros(num_agents, 2)
 
     for row, line in enumerate(level_lines):
@@ -71,7 +71,7 @@ def load_level(index: int) -> tuple[LevelState, LevelState]:
 
 if __name__ == '__main__':
 
-    initial_state, goal_state = load_level(41)
+    initial_state, goal_state = load_level(0)
 
     env = EnvWrapper(
         action_space_n=29,
@@ -80,7 +80,5 @@ if __name__ == '__main__':
     )
 
     print(env)
-    env.step([Action.MoveE])
-    print(env)
-    env.step([Action.MoveE])
+    env.step([Action.PullNN])
     print(env)
