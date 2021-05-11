@@ -49,6 +49,8 @@ class PPOAgent(BaseAgent):
         self.critic = critic
         self.optimizer = optimizer
 
+        self.max_agents = 9  # HARDCODE 9
+
         self.action_space_n = env.action_space_n
         # Curiosity
         self.ICM = IntrinsicCuriosityModule(self.action_space_n)
@@ -82,7 +84,6 @@ class PPOAgent(BaseAgent):
 
                 t += 1
                 s1, r, d = temp_step
-                print(actions)
                 self.mem_buffer.set_next(s, s1, r, action_idxs, probs, log_prob, d)
                 if t % max_Time == 0:
                     self.__update()
@@ -107,7 +108,6 @@ class PPOAgent(BaseAgent):
         self.actor_old.load_state_dict(torch.load(path))
 
     def __update(self):
-        losses_ = torch.zeros(self.n_acc_grad)  # SOME PRINT STUFF
         # ACC Gradient traning
         # We have the samples why not train a bit on it?
         torch.cuda.empty_cache()
@@ -133,17 +133,17 @@ class PPOAgent(BaseAgent):
         total_loss.backward()
         self.optimizer.step()
 
-        print("Mean ep losses: ", losses_.mean())
         print("Total ep reward: ", self.mem_buffer.rewards.sum())
         self.actor_old.load_state_dict(self.actor.state_dict())
         self.mem_buffer.clear()
 
     def __eval(self):
-        actions_prob = self.actor(self.mem_buffer.map_states, self.mem_buffer.agent_states, self.env.mask)
-
+        actions_prob = self.actor(self.mem_buffer.map_states.unsqueeze(1),
+                                  self.mem_buffer.agent_states,
+                                  self.env.mask)
         actions_dist = Categorical(actions_prob)
         action_log_prob = actions_dist.log_prob(self.mem_buffer.actions)
-        state_values = self.critic(self.mem_buffer.agent_states[0])
+        state_values = self.critic(self.mem_buffer.map_states)
         return action_log_prob, state_values.squeeze(1), actions_dist.entropy()  # Bregman divergence
 
     def __advantages(self, discounted_rewards, state_values):
@@ -155,7 +155,7 @@ class PPOAgent(BaseAgent):
             advantages[t] = discounted_reward - state_values[t] + last_state_value * (
                     self.gamma ** (T - t))
             t += 1
-        return advantages.float().cuda().detach()
+        return advantages.float().detach()
 
     def __discounted_rewards(self):
         discounted_rewards = torch.zeros(len(self.mem_buffer.rewards))
@@ -165,21 +165,27 @@ class PPOAgent(BaseAgent):
             running_reward = r + (running_reward * self.gamma) * (1. - d)  # Zero out done states
             discounted_rewards[-t] = running_reward
             t += 1
-        return discounted_rewards.float().cuda()
+        return discounted_rewards.float()
 
     def __intrinsic_reward_objective(self):
-        next_states = self.mem_buffer.agent_next_states
-        states = self.mem_buffer.agent_states
+        states = self.mem_buffer.map_states.unsqueeze(1)
+        next_states = self.mem_buffer.map_next_states.unsqueeze(1)
         action_probs = self.mem_buffer.action_probs
         actions = self.mem_buffer.actions
 
         a_t_hats, phi_t1_hats, phi_t1s, phi_ts = self.ICM(states, next_states, action_probs)
         r_i_ts = F.mse_loss(phi_t1_hats, phi_t1s, reduction='none').sum(-1)
 
-        return (self.eta * r_i_ts).detach(), r_i_ts.mean(), F.cross_entropy(a_t_hats, actions)
+        multi_cross_loss = 0
+        for i in range(len(actions[1])):
+            multi_cross_loss += F.cross_entropy(a_t_hats, actions[:, i])
+        multi_cross_loss /= self.max_agents
+
+        return (self.eta * r_i_ts).detach(), r_i_ts.mean(), multi_cross_loss / self.max_agents
 
     def __clipped_surrogate_objective(self, actions_log_probs, R_T):
         r_T_theta = torch.exp(actions_log_probs - self.mem_buffer.action_log_prob)
+        r_T_theta = r_T_theta.mean(-1)  # average over agents
         r_T_c_theta = torch.clamp(r_T_theta, min=1 - self.eps_c, max=1 + self.eps_c)
         return torch.min(r_T_theta * R_T, r_T_c_theta * R_T).mean()  # E
 

@@ -19,6 +19,7 @@ class PolicyModel(nn.Module):
         self.activation = nn.ReLU()
 
     def forward(self, x):
+        x = x.view(-1, self.width * self.height)
         out = self.fc_1(x)
         out = self.activation(out)
         out = self.fc_2(out)
@@ -81,7 +82,5 @@ class ActorPolicyModel(nn.Module):
         out = self.fc_1(out)
         out = self.activation(out)
         out = self.fc_out(out)
-
-        print(out.shape)
 
         return F.log_softmax(out, dim=-1)
