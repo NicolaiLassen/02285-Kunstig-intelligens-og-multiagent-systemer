@@ -1,12 +1,14 @@
 import os
-from typing import List
+from typing import List, Tuple
 
 import torch
 from torch import Tensor
 
-from environment.action import Action
+from agents.ppo_agent import PPOAgent
 from environment.env_wrapper import EnvWrapper
 from environment.level_state import LevelState
+from models.curiosity import IntrinsicCuriosityModule
+from models.policy_models import ActorPolicyModel, PolicyModel
 
 LEVELS_DIR = './levels'
 
@@ -15,7 +17,8 @@ def read_level_file(index: int):
     level_names = os.listdir(LEVELS_DIR)[1:]  # skip dir info file ".DS_Store"
     file_name = level_names[index % len(level_names)]
     level_file = open(os.path.join(LEVELS_DIR, file_name), 'r')
-    level_file_lines = [l.strip().replace("\n", "") if l.startswith("#") else l.replace("\n", "") for l in level_file.readlines()]
+    level_file_lines = [l.strip().replace("\n", "") if l.startswith("#") else l.replace("\n", "") for l in
+                        level_file.readlines()]
     level_file.close()
     return level_file_lines
 
@@ -41,7 +44,7 @@ def parse_level_lines(color_dict, level_lines: List[str], width=50, height=50) -
     )
 
 
-def load_level(index: int) -> tuple[LevelState, LevelState]:
+def load_level(index: int) -> Tuple[LevelState, LevelState]:
     file_lines = read_level_file(index)
     colors_index = file_lines.index("#colors")
     initial_index = file_lines.index("#initial")
@@ -70,8 +73,14 @@ def load_level(index: int) -> tuple[LevelState, LevelState]:
 
 
 if __name__ == '__main__':
-
     initial_state, goal_state = load_level(0)
+
+    width = 50
+    height = 50
+
+    lr_actor = 3e-4
+    lr_critic = 1e-3
+    lr_icm = 1e-3
 
     env = EnvWrapper(
         action_space_n=29,
@@ -79,6 +88,15 @@ if __name__ == '__main__':
         goal_state=goal_state,
     )
 
-    print(env)
-    env.step([Action.PullNN])
-    print(env)
+    actor = ActorPolicyModel(width, height, env.action_space_n)
+    critic = PolicyModel(width, height)
+    icm = IntrinsicCuriosityModule(env.action_space_n)
+
+    optimizer = torch.optim.Adam([
+        {'params': actor.parameters(), 'lr': lr_actor},
+        {'params': icm.parameters(), 'lr': lr_icm},
+        {'params': critic.parameters(), 'lr': lr_critic}
+    ])
+
+    agent = PPOAgent(env, actor, critic, optimizer)
+    agent.train(100, 10000)

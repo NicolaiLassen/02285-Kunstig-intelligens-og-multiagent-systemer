@@ -7,7 +7,7 @@ import torch
 from agents.ppo_agent import PPOAgent
 from environment.action import action_dict, Action
 from environment.env_wrapper import EnvWrapper
-from models.policy_models import PolicyModelEncoder, PolicyModel
+from models.policy_models import ActorPolicyModel, PolicyModel
 from utils.preprocess import parse_level_file
 
 client_name = "FeelerBois"
@@ -58,7 +58,7 @@ if __name__ == '__main__':
     action_space_n = int(len(action_dict))
     env_wrapper = EnvWrapper(len(action_dict), initial_state, goal_state)
 
-    actor = PolicyModelEncoder(width, height, env_wrapper.action_space_n)
+    actor = ActorPolicyModel(width, height, env_wrapper.action_space_n)
     critic = PolicyModel(width, height)
 
     optimizer_actor = torch.optim.Adam(actor.parameters(), lr=lr_actor)

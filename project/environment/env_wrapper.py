@@ -55,11 +55,11 @@ class EnvWrapper:
         level_s1, agents_s1 = self.__act(actions)
         done = self.__check_done(level_s1)
         reward = 0
-        return [level_s1, agents_s1], reward, done
+        return [level_s1.float(), agents_s1.float()], reward, done
 
     def reset(self) -> List[Tensor]:
         self.t0_state = self.initial_state
-        return [self.t0_state.level, self.t0_state.agents]
+        return [self.t0_state.level.float(), self.t0_state.agents.float()]
 
     def __check_done(self, s1: Tensor) -> bool:
         return torch.equal(s1, self.goal_state.level)

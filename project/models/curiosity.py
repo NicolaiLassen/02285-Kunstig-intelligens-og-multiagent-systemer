@@ -11,7 +11,7 @@ class ICMHead(nn.Module):
         self.conv1 = nn.Conv2d(channels, 32, kernel_size=(8, 8), stride=(4, 4))
         self.conv2 = nn.Conv2d(32, 64, kernel_size=(4, 4), stride=(2, 2))
         self.conv3 = nn.Conv2d(64, 32, kernel_size=(3, 3), stride=(1, 1))
-        self.dense = nn.Linear(32 * 4 * self.motion_blur, 512)
+        self.dense = nn.Linear(32 * 4, 512)
         self.activation = nn.ReLU()
 
     def forward(self, state):
@@ -26,9 +26,9 @@ class ICMHead(nn.Module):
 
 
 # Intrinsic Curiosity Model Reward
-class ICM(nn.Module):
+class IntrinsicCuriosityModule(nn.Module):
     def __init__(self, action_space_n: int, width: int = 64, height: int = 64) -> None:
-        super(ICM, self).__init__()
+        super(IntrinsicCuriosityModule, self).__init__()
 
         self.head = ICMHead()
         self.state_size = width * height
