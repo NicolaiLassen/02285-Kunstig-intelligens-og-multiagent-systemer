@@ -96,12 +96,13 @@ def load_level(index: int) -> tuple[LevelState, LevelState]:
 if __name__ == '__main__':
     initial_state, goal_state = load_level(0)
 
-    print(initial_state, file=sys.stderr, flush=True)
-
     env = EnvWrapper(
         action_space_n=29,
         initial_state=initial_state,
         goal_state=goal_state,
     )
+
+    reward = env.reward(env.initial_state)
+    print("reward: {}".format(reward))
 
 

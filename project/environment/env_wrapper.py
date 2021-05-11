@@ -1,4 +1,3 @@
-import sys
 from typing import List, Tuple, Optional
 
 import torch
@@ -19,6 +18,8 @@ class EnvWrapper:
             goal_state: LevelState
     ) -> None:
         self.free_value = 32  # ord(" ")
+        self.agent_0_value = 48  # ord("0")
+        self.agent_9_value = 57  # ord("9")
         self.box_a_value = 65  # ord("A")
         self.box_z_value = 90  # ord("Z")
 
@@ -29,6 +30,15 @@ class EnvWrapper:
         self.agents_n = initial_state.agents_n
         self.rows_n = initial_state.rows_n
         self.cols_n = initial_state.cols_n
+
+        self.goal_state_positions = {}
+        for row in range(len(self.goal_state.level)):
+            for col in range(len(self.goal_state.level[row])):
+                val = goal_state.level[row][col]
+                if self.box_a_value <= val <= self.box_z_value:
+                    self.goal_state_positions[val.item()] = [row, col]
+                if self.agent_0_value <= val <= self.agent_9_value:
+                    self.goal_state_positions[val.item()] = [row, col]
 
         self.mask = None
 
@@ -52,20 +62,44 @@ class EnvWrapper:
             # print('# actions contain conflict\n{}'.format(actions), file=sys.stderr, flush=True)
             return None
 
-        level_s1, agents_s1 = self.__act(actions)
-        done = self.__check_done(level_s1)
-        reward = 0
-        return [level_s1, agents_s1], reward, done
+        t1_state = self.__act(actions)
+        done = self.__check_done(t1_state)
+        reward = self.reward(t1_state)
+        return [t1_state.level, t1_state.agents], reward, done
+
+    def reward(self, state) -> int:
+
+        sum_distance = 0
+        for row in range(len(state.level)):
+            for col in range(len(state.level[row])):
+                val = state.level[row][col].item()
+                if val not in self.goal_state_positions:
+                    continue
+                goal_row, goal_col = self.goal_state_positions[val]
+                distance = abs(goal_row - row) + abs(goal_col - col)
+                sum_distance += distance
+
+        return sum_distance * -1
+
+    # def reward(self, state) -> int:
+    #     sum_agent_distance = 0
+    #     for i in range(self.agents_n):
+    #         a_row, a_col = state.agent_row_col(i)
+    #         b_row, b_col = self.goal_state.agent_row_col(i)
+    #         agent_distance = abs(b_row - a_row) + abs(b_col - a_col)
+    #         sum_agent_distance += agent_distance
+    #
+    #     return sum_agent_distance * -1
 
     def reset(self) -> List[Tensor]:
         self.t0_state = self.initial_state
         return [self.t0_state.level, self.t0_state.agents]
 
-    def __check_done(self, s1: Tensor) -> bool:
-        return torch.equal(s1, self.goal_state.level)
+    def __check_done(self, state: LevelState) -> bool:
+        return torch.equal(state.level, self.goal_state.level)
 
     def __is_applicable(self, index: int, action: Action):
-        agent_row, agent_col = self.__agent_row_col(index)
+        agent_row, agent_col = self.t0_state.agent_row_col(index)
 
         if action.type is ActionType.NoOp:
             return True
@@ -114,7 +148,7 @@ class EnvWrapper:
         box_cols = [-1 for _ in range(num_agents)]
 
         for i in range(num_agents):
-            agent_row, agent_col = self.__agent_row_col(i)
+            agent_row, agent_col = self.t0_state.agent_row_col(i)
             action = actions[i]
             if action.type is ActionType.NoOp:
                 continue
@@ -163,38 +197,36 @@ class EnvWrapper:
     def __is_free(self, row, col):
         return self.t0_state.level[row][col].item() == self.free_value
 
-    def __agent_row_col(self, index: int):
-        agent_position = self.t0_state.agents[index]
-        return int(agent_position[0].detach().item()), int(agent_position[1].detach().item())
+    def __act(self, actions: List[Action]) -> LevelState:
 
-    def __act(self, actions: List[Action]) -> Tuple[Tensor, Tensor]:
+        next_state = self.t0_state
+
         for index, action in enumerate(actions):
             # Update agent location
-            prev_agent_row, prev_agent_col = self.__agent_row_col(index)
+            prev_agent_row, prev_agent_col = self.t0_state.agent_row_col(index)
             next_agent_row = prev_agent_row + action.agent_row_delta
             next_agent_col = prev_agent_col + action.agent_col_delta
-            self.t0_state.agents[index] = torch.tensor([next_agent_row, next_agent_col])
-
             agent_value = self.t0_state.level[prev_agent_row][prev_agent_col]
+            next_state.agents[index] = torch.tensor([next_agent_row, next_agent_col])
 
             # Update level matrix
             if action.type is ActionType.NoOp:
                 continue
             elif action.type is ActionType.Move:
-                self.t0_state.level[next_agent_row][next_agent_col] = agent_value
-                self.t0_state.level[prev_agent_row][prev_agent_col] = self.free_value
+                next_state.level[next_agent_row][next_agent_col] = agent_value
+                next_state.level[prev_agent_row][prev_agent_col] = self.free_value
             elif action.type is ActionType.Push:
                 box_value = self.t0_state.level[next_agent_row][next_agent_col]
                 next_box_row = next_agent_row + action.box_row_delta
                 next_box_col = next_agent_col + action.box_col_delta
-                self.t0_state.level[next_box_row][next_box_col] = box_value
-                self.t0_state.level[next_agent_row][next_agent_col] = agent_value
-                self.t0_state.level[prev_agent_row][prev_agent_col] = self.free_value
+                next_state.level[next_box_row][next_box_col] = box_value
+                next_state.level[next_agent_row][next_agent_col] = agent_value
+                next_state.level[prev_agent_row][prev_agent_col] = self.free_value
             elif action.type is ActionType.Pull:
                 prev_box_row = prev_agent_row + (action.box_row_delta * -1)
                 prev_box_col = prev_agent_col + (action.box_col_delta * -1)
                 box_value = self.t0_state.level[prev_box_row][prev_box_col]
-                self.t0_state.level[next_agent_row][next_agent_col] = agent_value
-                self.t0_state.level[prev_agent_row][prev_agent_col] = box_value
-                self.t0_state.level[prev_box_row][prev_box_col] = self.free_value
-        return self.t0_state.level, self.t0_state.agents
+                next_state.level[next_agent_row][next_agent_col] = agent_value
+                next_state.level[prev_agent_row][prev_agent_col] = box_value
+                next_state.level[prev_box_row][prev_box_col] = self.free_value
+        return next_state

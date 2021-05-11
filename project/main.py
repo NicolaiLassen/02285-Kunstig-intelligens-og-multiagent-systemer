@@ -1,4 +1,3 @@
-import os
 import sys
 from typing import List
 
@@ -11,11 +10,6 @@ from models.policy_models import PolicyModelEncoder, PolicyModel
 from utils.preprocess import parse_level_file
 
 client_name = "FeelerBois"
-
-
-def debug_print(message):
-    if message is not None:
-        print(message, file=sys.stderr, flush=True)
 
 
 def send_plan(server_out, plan: List[List[Action]]):
@@ -41,7 +35,6 @@ def get_server_out():
     if hasattr(server_out, "reconfigure"):
         server_out.reconfigure(encoding='ASCII')
     return server_out
-
 
 
 if __name__ == '__main__':
