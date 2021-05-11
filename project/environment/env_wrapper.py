@@ -155,8 +155,7 @@ class EnvWrapper:
         return False
 
     def __is_same_color(self, a_row, a_col, b_row, b_col):
-        # TODO add color tensor
-        return True
+        return self.t0_state.colors[a_row][a_col] == self.t0_state.colors[b_row][b_col]
 
     def __is_box(self, row, col):
         return self.box_a_value <= self.t0_state.level[row][col] <= self.box_z_value

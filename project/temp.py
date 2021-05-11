@@ -5,6 +5,7 @@ from typing import List
 import torch
 from torch import Tensor
 
+from environment.action import Action
 from environment.env_wrapper import EnvWrapper
 from environment.level_state import LevelState
 
@@ -102,3 +103,5 @@ if __name__ == '__main__':
         initial_state=initial_state,
         goal_state=goal_state,
     )
+
+
