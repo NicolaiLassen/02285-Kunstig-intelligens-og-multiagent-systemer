@@ -81,16 +81,6 @@ class EnvWrapper:
 
         return sum_distance * -1
 
-    # def reward(self, state) -> int:
-    #     sum_agent_distance = 0
-    #     for i in range(self.agents_n):
-    #         a_row, a_col = state.agent_row_col(i)
-    #         b_row, b_col = self.goal_state.agent_row_col(i)
-    #         agent_distance = abs(b_row - a_row) + abs(b_col - a_col)
-    #         sum_agent_distance += agent_distance
-    #
-    #     return sum_agent_distance * -1
-
     def reset(self) -> List[Tensor]:
         self.t0_state = self.initial_state
         return [self.t0_state.level, self.t0_state.agents]
