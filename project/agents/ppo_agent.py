@@ -108,6 +108,7 @@ class PPOAgent():
                         self.env.load(level)
                     level_done_n += 1
                     level_reward = 0
+                    s1 = self.env.reset()
 
             self.__update()
             s1 = self.env.reset()
