@@ -8,10 +8,8 @@ import torch.optim as optim
 from torch import Tensor
 from torch.distributions import Categorical
 
-from agents.agent_base import BaseAgent
 from environment.action import idxs_to_actions
 from environment.env_wrapper import EnvWrapper
-from models.curiosity import IntrinsicCuriosityModule
 from utils import mem_buffer
 # PPO Actor Critic
 from utils.mem_buffer import AgentMemBuffer
@@ -25,14 +23,15 @@ from utils.mem_buffer import AgentMemBuffer
 from utils.normalize_dist import normalize_dist
 
 
-class PPOAgent(BaseAgent):
+class PPOAgent():
     mem_buffer: mem_buffer = None
 
     def __init__(self,
                  env: EnvWrapper,
                  actor: nn.Module,
                  critic: nn.Module,
-                 optimizer: optim.Optimizer,
+                 curiosity: nn.Module = None,
+                 optimizer: optim.Optimizer = None,
                  n_acc_gradient=10,
                  gamma=0.9,
                  lamda=0.5,
@@ -52,7 +51,7 @@ class PPOAgent(BaseAgent):
 
         self.action_space_n = env.action_space_n
         # Curiosity
-        self.ICM = IntrinsicCuriosityModule(self.action_space_n)
+        self.curiosity = curiosity
         # Hyper n
         self.n_acc_grad = n_acc_gradient
         self.n_max_Times_update = n_max_Times_update
@@ -68,13 +67,12 @@ class PPOAgent(BaseAgent):
     def train(self, max_Time: int, max_Time_steps: int):
         self.mem_buffer = AgentMemBuffer(max_Time, action_space_n=self.action_space_n)
         t = 0
-
+        s1 = self.env.reset()
         while t < max_Time_steps:
             self.save_actor()
-            s1 = self.env.reset()
             for ep_T in range(max_Time + 1):
                 s = s1
-                action_idxs, probs, log_prob = self.act(s)
+                action_idxs, probs, log_prob = self.act(s[0].cuda(), s[1].cuda())
                 actions = idxs_to_actions(action_idxs)
 
                 temp_step = self.env.step(actions)
@@ -86,11 +84,14 @@ class PPOAgent(BaseAgent):
                 self.mem_buffer.set_next(s, s1, r, action_idxs, probs, log_prob, d)
                 if t % max_Time == 0:
                     self.__update()
+                if d:
+                    self.env.reset()
 
-    def act(self, state) -> Tuple[Tensor, Tensor, Tensor]:
-        state_map = normalize_dist(state[0])
-        actions_logs_prob = self.actor_old(state_map.unsqueeze(0).unsqueeze(0),
-                                           state[1].unsqueeze(0),
+    def act(self, map_state: Tensor, agent_state: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
+        map_state = normalize_dist(map_state)
+        agent_state = normalize_dist(agent_state)
+        actions_logs_prob = self.actor_old(map_state.unsqueeze(0).unsqueeze(0),
+                                           agent_state.unsqueeze(0),
                                            self.env.mask)
 
         actions_dist = Categorical(actions_logs_prob)
@@ -110,7 +111,6 @@ class PPOAgent(BaseAgent):
         # ACC Gradient traning
         # We have the samples why not train a bit on it?
         torch.cuda.empty_cache()
-        print(self.mem_buffer.actions)
 
         action_log_probs, state_values, entropy = self.__eval()
         d_r = self.__discounted_rewards()
@@ -133,7 +133,7 @@ class PPOAgent(BaseAgent):
         total_loss.backward()
         self.optimizer.step()
 
-        print("Total ep reward: ", self.mem_buffer.rewards.sum())
+        print(self.mem_buffer.rewards)
         self.actor_old.load_state_dict(self.actor.state_dict())
         self.mem_buffer.clear()
 
@@ -155,7 +155,7 @@ class PPOAgent(BaseAgent):
             advantages[t] = discounted_reward - state_values[t] + last_state_value * (
                     self.gamma ** (T - t))
             t += 1
-        return advantages.float().detach()
+        return advantages.float().cuda().detach()
 
     def __discounted_rewards(self):
         discounted_rewards = torch.zeros(len(self.mem_buffer.rewards))
@@ -165,7 +165,7 @@ class PPOAgent(BaseAgent):
             running_reward = r + (running_reward * self.gamma) * (1. - d)  # Zero out done states
             discounted_rewards[-t] = running_reward
             t += 1
-        return discounted_rewards.float()
+        return discounted_rewards.float().cuda()
 
     def __intrinsic_reward_objective(self):
         states = self.mem_buffer.map_states.unsqueeze(1)
@@ -173,7 +173,7 @@ class PPOAgent(BaseAgent):
         action_probs = self.mem_buffer.action_probs
         actions = self.mem_buffer.actions
 
-        a_t_hats, phi_t1_hats, phi_t1s, phi_ts = self.ICM(states, next_states, action_probs)
+        a_t_hats, phi_t1_hats, phi_t1s, phi_ts = self.curiosity(states, next_states, action_probs)
         r_i_ts = F.mse_loss(phi_t1_hats, phi_t1s, reduction='none').sum(-1)
 
         multi_cross_loss = 0

@@ -48,15 +48,13 @@ class EnvWrapper:
         return self.t0_state.__repr__()
 
     def step(self, actions: List[Action]) -> Optional[Tuple[List[Tensor], int, bool]]:
-
-        # TODO FIX NONE
         for index, action in enumerate(actions):
             if not self.__is_applicable(index, action):
-                print('# action not applicable\n{}: {}'.format(index, action), file=sys.stderr, flush=True)
+                # print('# action not applicable\n{}: {}'.format(index, action), file=sys.stderr, flush=True)
                 return None
 
         if self.__is_conflict(actions):
-            print('# actions contain conflict\n{}'.format(actions), file=sys.stderr, flush=True)
+            # print('# actions contain conflict\n{}'.format(actions), file=sys.stderr, flush=True)
             return None
 
         t1_state = self.__act(actions)
@@ -100,11 +98,11 @@ class EnvWrapper:
             next_agent_row = agent_row + action.agent_row_delta
             next_agent_col = agent_col + action.agent_col_delta
             if not self.__is_box(next_agent_row, next_agent_col):
-                print('# next agent position is NOT box', file=sys.stderr, flush=True)
+                # print('# next agent position is NOT box', file=sys.stderr, flush=True)
                 return False
             # check that agent and box is same color
             if not self.__is_same_color(agent_row, agent_col, next_agent_row, next_agent_col):
-                print('# box and agent is NOT same color', file=sys.stderr, flush=True)
+                # print('# box and agent is NOT same color', file=sys.stderr, flush=True)
                 return False
             # check that next box position is free
             next_box_row = next_agent_row + action.box_row_delta

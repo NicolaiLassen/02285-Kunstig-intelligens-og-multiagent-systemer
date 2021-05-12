@@ -14,14 +14,14 @@ class AgentMemBuffer:
         self.action_space_n = action_space_n
         self.max_agents = max_agents
 
-        self.map_states = torch.zeros(self.max_length, self.height, self.width, dtype=torch.float)
-        self.map_next_states = torch.zeros(self.max_length, self.height, self.width, dtype=torch.float)
+        self.map_states = torch.zeros(self.max_length, self.height, self.width, dtype=torch.float).cuda()
+        self.map_next_states = torch.zeros(self.max_length, self.height, self.width, dtype=torch.float).cuda()
 
         # max train length x number of client in state, grid dirs xy
-        self.agent_states = torch.zeros(self.max_length, max_agents, 2, dtype=torch.float)
-        self.actions = torch.zeros(self.max_length, max_agents, dtype=torch.long)
-        self.action_probs = torch.zeros(self.max_length, max_agents, action_space_n, dtype=torch.float)
-        self.action_log_prob = torch.zeros(self.max_length, max_agents, dtype=torch.float)
+        self.agent_states = torch.zeros(self.max_length, max_agents, 2, dtype=torch.float).cuda()
+        self.actions = torch.zeros(self.max_length, max_agents, dtype=torch.long).cuda()
+        self.action_probs = torch.zeros(self.max_length, max_agents, action_space_n, dtype=torch.float).cuda()
+        self.action_log_prob = torch.zeros(self.max_length, max_agents, dtype=torch.float).cuda()
 
         self.rewards = torch.zeros(self.max_length, dtype=torch.float)
         self.done = torch.zeros(self.max_length, dtype=torch.int)
@@ -52,15 +52,15 @@ class AgentMemBuffer:
         self.t += 1
 
     def clear(self):
-        self.map_states = torch.zeros(self.max_length, self.height, self.width, dtype=torch.float)
-        self.map_next_states = torch.zeros(self.max_length, self.height, self.width, dtype=torch.float)
+        self.map_states = torch.zeros(self.max_length, self.height, self.width, dtype=torch.float).cuda()
+        self.map_next_states = torch.zeros(self.max_length, self.height, self.width, dtype=torch.float).cuda()
 
         # max train length x number of client in state, grid dirs xy
-        self.agent_states = torch.zeros(self.max_length, self.max_agents, 2, dtype=torch.float)
-        self.actions = torch.zeros(self.max_length, self.max_agents, dtype=torch.long)
-        self.action_probs = torch.zeros(self.max_length, self.max_agents, self.action_space_n, dtype=torch.float)
-        self.action_log_prob = torch.zeros(self.max_length, self.max_agents, dtype=torch.float)
+        self.agent_states = torch.zeros(self.max_length, self.max_agents, 2, dtype=torch.float).cuda()
+        self.actions = torch.zeros(self.max_length, self.max_agents, dtype=torch.long).cuda()
+        self.action_probs = torch.zeros(self.max_length, self.max_agents, self.action_space_n, dtype=torch.float).cuda()
+        self.action_log_prob = torch.zeros(self.max_length, self.max_agents, dtype=torch.float).cuda()
 
-        self.rewards = torch.zeros(self.max_length, dtype=torch.float)
-        self.done = torch.zeros(self.max_length, dtype=torch.int)
+        self.rewards = torch.zeros(self.max_length, dtype=torch.float).cuda()
+        self.done = torch.zeros(self.max_length, dtype=torch.int).cuda()
         self.t = 0

@@ -98,4 +98,4 @@ action_dict = {
 
 
 def idxs_to_actions(actions: Tensor) -> List[Action]:
-    return [action_dict[a.item()] for a in actions]
+    return [action_dict[a] for a in actions[0].cpu().numpy()]

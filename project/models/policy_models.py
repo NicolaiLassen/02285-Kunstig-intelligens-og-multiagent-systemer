@@ -2,7 +2,6 @@
 import torch
 import torch.nn.functional as F
 from torch import nn, Tensor
-from vit_pytorch import ViT
 
 
 class PolicyModel(nn.Module):
@@ -11,7 +10,7 @@ class PolicyModel(nn.Module):
 
         self.width = width
         self.height = height
-        self.embed_dim = 128
+        self.embed_dim = 64
 
         self.fc_1 = nn.Linear(width * height, self.embed_dim)
         self.fc_2 = nn.Linear(self.embed_dim, self.embed_dim)
@@ -33,21 +32,13 @@ class ActorPolicyModel(nn.Module):
 
         self.width = width
         self.height = height
-        self.encoder_out_dim = 256
+        self.encoder_out_dim = 128
 
-        # 2d WxH encoder image # https://arxiv.org/abs/2010.11929
-        self.map_encoder = ViT(
-            image_size=50,
-            patch_size=10,
-            num_classes=self.encoder_out_dim,
-            dim=128,
-            depth=2,
-            channels=1,
-            heads=3,
-            mlp_dim=256,
-            dropout=0,
-            emb_dropout=0
-        )
+        # map features
+        self.conv1 = nn.Conv2d(1, 32, kernel_size=(8, 8), stride=(4, 4))
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=(4, 4), stride=(2, 2))
+        self.conv3 = nn.Conv2d(64, 32, kernel_size=(3, 3), stride=(1, 1))
+        self.activation = nn.ReLU()
 
         # 2 features [x,y]
         self.fc_agent_1 = nn.Linear(2, self.encoder_out_dim)
@@ -59,11 +50,12 @@ class ActorPolicyModel(nn.Module):
 
     def forward(self, map: Tensor,
                 agent_map: Tensor,
-                color_map: Tensor = None,
-                map_mask: Tensor = None) -> Tensor:
-        # 2d patch VIT encoder
-        map_out = self.map_encoder(map)
-        map_out = map_out.unsqueeze(1)
+                color_map: Tensor = None) -> Tensor:
+
+        map_out = self.activation(self.conv1(map))
+        map_out = self.activation(self.conv2(map_out))
+        map_out = self.activation(self.conv3(map_out))
+        map_out = map_out.view(-1, 1, 32 * 4)
 
         # agent pass
         agent_map_out = self.fc_agent_1(agent_map)
