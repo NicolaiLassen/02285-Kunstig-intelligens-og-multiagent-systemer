@@ -35,7 +35,5 @@ if __name__ == '__main__':
         {'params': critic.parameters(), 'lr': lr_critic}
     ])
 
-    # print(get_n_params(actor))
-    # print(get_n_params(critic))
     agent = PPOAgent(env, actor, critic, icm, optimizer)
-    agent.train(2000, 10000)
+    agent.train(2000, 1000000)
