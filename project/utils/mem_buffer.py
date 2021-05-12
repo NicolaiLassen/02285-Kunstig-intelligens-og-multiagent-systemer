@@ -17,6 +17,7 @@ class AgentMemBuffer:
         self.map_states = torch.zeros(self.max_length, self.height, self.width, dtype=torch.float).cuda()
         self.map_next_states = torch.zeros(self.max_length, self.height, self.width, dtype=torch.float).cuda()
         self.map_goal_states = torch.zeros(self.max_length, self.height, self.width, dtype=torch.float).cuda()
+        self.map_color_states = torch.zeros(self.max_length, self.height, self.width, dtype=torch.float).cuda()
 
         # max train length x number of client in state, grid dirs xy
         self.agent_states = torch.zeros(self.max_length, max_agents, 2, dtype=torch.float).cuda()
@@ -42,13 +43,14 @@ class AgentMemBuffer:
             return
 
         self.map_states[self.t] = state[0]
+        self.map_color_states = state[1]
         self.map_next_states[self.t] = next_states[0]
-        self.agent_states[self.t][:len(state[1])] = state[1]
+        self.agent_states[self.t][:len(state[1])] = state[2]
         self.map_goal_states[self.t] = map_goal_state
 
-        self.actions[self.t][:len(state[1])] = action
-        self.action_probs[self.t][:len(state[1])] = action_probs
-        self.action_log_prob[self.t][:len(state[1])] = action_log_prob
+        self.actions[self.t][:len(state[2])] = action
+        self.action_probs[self.t][:len(state[2])] = action_probs
+        self.action_log_prob[self.t][:len(state[2])] = action_log_prob
 
         self.rewards[self.t] = float(reward)
         self.done[self.t] = int(done)
@@ -58,6 +60,7 @@ class AgentMemBuffer:
         self.map_states = torch.zeros(self.max_length, self.height, self.width, dtype=torch.float).cuda()
         self.map_next_states = torch.zeros(self.max_length, self.height, self.width, dtype=torch.float).cuda()
         self.map_goal_states = torch.zeros(self.max_length, self.height, self.width, dtype=torch.float).cuda()
+        self.map_color_states = torch.zeros(self.max_length, self.height, self.width, dtype=torch.float).cuda()
 
         # max train length x number of client in state, grid dirs xy
         self.agent_states = torch.zeros(self.max_length, self.max_agents, 2, dtype=torch.float).cuda()

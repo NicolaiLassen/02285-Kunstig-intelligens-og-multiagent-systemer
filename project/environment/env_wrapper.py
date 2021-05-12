@@ -77,7 +77,7 @@ class EnvWrapper:
         self.t0_state = t1_state
         self.step_n += 1
 
-        return [t1_state.level.float(), t1_state.agents.float()], reward, done
+        return [t1_state.level.float(), t1_state.colors.float(), t1_state.agents.float()], reward, done
 
     def reward(self, state) -> int:
 
@@ -96,7 +96,7 @@ class EnvWrapper:
     def reset(self) -> List[Tensor]:
         self.step_n = 0
         self.t0_state = copy.deepcopy(self.initial_state)
-        return [self.t0_state.level.float(), self.t0_state.agents.float()]
+        return [self.t0_state.level.float(), self.t0_state.colors.float(), self.t0_state.agents.float()]
 
     def __check_done(self, state: LevelState) -> bool:
         return torch.equal(state.level, self.goal_state.level)

@@ -83,7 +83,8 @@ class PPOAgent():
                 s = s1
                 action_idxs, probs, log_prob = self.act(s[0].cuda(),
                                                         self.env.goal_state.level.float().cuda(),
-                                                        s[1].cuda())
+                                                        s[1].cuda(),
+                                                        s[2].cuda())
                 actions = idxs_to_actions(action_idxs)
 
                 temp_step = self.env.step(actions)
@@ -94,8 +95,7 @@ class PPOAgent():
                 ep_t += 1
                 s1, r, d = temp_step
                 level_reward += r
-                self.mem_buffer.set_next(s, s1, self.env.goal_state.level.float(), r, action_idxs, probs,
-                                         log_prob, d)
+                self.mem_buffer.set_next(s, s1, self.env.goal_state.level.float(), r, action_idxs, probs, log_prob, d)
 
                 if d:
                     self.reward_level_ckpt[level].append(level_reward)
@@ -111,11 +111,14 @@ class PPOAgent():
             level_reward = 0
             ep_t = 0
 
-    def act(self, map_state: Tensor, map_goal_state: Tensor, agent_state: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
+    def act(self, map_state: Tensor, map_goal_state: Tensor, color_state: Tensor, agent_state: Tensor) -> Tuple[
+        Tensor, Tensor, Tensor]:
         map_state = normalize_dist(map_state)
         agent_state = normalize_dist(agent_state)
+        color_state = normalize_dist(color_state)
         actions_logs_prob = self.actor_old(map_state.unsqueeze(0).unsqueeze(0),
                                            map_goal_state.unsqueeze(0).unsqueeze(0),
+                                           color_state.unsqueeze(0).unsqueeze(0),
                                            agent_state.unsqueeze(0))
 
         actions_dist = Categorical(actions_logs_prob)
