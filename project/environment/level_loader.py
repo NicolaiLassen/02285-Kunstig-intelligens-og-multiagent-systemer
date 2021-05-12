@@ -44,8 +44,6 @@ def read_level_file(index: int):
 
     level_file_lines = [line.strip().replace("\n", "") if line.startswith("#") else line.replace("\n", "")
                         for line in level_file.readlines()]
-    for line in level_file_lines:
-        print(line, file=sys.stderr, flush=True)
     level_file.close()
     return level_file_lines
 

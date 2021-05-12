@@ -4,6 +4,7 @@ import torch
 from torch import Tensor
 
 from environment.action import Action, ActionType
+from environment.level_loader import load_level
 from utils.preprocess import LevelState
 
 
@@ -14,11 +15,10 @@ def debug_print(s):
 
 class EnvWrapper:
 
+    step_n = 0
     def __init__(
             self,
-            action_space_n: int,
-            initial_state: LevelState,
-            goal_state: LevelState
+            action_space_n: int = 29,
     ) -> None:
         self.free_value = 32  # ord(" ")
         self.agent_0_value = 48  # ord("0")
@@ -27,6 +27,12 @@ class EnvWrapper:
         self.box_z_value = 90  # ord("Z")
 
         self.action_space_n = action_space_n
+
+    def __repr__(self):
+        return self.t0_state.__repr__()
+
+    def load(self, i: int):
+        initial_state, goal_state = load_level(i)
         self.initial_state = initial_state
         self.goal_state = goal_state
 
@@ -45,9 +51,7 @@ class EnvWrapper:
 
         self.mask = None
         self.t0_state = initial_state
-
-    def __repr__(self):
-        return self.t0_state.__repr__()
+        self.step_n = 0
 
     def step(self, actions: List[Action]) -> Optional[Tuple[List[Tensor], int, bool]]:
 
@@ -64,6 +68,7 @@ class EnvWrapper:
         t1_state = self.__act(actions)
         done = self.__check_done(t1_state)
         reward = self.reward(t1_state)
+        self.step_n += 1
         return [t1_state.level.float(), t1_state.agents.float()], reward, done
 
     def reward(self, state) -> int:
@@ -78,9 +83,10 @@ class EnvWrapper:
                 distance = abs(goal_row - row) + abs(goal_col - col)
                 sum_distance += distance
 
-        return sum_distance * -1
+        return (sum_distance * -1) - self.step_n
 
     def reset(self) -> List[Tensor]:
+        self.step_n = 0
         self.t0_state = self.initial_state
         return [self.t0_state.level.float(), self.t0_state.agents.float()]
 

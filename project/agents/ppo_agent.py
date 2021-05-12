@@ -26,6 +26,16 @@ from utils.normalize_dist import normalize_dist
 class PPOAgent():
     mem_buffer: mem_buffer = None
 
+    # counters ckpt
+    t_update = 0  # t * 1000
+    model_save_every = 50  # (8000000/4)  / 2000 / 50
+
+    intrinsic_reward_ckpt = []
+    curiosity_loss_ckpt = []
+    actor_loss_ckpt = []
+    critic_loss_ckpt = []
+    reward_ckpt = []
+
     def __init__(self,
                  env: EnvWrapper,
                  actor: nn.Module,
@@ -66,10 +76,14 @@ class PPOAgent():
 
     def train(self, max_Time: int, max_Time_steps: int):
         self.mem_buffer = AgentMemBuffer(max_Time, action_space_n=self.action_space_n)
-        t = 0
+        level_tries = 10
+        level = 0
+        level_done = 0
+        self.env.load(level)
         s1 = self.env.reset()
+        t = 0
         while t < max_Time_steps:
-            self.save_actor()
+            self.env.reset()
             for ep_T in range(max_Time + 1):
                 s = s1
                 action_idxs, probs, log_prob = self.act(s[0].cuda(), s[1].cuda())
@@ -85,7 +99,14 @@ class PPOAgent():
                 if t % max_Time == 0:
                     self.__update()
                 if d:
-                    self.env.reset()
+                    print(d)
+                    if level_done % level_tries == 0:
+                        level = level + 1 % 10
+                        self.env.load(level)
+                    else:
+                        print("gej")
+                        self.env.reset()
+                    level_done += 1
 
     def act(self, map_state: Tensor, agent_state: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
         map_state = normalize_dist(map_state)
@@ -99,9 +120,15 @@ class PPOAgent():
         action_dist_log_prob = actions_dist.log_prob(actions)
         return actions.detach(), actions_dist.probs.detach(), action_dist_log_prob.detach()
 
-    def save_actor(self):
-        return
-        # torch.save(self.actor_old.state_dict(), "encoder_actor.ckpt")
+    def save_ckpt(self):
+        if self.t_update % self.model_save_every == 0:
+            torch.save(self.actor_old.state_dict(), "ckpt/actor_{}.ckpt".format(self.t_update))
+        torch.save(torch.tensor(self.curiosity_loss_ckpt), "ckpt/losses_curiosity.ckpt")
+        torch.save(torch.tensor(self.intrinsic_reward_ckpt), "ckpt/intrinsic_rewards.ckpt")
+        torch.save(torch.tensor(self.actor_loss_ckpt), "ckpt/losses_actor.ckpt")
+        torch.save(torch.tensor(self.critic_loss_ckpt), "ckpt/losses_critic.ckpt")
+        torch.save(torch.tensor(self.reward_ckpt), "ckpt/rewards.ckpt")
+        self.t_update += 1
 
     def load_actor(self, path):
         self.actor.load_state_dict(torch.load(path))
@@ -133,7 +160,15 @@ class PPOAgent():
         total_loss.backward()
         self.optimizer.step()
 
-        print(self.mem_buffer.rewards)
+        with torch.no_grad():
+            self.intrinsic_reward_ckpt.append(r_i_ts.sum().item())
+            self.curiosity_loss_ckpt.append(curiosity_loss.item())
+            self.actor_loss_ckpt.append(actor_loss.sum().item())
+            self.critic_loss_ckpt.append(critic_loss.sum().item())
+            self.reward_ckpt.append(self.mem_buffer.rewards.sum().item())
+            self.save_ckpt()
+
+        print(self.mem_buffer.rewards.sum())
         self.actor_old.load_state_dict(self.actor.state_dict())
         self.mem_buffer.clear()
 

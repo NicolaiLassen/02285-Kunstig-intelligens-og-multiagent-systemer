@@ -2,7 +2,6 @@ import torch
 
 from agents.ppo_agent import PPOAgent
 from environment.env_wrapper import EnvWrapper
-from environment.level_loader import load_level
 from models.curiosity import IntrinsicCuriosityModule
 from models.policy_models import ActorPolicyModel, PolicyModel
 
@@ -18,8 +17,6 @@ def get_n_params(model):
 
 
 if __name__ == '__main__':
-    initial_state, goal_state = load_level(1)
-
     width = 50
     height = 50
 
@@ -27,21 +24,7 @@ if __name__ == '__main__':
     lr_critic = 1e-3
     lr_icm = 1e-3
 
-    # print(initial_state, file=sys.stderr, flush=True)
-    #
-    env = EnvWrapper(
-        action_space_n=29,
-        initial_state=initial_state,
-        goal_state=goal_state,
-    )
-    # print(env)
-    #
-    # for a in [Action.PushSS, Action.PushSS, Action.PushSS, Action.MoveN, Action.MoveN, Action.MoveN, Action.MoveE,
-    #           Action.MoveE, Action.MoveE]:
-    #     s1, r, d = env.step([a])
-    #     print(env)
-    #     print(d)
-
+    env = EnvWrapper()
     actor = ActorPolicyModel(width, height, env.action_space_n).cuda()
     critic = PolicyModel(width, height).cuda()
     icm = IntrinsicCuriosityModule(env.action_space_n).cuda()
@@ -52,7 +35,7 @@ if __name__ == '__main__':
         {'params': critic.parameters(), 'lr': lr_critic}
     ])
 
-    print(get_n_params(actor))
-    print(get_n_params(critic))
+    # print(get_n_params(actor))
+    # print(get_n_params(critic))
     agent = PPOAgent(env, actor, critic, icm, optimizer)
     agent.train(2000, 10000)
