@@ -1,3 +1,5 @@
+import os
+
 import torch
 
 from agents.ppo_agent import PPOAgent
@@ -16,9 +18,15 @@ def get_n_params(model):
     return pp
 
 
+def create_dir(directory):
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+
 if __name__ == '__main__':
     width = 50
     height = 50
+    create_dir("./ckpt")
 
     lr_actor = 3e-4
     lr_critic = 1e-3
@@ -36,4 +44,4 @@ if __name__ == '__main__':
     ])
 
     agent = PPOAgent(env, actor, critic, icm, optimizer)
-    agent.train(2000, 1000000)
+    agent.train(2000, 2000000)

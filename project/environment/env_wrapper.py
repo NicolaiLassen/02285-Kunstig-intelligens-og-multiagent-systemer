@@ -1,3 +1,4 @@
+import copy
 from typing import List, Tuple, Optional
 
 import torch
@@ -14,8 +15,15 @@ def debug_print(s):
 
 
 class EnvWrapper:
-
+    initial_state = None
+    goal_state = None
+    t0_state = None
+    agents_n = 0
+    rows_n = 0
+    cols_n = 0
     step_n = 0
+    goal_state_positions = {}
+
     def __init__(
             self,
             action_space_n: int = 29,
@@ -49,13 +57,11 @@ class EnvWrapper:
                 if self.agent_0_value <= val <= self.agent_9_value:
                     self.goal_state_positions[val.item()] = [row, col]
 
-        self.mask = None
-        self.t0_state = initial_state
+        self.t0_state = copy.deepcopy(initial_state)
         self.step_n = 0
 
     def step(self, actions: List[Action]) -> Optional[Tuple[List[Tensor], int, bool]]:
 
-        # TODO FIX NONE
         for index, action in enumerate(actions):
             if not self.__is_applicable(index, action):
                 debug_print('# action not applicable\n{}: {}'.format(index, action))
@@ -68,7 +74,12 @@ class EnvWrapper:
         t1_state = self.__act(actions)
         done = self.__check_done(t1_state)
         reward = self.reward(t1_state)
+        self.t0_state = t1_state
         self.step_n += 1
+
+        if done:
+            self.reset()
+
         return [t1_state.level.float(), t1_state.agents.float()], reward, done
 
     def reward(self, state) -> int:
@@ -87,7 +98,7 @@ class EnvWrapper:
 
     def reset(self) -> List[Tensor]:
         self.step_n = 0
-        self.t0_state = self.initial_state
+        self.t0_state = copy.deepcopy(self.initial_state)
         return [self.t0_state.level.float(), self.t0_state.agents.float()]
 
     def __check_done(self, state: LevelState) -> bool:

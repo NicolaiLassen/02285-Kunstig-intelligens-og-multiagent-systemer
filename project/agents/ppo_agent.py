@@ -1,4 +1,5 @@
 import copy
+import pickle
 from typing import Tuple
 
 import torch
@@ -34,7 +35,7 @@ class PPOAgent():
     curiosity_loss_ckpt = []
     actor_loss_ckpt = []
     critic_loss_ckpt = []
-    reward_ckpt = []
+    reward_level_ckpt = {i: [] for i in range(10)}
 
     def __init__(self,
                  env: EnvWrapper,
@@ -76,15 +77,16 @@ class PPOAgent():
 
     def train(self, max_Time: int, max_Time_steps: int):
         self.mem_buffer = AgentMemBuffer(max_Time, action_space_n=self.action_space_n)
-        level_tries = 10
         level = 0
-        level_done = 0
+        level_tries_n = 10
+        level_done_n = 0
+        level_reward = 0
         self.env.load(level)
-        s1 = self.env.reset()
         t = 0
+        ep_t = 0
+        s1 = self.env.reset()
         while t < max_Time_steps:
-            self.env.reset()
-            for ep_T in range(max_Time + 1):
+            while ep_t < max_Time:
                 s = s1
                 action_idxs, probs, log_prob = self.act(s[0].cuda(), s[1].cuda())
                 actions = idxs_to_actions(action_idxs)
@@ -94,26 +96,28 @@ class PPOAgent():
                     continue
 
                 t += 1
+                ep_t += 1
                 s1, r, d = temp_step
+                level_reward += r
                 self.mem_buffer.set_next(s, s1, r, action_idxs, probs, log_prob, d)
-                if t % max_Time == 0:
-                    self.__update()
+
                 if d:
-                    print(d)
-                    if level_done % level_tries == 0:
-                        level = level + 1 % 10
+                    self.reward_level_ckpt[level].append(level_reward)
+                    if (level_done_n + 1) % level_tries_n + 1 == 0:
+                        level = level % 10
                         self.env.load(level)
-                    else:
-                        print("gej")
-                        self.env.reset()
-                    level_done += 1
+                    level_done_n += 1
+                    level_reward = 0
+
+            self.__update()
+            s1 = self.env.reset()
+            level_reward = 0
+            ep_t = 0
 
     def act(self, map_state: Tensor, agent_state: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
         map_state = normalize_dist(map_state)
         agent_state = normalize_dist(agent_state)
-        actions_logs_prob = self.actor_old(map_state.unsqueeze(0).unsqueeze(0),
-                                           agent_state.unsqueeze(0),
-                                           self.env.mask)
+        actions_logs_prob = self.actor_old(map_state.unsqueeze(0).unsqueeze(0), agent_state.unsqueeze(0))
 
         actions_dist = Categorical(actions_logs_prob)
         actions = actions_dist.sample()
@@ -127,7 +131,9 @@ class PPOAgent():
         torch.save(torch.tensor(self.intrinsic_reward_ckpt), "ckpt/intrinsic_rewards.ckpt")
         torch.save(torch.tensor(self.actor_loss_ckpt), "ckpt/losses_actor.ckpt")
         torch.save(torch.tensor(self.critic_loss_ckpt), "ckpt/losses_critic.ckpt")
-        torch.save(torch.tensor(self.reward_ckpt), "ckpt/rewards.ckpt")
+        with open('ckpt/reward_level_ckpt.pickle', 'wb') as handle:
+            pickle.dump(self.reward_level_ckpt, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
         self.t_update += 1
 
     def load_actor(self, path):
@@ -165,17 +171,14 @@ class PPOAgent():
             self.curiosity_loss_ckpt.append(curiosity_loss.item())
             self.actor_loss_ckpt.append(actor_loss.sum().item())
             self.critic_loss_ckpt.append(critic_loss.sum().item())
-            self.reward_ckpt.append(self.mem_buffer.rewards.sum().item())
             self.save_ckpt()
 
-        print(self.mem_buffer.rewards.sum())
         self.actor_old.load_state_dict(self.actor.state_dict())
         self.mem_buffer.clear()
 
     def __eval(self):
         actions_prob = self.actor(self.mem_buffer.map_states.unsqueeze(1),
-                                  self.mem_buffer.agent_states,
-                                  self.env.mask)
+                                  self.mem_buffer.agent_states)
         actions_dist = Categorical(actions_prob)
         action_log_prob = actions_dist.log_prob(self.mem_buffer.actions)
         state_values = self.critic(self.mem_buffer.map_states)
