@@ -12,7 +12,6 @@ from agents.agent_base import BaseAgent
 from environment.action import idxs_to_actions
 from environment.env_wrapper import EnvWrapper
 from models.curiosity import IntrinsicCuriosityModule
-from models.policy_models import ActorPolicyModel
 from utils import mem_buffer
 # PPO Actor Critic
 from utils.mem_buffer import AgentMemBuffer
@@ -111,6 +110,7 @@ class PPOAgent(BaseAgent):
         # ACC Gradient traning
         # We have the samples why not train a bit on it?
         torch.cuda.empty_cache()
+        print(self.mem_buffer.actions)
 
         action_log_probs, state_values, entropy = self.__eval()
         d_r = self.__discounted_rewards()
@@ -188,21 +188,3 @@ class PPOAgent(BaseAgent):
         r_T_theta = r_T_theta.mean(-1)  # average over agents
         r_T_c_theta = torch.clamp(r_T_theta, min=1 - self.eps_c, max=1 + self.eps_c)
         return torch.min(r_T_theta * R_T, r_T_c_theta * R_T).mean()  # E
-
-
-# TEST
-if __name__ == '__main__':
-    a = torch.randn(3, 50, 50)
-    a[20:50, 20:50] = 0
-    b = torch.randn(3, 8, 2)
-    model = ActorPolicyModel(50, 50, 29)
-
-    log_probs = model(a, b)
-    print(log_probs.shape)
-
-    actions_dist = Categorical(log_probs)
-    actions = actions_dist.sample()
-    print(actions.shape)
-    action_dist_log_probs = actions_dist.log_prob(actions)
-    print(action_dist_log_probs)
-    print(actions_dist.sample())

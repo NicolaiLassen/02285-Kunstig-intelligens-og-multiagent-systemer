@@ -29,6 +29,10 @@ class LevelState:
         color_rep = self.colors[:self.rows_n, :self.cols_n].__repr__()
         return "\n".join([level_rep, color_rep])
 
+    def agent_row_col(self, index: int):
+        agent_position = self.agents[index]
+        return int(agent_position[0].detach().item()), int(agent_position[1].detach().item())
+
 #    def print(self):
 #        for row in self.level:
 #            print(row, file=sys.stderr, flush=True)
