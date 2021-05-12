@@ -181,6 +181,7 @@ class PPOAgent():
     def __eval(self):
         actions_prob = self.actor(self.mem_buffer.map_states.unsqueeze(1),
                                   self.mem_buffer.map_goal_states.unsqueeze(1),
+                                  self.mem_buffer.map_color_states.unsqueeze(1),
                                   self.mem_buffer.agent_states)
         actions_dist = Categorical(actions_prob)
         action_log_prob = actions_dist.log_prob(self.mem_buffer.actions)
