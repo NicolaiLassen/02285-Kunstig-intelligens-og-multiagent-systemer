@@ -43,7 +43,7 @@ class AgentMemBuffer:
             return
 
         self.map_states[self.t] = state[0]
-        self.map_color_states = state[1]
+        self.map_color_states[self.t] = state[1]
         self.map_next_states[self.t] = next_states[0]
         self.agent_states[self.t][:len(state[1])] = state[2]
         self.map_goal_states[self.t] = map_goal_state
