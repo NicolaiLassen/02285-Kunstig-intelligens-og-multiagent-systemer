@@ -3,8 +3,7 @@ hospital
 #levelname
 SAD1
 #colors
-blue: 0
-red: A
+blue: 0, A
 #initial
 +++++
 +0A +

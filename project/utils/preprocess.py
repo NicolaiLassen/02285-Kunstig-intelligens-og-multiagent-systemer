@@ -2,11 +2,7 @@ import torch
 
 from environment.entity import Entity
 from environment.level_state import LevelState
-
-
-def normalize_dist(t):
-    # Normalize  # PLZ DON'T BLOW MY GRADIENT
-    return (t - t.mean()) / (t.std() + 1e-10)
+from utils.normalize_dist import normalize_dist
 
 
 def parse_level_file(level_file):
@@ -69,6 +65,6 @@ def parse_level_lines(color_dict, level_lines, width=50, height=50):
     for i, agent in enumerate(agents):
         agents_t[i] = torch.tensor([agent.col, agent.row])
 
-    level_t = normalize_dist(level_t) # NORM
+    level_t = normalize_dist(level_t)  # NORM
 
     return LevelState(num_rows, num_cols, level, agents, level_t, agents_t)

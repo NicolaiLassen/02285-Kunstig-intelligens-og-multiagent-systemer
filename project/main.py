@@ -1,66 +1,134 @@
+import os
 import sys
 from typing import List
+from typing import Tuple
 
 import torch
+from torch import Tensor
 
-from agents.ppo_agent import PPOAgent
-from environment.action import action_dict, Action
+from environment.action import Action
 from environment.env_wrapper import EnvWrapper
-from models.policy_models import PolicyModelEncoder, PolicyModel
-from utils.preprocess import parse_level_file
+from environment.level_state import LevelState
 
-client_name = "FeelerBois"
-
-
-def send_plan(server_out, plan: List[List[Action]]):
-    # Print plan to server.
-    if plan is None:
-        print('Unable to solve level.', file=sys.stderr, flush=True)
-        sys.exit(0)
-    else:
-        print('Found solution of length {}.'.format(len(plan)), file=sys.stderr, flush=True)
-        for joint_action in plan:
-            print("|".join(a.name_ for a in joint_action), flush=True)
-            # We must read the server's response to not fill up the stdin buffer and block the server.
-            response = server_out.readline()
+LEVELS_DIR = './levels'
 
 
-def get_server_out():
-    # Send client name to server.
-    if hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(encoding='ASCII')
-    print(client_name, flush=True)
+def read_level_file(index: int):
+    level_names = os.listdir(LEVELS_DIR)[1:]  # skip dir info file ".DS_Store"
+    file_name = level_names[index % len(level_names)]
+    level_file = open(os.path.join(LEVELS_DIR, file_name), 'r')
 
-    server_out = sys.stdin
-    if hasattr(server_out, "reconfigure"):
-        server_out.reconfigure(encoding='ASCII')
-    return server_out
+    level_file_lines = [line.strip().replace("\n", "") if line.startswith("#") else line.replace("\n", "")
+                        for line in level_file.readlines()]
+    for line in level_file_lines:
+        print(line, file=sys.stderr, flush=True)
+    level_file.close()
+    return level_file_lines
+
+
+color_map = {
+    'blue': 1,
+    'red': 2,
+    'cyan': 3,
+    'purple': 4,
+    'green': 5,
+    'orange': 6,
+    'grey': 7,
+    'lightblue': 8,
+    'brown': 9,
+}
+
+
+def color_to_int(s: str):
+    return color_map[s.lower()]
+
+
+def parse_level_lines(color_dict, level_lines: List[str], width=50, height=50) -> LevelState:
+    num_agents = len([char for char in color_dict.keys() if '0' <= char <= '9'])
+    num_rows = len(level_lines)
+    num_cols = len(level_lines[0])
+    level_matrix: Tensor = torch.zeros(width, height, dtype=torch.long)
+    color_matrix: Tensor = torch.zeros(width, height, dtype=torch.long)
+    agent_positions = torch.zeros(num_agents, 2)
+
+    for row, line in enumerate(level_lines):
+        for col, char in enumerate(line):
+            level_matrix[row][col] = ord(char)
+            if '0' <= char <= '9':
+                agent_positions[int(char)] = torch.tensor([row, col])
+                color_matrix[row][col] = color_to_int(color_dict[char])
+            if 'A' <= char <= 'Z':
+                color_matrix[row][col] = color_to_int(color_dict[char])
+
+    return LevelState(
+        num_rows,
+        num_cols,
+        level_matrix,
+        color_matrix,
+        agent_positions,
+    )
+
+
+def load_level(index: int) -> Tuple[LevelState, LevelState]:
+    file_lines = read_level_file(index)
+    colors_index = file_lines.index("#colors")
+    initial_index = file_lines.index("#initial")
+    goal_index = file_lines.index("#goal")
+    end_index = file_lines.index("#end")
+
+    # parse colors
+    color_dict = {}
+    for line in file_lines[colors_index + 1:initial_index]:
+        split = line.split(':')
+        color = split[0].strip().lower()
+        for e in [e.strip() for e in split[1].split(',')]:
+            color_dict[e] = color
+
+    # parse initial level state
+    level_initial_lines = file_lines[initial_index + 1:goal_index]
+    level_initial_state = parse_level_lines(color_dict, level_initial_lines)
+
+    # parse goal level state
+    level_goal_lines = file_lines[goal_index + 1:end_index]
+    level_goal_state = parse_level_lines(color_dict, level_goal_lines)
+
+    return level_initial_state, level_goal_state
 
 
 if __name__ == '__main__':
-    bach_size = 1
+    initial_state, goal_state = load_level(0)
+
     width = 50
     height = 50
 
-    lr_actor = 0.0005
-    lr_critic = 0.001
+    lr_actor = 3e-4
+    lr_critic = 1e-3
+    lr_icm = 1e-3
 
-    initial_state, goal_state = parse_level_file(server_messages)
+    print(initial_state, file=sys.stderr, flush=True)
 
-    # PRINT STUFF
-    action_space_n = int(len(action_dict))
-    env_wrapper = EnvWrapper(len(action_dict), initial_state, goal_state)
+    env = EnvWrapper(
+        action_space_n=29,
+        initial_state=initial_state,
+        goal_state=goal_state,
+    )
+    print(env)
 
-    actor = PolicyModelEncoder(width, height, env_wrapper.action_space_n)
-    critic = PolicyModel(width, height)
+    for a in [Action.PushSS, Action.PushSS, Action.PushSS, Action.MoveN, Action.MoveN, Action.MoveN, Action.MoveE,
+              Action.MoveE, Action.MoveE]:
+        s1, r, d = env.step([a])
+        print(env)
+        print(d)
 
-    optimizer_actor = torch.optim.Adam(actor.parameters(), lr=lr_actor)
-    optimizer_critic = torch.optim.Adam(critic.parameters(), lr=lr_critic)
-
-    agent = PPOAgent(env_wrapper, actor, critic, optimizer_actor, optimizer_critic)
-    agent.train(100, 10000)
-
-    # action_idxs, _ = agent.act([initial_state.level_t, initial_state.agents_t])
-    # plan = [idxs_to_actions(action_idxs)]
-    # debug_print(plan)
-    # send_plan(plan)
+    # actor = ActorPolicyModel(width, height, env.action_space_n)
+    # critic = PolicyModel(width, height)
+    # icm = IntrinsicCuriosityModule(env.action_space_n)
+    #
+    # optimizer = torch.optim.Adam([
+    #     {'params': actor.parameters(), 'lr': lr_actor},
+    #     {'params': icm.parameters(), 'lr': lr_icm},
+    #     {'params': critic.parameters(), 'lr': lr_critic}
+    # ])
+    #
+    # agent = PPOAgent(env, actor, critic, optimizer)
+    # agent.train(400, 10000)

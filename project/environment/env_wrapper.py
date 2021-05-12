@@ -1,3 +1,4 @@
+import sys
 from typing import List, Tuple, Optional
 
 import torch
@@ -41,10 +42,6 @@ class EnvWrapper:
                     self.goal_state_positions[val.item()] = [row, col]
 
         self.mask = None
-
-        #        self.initial_state = initial_state
-        #        self.goal_state = goal_state
-
         self.t0_state = initial_state
 
     def __repr__(self):
@@ -55,17 +52,17 @@ class EnvWrapper:
         # TODO FIX NONE
         for index, action in enumerate(actions):
             if not self.__is_applicable(index, action):
-                # print('# action not applicable\n{}: {}'.format(index, action), file=sys.stderr, flush=True)
+                print('# action not applicable\n{}: {}'.format(index, action), file=sys.stderr, flush=True)
                 return None
 
         if self.__is_conflict(actions):
-            # print('# actions contain conflict\n{}'.format(actions), file=sys.stderr, flush=True)
+            print('# actions contain conflict\n{}'.format(actions), file=sys.stderr, flush=True)
             return None
 
         t1_state = self.__act(actions)
         done = self.__check_done(t1_state)
         reward = self.reward(t1_state)
-        return [t1_state.level, t1_state.agents], reward, done
+        return [t1_state.level.float(), t1_state.agents.float()], reward, done
 
     def reward(self, state) -> int:
 
@@ -83,7 +80,7 @@ class EnvWrapper:
 
     def reset(self) -> List[Tensor]:
         self.t0_state = self.initial_state
-        return [self.t0_state.level, self.t0_state.agents]
+        return [self.t0_state.level.float(), self.t0_state.agents.float()]
 
     def __check_done(self, state: LevelState) -> bool:
         return torch.equal(state.level, self.goal_state.level)
@@ -103,9 +100,11 @@ class EnvWrapper:
             next_agent_row = agent_row + action.agent_row_delta
             next_agent_col = agent_col + action.agent_col_delta
             if not self.__is_box(next_agent_row, next_agent_col):
+                print('# next agent position is NOT box', file=sys.stderr, flush=True)
                 return False
             # check that agent and box is same color
             if not self.__is_same_color(agent_row, agent_col, next_agent_row, next_agent_col):
+                print('# box and agent is NOT same color', file=sys.stderr, flush=True)
                 return False
             # check that next box position is free
             next_box_row = next_agent_row + action.box_row_delta
@@ -179,7 +178,7 @@ class EnvWrapper:
         return False
 
     def __is_same_color(self, a_row, a_col, b_row, b_col):
-        return self.t0_state.colors[a_row][a_col] == self.t0_state.colors[b_row][b_col]
+        return True # self.t0_state.colors[a_row][a_col] == self.t0_state.colors[b_row][b_col]
 
     def __is_box(self, row, col):
         return self.box_a_value <= self.t0_state.level[row][col] <= self.box_z_value
