@@ -56,6 +56,7 @@ class ActorPolicyModel(nn.Module):
         self.color_map_encoder = NaturalBlock()
 
         # 2 features [x,y]
+        # scale up embeds
         self.fc_agent_1 = nn.Linear(2, self.encoder_out_dim)
 
         self.fc_passes = nn.Linear(self.encoder_out_dim, self.encoder_out_dim)
