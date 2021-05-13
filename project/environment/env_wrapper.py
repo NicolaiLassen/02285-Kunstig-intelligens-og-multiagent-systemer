@@ -1,10 +1,10 @@
 import copy
-from typing import List, Tuple, Optional
+from typing import List, Tuple
 
 import torch
 from torch import Tensor
 
-from environment.action import Action, ActionType
+from environment.action import Action, ActionType, idxs_to_actions
 from environment.level_loader import load_level
 from utils.preprocess import LevelState
 
@@ -23,6 +23,8 @@ class EnvWrapper:
     cols_n = 0
     step_n = 0
     goal_state_positions = {}
+    file_name = None
+    valid_agent_actions = None
 
     def __init__(
             self,
@@ -40,7 +42,8 @@ class EnvWrapper:
         return self.t0_state.__repr__()
 
     def load(self, i: int):
-        initial_state, goal_state = load_level(i)
+        initial_state, goal_state, file_name = load_level(i)
+        self.file_name = file_name
         self.initial_state = initial_state
         self.goal_state = goal_state
 
@@ -59,24 +62,34 @@ class EnvWrapper:
 
         self.t0_state = copy.deepcopy(initial_state)
         self.step_n = 0
+        self.valid_agent_actions = torch.ones(initial_state.agents_n, 29)  # action_space validate
 
-    def step(self, actions: List[Action]) -> Optional[Tuple[List[Tensor], int, bool]]:
+    def step(self, action_idxs: Tensor) -> Tuple[bool, List[Tensor], int, bool]:
 
+        actions = idxs_to_actions(action_idxs)
+        valid = True
         for index, action in enumerate(actions):
             if not self.__is_applicable(index, action):
-                debug_print('# action not applicable\n{}: {}'.format(index, action))
-                return None
+                self.valid_agent_actions[index][action_idxs[0][index].item()] = 0
+                valid = False
+
+        if valid != len(actions):
+            return False, [self.t0_state.level.float(), self.t0_state.colors.float(),
+                           self.t0_state.agents.float(), self.valid_agent_actions.float()], 0, False
 
         if self.__is_conflict(actions):
-            debug_print('# actions contain conflict\n{}'.format(actions))
-            return None
+            # TODO
+            return False, [self.t0_state.level.float(), self.t0_state.colors.float(),
+                           self.t0_state.agents.float(), self.valid_agent_actions.float()], 0, False
 
         t1_state = self.__act(actions)
         reward = self.reward(t1_state)
         done = reward == len(self.goal_state_positions)
         self.t0_state = t1_state
         self.step_n += 1
-        return [t1_state.level.float(), t1_state.colors.float(), t1_state.agents.float()], reward, done
+        self.valid_agent_actions = torch.ones(self.initial_state.agents_n, 29)
+        return True, [t1_state.level.float(), t1_state.colors.float(), t1_state.agents.float(),
+                      self.valid_agent_actions.float()], reward, done
 
     def reward(self, state) -> int:
         # check sparse reward system
@@ -94,7 +107,9 @@ class EnvWrapper:
     def reset(self) -> List[Tensor]:
         self.step_n = 0
         self.t0_state = copy.deepcopy(self.initial_state)
-        return [self.t0_state.level.float(), self.t0_state.colors.float(), self.t0_state.agents.float()]
+        self.valid_agent_actions = torch.ones(self.initial_state.agents_n, 29)
+        return [self.t0_state.level.float(), self.t0_state.colors.float(), self.t0_state.agents.float(),
+                self.valid_agent_actions.float()]
 
     def __is_applicable(self, index: int, action: Action):
         agent_row, agent_col = self.t0_state.agent_row_col(index)

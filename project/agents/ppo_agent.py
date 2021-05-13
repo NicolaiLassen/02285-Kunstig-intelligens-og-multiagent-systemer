@@ -11,8 +11,8 @@ import torch.optim as optim
 from torch import Tensor
 from torch.distributions import Categorical
 
-from environment.action import idxs_to_actions
 from environment.env_wrapper import EnvWrapper
+from environment.level_loader import level_names
 from utils import mem_buffer
 # PPO Actor Critic
 from utils.mem_buffer import AgentMemBuffer
@@ -24,11 +24,8 @@ def delete_file(path):
         os.remove(path)
 
 
-levels_n = 20
-
-
 def random_level():
-    return randint(0, levels_n)
+    return randint(0, len(level_names))
 
 
 class PPOAgent():
@@ -42,7 +39,7 @@ class PPOAgent():
     curiosity_loss_ckpt = []
     actor_loss_ckpt = []
     critic_loss_ckpt = []
-    total_steps_level_ckpt = {i: [] for i in range(levels_n)}
+    total_steps_level_ckpt = {name: [] for name in level_names}
 
     def __init__(self,
                  env: EnvWrapper,
@@ -93,26 +90,22 @@ class PPOAgent():
             total_steps_level = 0
             while ep_t < max_Time:
                 s = s1
-                ## TODO: Feed difference from last state to network to force update when nothing happens
                 action_idxs, probs, log_prob = self.act(s[0].cuda(),
                                                         self.env.goal_state.level.float().cuda(),
                                                         s[1].cuda(),
-                                                        s[2].cuda())
-                actions = idxs_to_actions(action_idxs)
-                temp_step = self.env.step(actions)
+                                                        s[2].cuda(),
+                                                        s[3].cuda())
+                valid, s1, r, d = self.env.step(action_idxs)
                 ep_t += 1
                 t += 1
-                if temp_step is None:
-                    # state did not change when action was applied. Learn this
-                    self.mem_buffer.set_next(s, s, self.env.goal_state.level.float(), 0, action_idxs, probs, log_prob,
-                                             False)
+                self.mem_buffer.set_next(s, s1, self.env.goal_state.level.float(), r, action_idxs, probs, log_prob, d)
+
+                if not valid:
                     continue
 
                 total_steps_level += 1
-                s1, r, d = temp_step
-                self.mem_buffer.set_next(s, s1, self.env.goal_state.level.float(), r, action_idxs, probs, log_prob, d)
                 if d:
-                    self.total_steps_level_ckpt[level].append(total_steps_level)
+                    self.total_steps_level_ckpt[self.env.file_name].append(total_steps_level)
                     level = random_level()
                     self.env.load(level)
                     s1 = self.env.reset()
@@ -124,15 +117,22 @@ class PPOAgent():
             self.__update()
             ep_t = 0
 
-    def act(self, map_state: Tensor, map_goal_state: Tensor, color_state: Tensor, agent_state: Tensor) -> Tuple[
+    def act(self, map_state: Tensor,
+            map_goal_state: Tensor,
+            color_state: Tensor,
+            agent_state: Tensor,
+            valid_actions: Tensor
+            ) -> Tuple[
         Tensor, Tensor, Tensor]:
+
         map_state = normalize_dist(map_state)
         agent_state = normalize_dist(agent_state)
         color_state = normalize_dist(color_state)
         actions_logs_prob = self.actor_old(map_state.unsqueeze(0).unsqueeze(0),
                                            map_goal_state.unsqueeze(0).unsqueeze(0),
                                            color_state.unsqueeze(0).unsqueeze(0),
-                                           agent_state.unsqueeze(0))
+                                           agent_state.unsqueeze(0),
+                                           valid_actions.unsqueeze(0))
 
         actions_dist = Categorical(actions_logs_prob)
         actions = actions_dist.sample()
@@ -197,7 +197,8 @@ class PPOAgent():
         actions_prob = self.actor(self.mem_buffer.map_states.unsqueeze(1),
                                   self.mem_buffer.map_goal_states.unsqueeze(1),
                                   self.mem_buffer.map_color_states.unsqueeze(1),
-                                  self.mem_buffer.agent_states)
+                                  self.mem_buffer.agent_states,
+                                  self.mem_buffer.agent_validate_states)
         actions_dist = Categorical(actions_prob)
         action_log_prob = actions_dist.log_prob(self.mem_buffer.actions)
         state_values = self.critic(self.mem_buffer.map_states)

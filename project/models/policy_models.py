@@ -59,6 +59,9 @@ class ActorPolicyModel(nn.Module):
         # scale up embeds
         self.fc_agent_1 = nn.Linear(2, self.encoder_out_dim)
 
+        # validate embeds
+        self.fc_validate = nn.Linear(29, self.encoder_out_dim)
+
         self.fc_passes = nn.Linear(self.encoder_out_dim, self.encoder_out_dim)
         self.fc_out = nn.Linear(self.encoder_out_dim, action_dim)
         self.activation = nn.ReLU()
@@ -66,7 +69,9 @@ class ActorPolicyModel(nn.Module):
     def forward(self, map: Tensor,
                 map_goal: Tensor,
                 map_colors: Tensor,
-                agent_pos: Tensor, ) -> Tensor:
+                agent_pos: Tensor,
+                agent_valid: Tensor
+                ) -> Tensor:
         # see current state
         map_out = self.map_encoder(map)
         map_out = map_out.view(-1, 1, 32 * 4)
@@ -85,9 +90,15 @@ class ActorPolicyModel(nn.Module):
         # agent pass
         agent_pos_out = self.activation(self.fc_agent_1(agent_pos))
 
+        # validate pass
+        validate_out = self.activation(self.fc_validate(agent_valid))
+
+        # agent and action out
+        agent_out = torch.einsum("ijk,ijk -> ijk", agent_pos_out, validate_out)
+
         # out pass
         # combine pos of agents with passes
-        out = torch.einsum("ijk,tjk -> tjk", maps_out, agent_pos_out)
+        out = torch.einsum("ijk,tjk -> tjk", maps_out, agent_out)
         out = self.activation(self.fc_passes(out))
         out = self.fc_out(out)
 

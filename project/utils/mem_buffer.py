@@ -21,6 +21,8 @@ class AgentMemBuffer:
 
         # max train length x number of client in state, grid dirs xy
         self.agent_states = torch.zeros(self.max_length, max_agents, 2, dtype=torch.float).cuda()
+        self.agent_validate_states = torch.zeros(self.max_length, max_agents, 29, dtype=torch.float).cuda()
+
         self.actions = torch.zeros(self.max_length, max_agents, dtype=torch.long).cuda()
         self.action_probs = torch.zeros(self.max_length, max_agents, action_space_n, dtype=torch.float).cuda()
         self.action_log_prob = torch.zeros(self.max_length, max_agents, dtype=torch.float).cuda()
@@ -46,6 +48,7 @@ class AgentMemBuffer:
         self.map_color_states[self.t] = state[1]
         self.map_next_states[self.t] = next_states[0]
         self.agent_states[self.t][:len(state[2])] = state[2]
+        self.agent_validate_states[self.t][:len(state[2])] = state[3]
         self.map_goal_states[self.t] = map_goal_state
 
         self.actions[self.t][:len(state[2])] = action
@@ -64,6 +67,8 @@ class AgentMemBuffer:
 
         # max train length x number of client in state, grid dirs xy
         self.agent_states = torch.zeros(self.max_length, self.max_agents, 2, dtype=torch.float).cuda()
+        self.agent_validate_states = torch.zeros(self.max_length, self.max_agents, 29, dtype=torch.float).cuda()
+
         self.actions = torch.zeros(self.max_length, self.max_agents, dtype=torch.long).cuda()
         self.action_probs = torch.zeros(self.max_length, self.max_agents, self.action_space_n, dtype=torch.float).cuda()
         self.action_log_prob = torch.zeros(self.max_length, self.max_agents, dtype=torch.float).cuda()
