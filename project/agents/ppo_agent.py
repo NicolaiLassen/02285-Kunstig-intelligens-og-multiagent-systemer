@@ -24,7 +24,7 @@ def delete_file(path):
         os.remove(path)
 
 
-levels_n = 14
+levels_n = 21
 
 
 def random_level():
@@ -85,8 +85,8 @@ class PPOAgent():
     def train(self, max_Time: int, max_Time_steps: int):
         self.mem_buffer = AgentMemBuffer(max_Time, action_space_n=self.action_space_n)
         level = random_level()
-        level_reward = 0
-        self.env.load(16)
+        level_running_reward = 0
+        self.env.load(level)
         print(self.env)
         t = 0
         ep_t = 0
@@ -106,21 +106,21 @@ class PPOAgent():
                 t += 1
                 ep_t += 1
                 s1, r, d = temp_step
-                level_reward += r
+                level_running_reward += r
                 self.mem_buffer.set_next(s, s1, self.env.goal_state.level.float(), r, action_idxs, probs, log_prob, d)
                 if d:
-                    self.reward_level_ckpt[level].append(level_reward)
+                    self.reward_level_ckpt[level].append(level_running_reward)
                     level = random_level()
                     self.env.load(level)
                     s1 = self.env.reset()
-                    level_reward = 0
+                    level_running_reward = 0
 
             level = random_level()
             self.env.load(level)
             s1 = self.env.reset()
             self.__update()
             ep_t = 0
-            level_reward = 0
+            level_running_reward = 0
 
     def act(self, map_state: Tensor, map_goal_state: Tensor, color_state: Tensor, agent_state: Tensor) -> Tuple[
         Tensor, Tensor, Tensor]:
