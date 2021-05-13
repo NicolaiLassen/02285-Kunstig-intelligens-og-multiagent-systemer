@@ -105,6 +105,7 @@ class PPOAgent():
 
                 if d:
                     self.reward_level_ckpt[level].append(level_reward)
+                    print(level_reward)
                     if (level_done_n + 1) % level_tries_n == 0:
                         level += 1
                         level = level % 10
