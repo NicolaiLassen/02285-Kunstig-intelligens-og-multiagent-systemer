@@ -78,7 +78,7 @@ class PPOAgent():
     def train(self, max_Time: int, max_Time_steps: int):
         self.mem_buffer = AgentMemBuffer(max_Time, action_space_n=self.action_space_n)
         level = 0
-        level_tries_n = 5
+        level_tries_n = 2
         level_done_n = 0
         level_reward = 0
         leve_solve_t = 0
