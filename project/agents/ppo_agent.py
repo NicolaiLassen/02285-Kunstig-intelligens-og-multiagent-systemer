@@ -217,7 +217,8 @@ class PPOAgent():
         running_reward = 0
         t = 0
         for r, d in zip(reversed(self.mem_buffer.rewards), reversed(self.mem_buffer.done)):
-            running_reward = r + (running_reward * self.gamma) * (1. - d)  # Zero out done states
+            running_reward = r + (
+                    running_reward * self.gamma)  # We wan't done rewards due to sparse env # * (1. - d)
             discounted_rewards[-t] = running_reward
             t += 1
         return discounted_rewards.float().cuda()
