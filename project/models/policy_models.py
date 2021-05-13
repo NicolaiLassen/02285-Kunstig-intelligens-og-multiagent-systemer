@@ -35,7 +35,7 @@ class NaturalBlock(nn.Module):
             nn.ReLU(),
             nn.Conv2d(32, 64, kernel_size=(4, 4), stride=(2, 2)),
             nn.ReLU(),
-            nn.Conv2d(64, 32, kernel_size=(3, 3), stride=(1, 1))
+            nn.Conv2d(64, 32, kernel_size=(3, 3), stride=(1, 1)),
         )
 
     def forward(self, x):
@@ -57,8 +57,8 @@ class ActorPolicyModel(nn.Module):
 
         # 2 features [x,y]
         self.fc_agent_1 = nn.Linear(2, self.encoder_out_dim)
-        self.fc_agent_2 = nn.Linear(self.encoder_out_dim, self.encoder_out_dim)
 
+        self.fc_passes = nn.Linear(self.encoder_out_dim, self.encoder_out_dim)
         self.fc_out = nn.Linear(self.encoder_out_dim, action_dim)
         self.activation = nn.ReLU()
 
@@ -82,14 +82,12 @@ class ActorPolicyModel(nn.Module):
         maps_out = torch.cat((map_out, map_goal_out, map_colors_out))
 
         # agent pass
-        agent_pos_out = self.fc_agent_1(agent_pos)
-        agent_pos_out = self.activation(agent_pos_out)
-        agent_pos_out = self.fc_agent_2(agent_pos_out)
-        agent_pos_out = self.activation(agent_pos_out)
+        agent_pos_out = self.activation(self.fc_agent_1(agent_pos))
 
         # out pass
         # combine pos of agents with passes
         out = torch.einsum("ijk,tjk -> tjk", maps_out, agent_pos_out)
+        out = self.activation(self.fc_passes(out))
         out = self.fc_out(out)
 
         return F.log_softmax(out, dim=-1)
