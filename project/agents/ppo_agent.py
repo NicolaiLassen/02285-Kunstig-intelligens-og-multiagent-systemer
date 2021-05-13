@@ -35,6 +35,7 @@ class PPOAgent():
     actor_loss_ckpt = []
     critic_loss_ckpt = []
     reward_level_ckpt = {i: [] for i in range(10)}
+    solve_time_level_ckpt = {i: [] for i in range(10)}
 
     def __init__(self,
                  env: EnvWrapper,
@@ -77,9 +78,10 @@ class PPOAgent():
     def train(self, max_Time: int, max_Time_steps: int):
         self.mem_buffer = AgentMemBuffer(max_Time, action_space_n=self.action_space_n)
         level = 0
-        level_tries_n = 1
+        level_tries_n = 5
         level_done_n = 0
         level_reward = 0
+        leve_solve_t = 0
         self.env.load(level)
         print(self.env)
         t = 0
@@ -93,31 +95,30 @@ class PPOAgent():
                                                         s[1].cuda(),
                                                         s[2].cuda())
                 actions = idxs_to_actions(action_idxs)
-
                 temp_step = self.env.step(actions)
                 if temp_step is None:
                     continue
 
+                leve_solve_t += 1
                 t += 1
                 ep_t += 1
                 s1, r, d = temp_step
                 level_reward += r
                 self.mem_buffer.set_next(s, s1, self.env.goal_state.level.float(), r, action_idxs, probs, log_prob, d)
-
                 if d:
                     self.reward_level_ckpt[level].append(level_reward)
-                    print(level_reward)
                     if (level_done_n + 1) % level_tries_n == 0:
                         level += 1
                         level = level % 10
                         self.env.load(level)
+                        print(level)
                     level_done_n += 1
+                    leve_solve_t = 0
                     level_reward = 0
                     s1 = self.env.reset()
 
-            s1 = self.env.reset()
+            print("train")
             self.__update()
-            level_reward = 0
             ep_t = 0
 
     def act(self, map_state: Tensor, map_goal_state: Tensor, color_state: Tensor, agent_state: Tensor) -> Tuple[

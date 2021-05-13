@@ -45,7 +45,7 @@ def plot_i():
 
 
 if __name__ == '__main__':
+    plot_i()
     with open('ckpt/reward_level.ckpt', 'rb') as handle:
         b = pickle.load(handle)
     print(b)
-    print(len(b[0]))

@@ -1,5 +1,4 @@
 import os
-import sys
 from typing import List
 from typing import Tuple
 
@@ -38,7 +37,9 @@ def load_level(index: int) -> Tuple[LevelState, LevelState]:
 
 
 def read_level_file(index: int):
-    level_names = os.listdir(LEVELS_DIR)[1:]  # skip dir info file ".DS_Store"
+    level_names = os.listdir(LEVELS_DIR)  # skip dir info file ".DS_Store"
+    level_names.sort()
+
     file_name = level_names[index % len(level_names)]
     level_file = open(os.path.join(LEVELS_DIR, file_name), 'r')
 

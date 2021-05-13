@@ -90,7 +90,7 @@ class EnvWrapper:
                 distance = abs(goal_row - row) + abs(goal_col - col)
                 sum_distance += distance
 
-        return (sum_distance * -1) - self.step_n
+        return sum_distance * -1
 
     def reset(self) -> List[Tensor]:
         self.step_n = 0
