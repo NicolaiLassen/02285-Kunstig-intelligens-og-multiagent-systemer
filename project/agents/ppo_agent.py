@@ -24,7 +24,7 @@ def delete_file(path):
         os.remove(path)
 
 
-levels_n = 21
+levels_n = 20
 
 
 def random_level():
@@ -36,7 +36,7 @@ class PPOAgent():
 
     # counters ckpt
     t_update = 0  # t * 1000
-    model_save_every = 50  # (8000000/4)  / 2000 / 50
+    model_save_every = 100
 
     intrinsic_reward_ckpt = []
     curiosity_loss_ckpt = []
@@ -93,19 +93,23 @@ class PPOAgent():
             total_steps_level = 0
             while ep_t < max_Time:
                 s = s1
+                ## TODO: Feed difference from last state to network to force update when nothing happens
                 action_idxs, probs, log_prob = self.act(s[0].cuda(),
                                                         self.env.goal_state.level.float().cuda(),
                                                         s[1].cuda(),
                                                         s[2].cuda())
                 actions = idxs_to_actions(action_idxs)
                 temp_step = self.env.step(actions)
+                ep_t += 1
+                t += 1
                 if temp_step is None:
+                    # state did not change when action was applied. Learn this
+                    self.mem_buffer.set_next(s, s, self.env.goal_state.level.float(), 0, action_idxs, probs, log_prob,
+                                             False)
                     continue
 
-                t += 1
-                ep_t += 1
-                s1, r, d = temp_step
                 total_steps_level += 1
+                s1, r, d = temp_step
                 self.mem_buffer.set_next(s, s1, self.env.goal_state.level.float(), r, action_idxs, probs, log_prob, d)
                 if d:
                     self.total_steps_level_ckpt[level].append(total_steps_level)
@@ -114,7 +118,6 @@ class PPOAgent():
                     s1 = self.env.reset()
                     total_steps_level = 0
 
-            print("train")
             level = random_level()
             self.env.load(level)
             s1 = self.env.reset()
@@ -146,7 +149,7 @@ class PPOAgent():
 
         delete_file('ckpt/reward_level.ckpt')
         with open('ckpt/reward_level.ckpt', 'wb') as handle:
-            pickle.dump(self.reward_level_ckpt, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            pickle.dump(self.total_steps_level_ckpt, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         self.t_update += 1
 
