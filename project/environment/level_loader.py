@@ -41,7 +41,6 @@ def read_level_file(index: int):
     level_names.sort()
 
     file_name = level_names[index % len(level_names)]
-    print(file_name)
     level_file = open(os.path.join(LEVELS_DIR, file_name), 'r')
 
     level_file_lines = [line.strip().replace("\n", "") if line.startswith("#") else line.replace("\n", "")

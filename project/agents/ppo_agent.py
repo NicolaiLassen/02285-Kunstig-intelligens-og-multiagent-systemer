@@ -42,7 +42,7 @@ class PPOAgent():
     curiosity_loss_ckpt = []
     actor_loss_ckpt = []
     critic_loss_ckpt = []
-    reward_level_ckpt = {i: [] for i in range(levels_n)}
+    total_steps_level_ckpt = {i: [] for i in range(levels_n)}
 
     def __init__(self,
                  env: EnvWrapper,
@@ -85,13 +85,12 @@ class PPOAgent():
     def train(self, max_Time: int, max_Time_steps: int):
         self.mem_buffer = AgentMemBuffer(max_Time, action_space_n=self.action_space_n)
         level = random_level()
-        level_running_reward = 0
         self.env.load(level)
-        print(self.env)
         t = 0
         ep_t = 0
         s1 = self.env.reset()
         while t < max_Time_steps:
+            total_steps_level = 0
             while ep_t < max_Time:
                 s = s1
                 action_idxs, probs, log_prob = self.act(s[0].cuda(),
@@ -106,21 +105,21 @@ class PPOAgent():
                 t += 1
                 ep_t += 1
                 s1, r, d = temp_step
-                level_running_reward += r
+                total_steps_level += 1
                 self.mem_buffer.set_next(s, s1, self.env.goal_state.level.float(), r, action_idxs, probs, log_prob, d)
                 if d:
-                    self.reward_level_ckpt[level].append(level_running_reward)
+                    self.total_steps_level_ckpt[level].append(total_steps_level)
                     level = random_level()
                     self.env.load(level)
                     s1 = self.env.reset()
-                    level_running_reward = 0
+                    total_steps_level = 0
 
+            print("train")
             level = random_level()
             self.env.load(level)
             s1 = self.env.reset()
             self.__update()
             ep_t = 0
-            level_running_reward = 0
 
     def act(self, map_state: Tensor, map_goal_state: Tensor, color_state: Tensor, agent_state: Tensor) -> Tuple[
         Tensor, Tensor, Tensor]:

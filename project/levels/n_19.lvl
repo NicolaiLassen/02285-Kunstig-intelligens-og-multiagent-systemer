@@ -3,31 +3,27 @@ hospital
 #levelname
 SAD1
 #colors
-blue: 0,A,B
+blue: 0,A
 #initial
 ++++++++++
 +0       +
-+        +
-+        +
-+        +
-+   A    +
-+   B    +
-+        +
-+        +
-+        +
-+        +
++  AAAA  +
++ A    A +
++ A    A +
++ A    A +
++ A    A +
++ A    A +
++ A    A +
 ++++++++++
 #goal
 ++++++++++
 +        +
-+        +
-+        +
-+        +
-+        +
-+        +
-+        +
-+ AB     +
-+        +
-+        +
++   A    +
++   A    +
++   A    +
++   A    +
++   A    +
++   A    +
++   A    +
 ++++++++++
 #end
