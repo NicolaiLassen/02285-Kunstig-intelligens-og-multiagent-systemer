@@ -1,6 +1,7 @@
 import copy
 import os
 import pickle
+from random import randint
 from typing import Tuple
 
 import torch
@@ -23,6 +24,13 @@ def delete_file(path):
         os.remove(path)
 
 
+levels_n = 14
+
+
+def random_level():
+    return randint(0, levels_n)
+
+
 class PPOAgent():
     mem_buffer: mem_buffer = None
 
@@ -34,8 +42,7 @@ class PPOAgent():
     curiosity_loss_ckpt = []
     actor_loss_ckpt = []
     critic_loss_ckpt = []
-    reward_level_ckpt = {i: [] for i in range(10)}
-    solve_time_level_ckpt = {i: [] for i in range(10)}
+    reward_level_ckpt = {i: [] for i in range(levels_n)}
 
     def __init__(self,
                  env: EnvWrapper,
@@ -77,12 +84,9 @@ class PPOAgent():
 
     def train(self, max_Time: int, max_Time_steps: int):
         self.mem_buffer = AgentMemBuffer(max_Time, action_space_n=self.action_space_n)
-        level = 0
-        level_tries_n = 2
-        level_done_n = 0
+        level = random_level()
         level_reward = 0
-        leve_solve_t = 0
-        self.env.load(level)
+        self.env.load(16)
         print(self.env)
         t = 0
         ep_t = 0
@@ -99,7 +103,6 @@ class PPOAgent():
                 if temp_step is None:
                     continue
 
-                leve_solve_t += 1
                 t += 1
                 ep_t += 1
                 s1, r, d = temp_step
@@ -107,19 +110,17 @@ class PPOAgent():
                 self.mem_buffer.set_next(s, s1, self.env.goal_state.level.float(), r, action_idxs, probs, log_prob, d)
                 if d:
                     self.reward_level_ckpt[level].append(level_reward)
-                    if (level_done_n + 1) % level_tries_n == 0:
-                        level += 1
-                        level = level % 10
-                        self.env.load(level)
-                        print(level)
-                    level_done_n += 1
-                    leve_solve_t = 0
-                    level_reward = 0
+                    level = random_level()
+                    self.env.load(level)
                     s1 = self.env.reset()
+                    level_reward = 0
 
-            print("train")
+            level = random_level()
+            self.env.load(level)
+            s1 = self.env.reset()
             self.__update()
             ep_t = 0
+            level_reward = 0
 
     def act(self, map_state: Tensor, map_goal_state: Tensor, color_state: Tensor, agent_state: Tensor) -> Tuple[
         Tensor, Tensor, Tensor]:

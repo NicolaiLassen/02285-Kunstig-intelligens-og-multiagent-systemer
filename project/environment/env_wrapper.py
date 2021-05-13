@@ -53,9 +53,9 @@ class EnvWrapper:
             for col in range(len(self.goal_state.level[row])):
                 val = goal_state.level[row][col]
                 if self.box_a_value <= val <= self.box_z_value:
-                    self.goal_state_positions[val.item()] = [row, col]
+                    self.goal_state_positions[str([row, col])] = val.item()
                 if self.agent_0_value <= val <= self.agent_9_value:
-                    self.goal_state_positions[val.item()] = [row, col]
+                    self.goal_state_positions[str([row, col])] = val.item()
 
         self.t0_state = copy.deepcopy(initial_state)
         self.step_n = 0
@@ -72,33 +72,29 @@ class EnvWrapper:
             return None
 
         t1_state = self.__act(actions)
-        done = self.__check_done(t1_state)
         reward = self.reward(t1_state)
+        done = reward == len(self.goal_state_positions)
         self.t0_state = t1_state
         self.step_n += 1
         return [t1_state.level.float(), t1_state.colors.float(), t1_state.agents.float()], reward, done
 
     def reward(self, state) -> int:
-
-        sum_distance = 0
+        # check sparse reward system
+        goal_count = 0
         for row in range(len(state.level)):
             for col in range(len(state.level[row])):
-                val = state.level[row][col].item()
-                if val not in self.goal_state_positions:
+                key = str([row, col])
+                if key not in self.goal_state_positions:
                     continue
-                goal_row, goal_col = self.goal_state_positions[val]
-                distance = abs(goal_row - row) + abs(goal_col - col)
-                sum_distance += distance
+                val = state.level[row][col].item()
+                goal_count += 1 if self.goal_state_positions[key] == val else 0
 
-        return sum_distance * -1
+        return goal_count
 
     def reset(self) -> List[Tensor]:
         self.step_n = 0
         self.t0_state = copy.deepcopy(self.initial_state)
         return [self.t0_state.level.float(), self.t0_state.colors.float(), self.t0_state.agents.float()]
-
-    def __check_done(self, state: LevelState) -> bool:
-        return torch.equal(state.level, self.goal_state.level)
 
     def __is_applicable(self, index: int, action: Action):
         agent_row, agent_col = self.t0_state.agent_row_col(index)
