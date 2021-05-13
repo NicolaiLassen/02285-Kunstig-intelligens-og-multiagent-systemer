@@ -76,7 +76,6 @@ class EnvWrapper:
         reward = self.reward(t1_state)
         self.t0_state = t1_state
         self.step_n += 1
-
         return [t1_state.level.float(), t1_state.colors.float(), t1_state.agents.float()], reward, done
 
     def reward(self, state) -> int:

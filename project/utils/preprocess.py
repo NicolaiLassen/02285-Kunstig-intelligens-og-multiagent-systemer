@@ -6,6 +6,7 @@ from utils.normalize_dist import normalize_dist
 
 
 def parse_level_file(level_file):
+    # Remove redundant
     level_file.readline()  # #domain
     level_file.readline()  # hospital
     level_file.readline()  # #levelname

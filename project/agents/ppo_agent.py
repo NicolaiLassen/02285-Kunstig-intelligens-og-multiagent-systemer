@@ -1,4 +1,5 @@
 import copy
+import os
 import pickle
 from typing import Tuple
 
@@ -15,6 +16,11 @@ from utils import mem_buffer
 # PPO Actor Critic
 from utils.mem_buffer import AgentMemBuffer
 from utils.normalize_dist import normalize_dist
+
+
+def delete_file(path):
+    if os.path.exists(path):
+        os.remove(path)
 
 
 class PPOAgent():
@@ -71,7 +77,7 @@ class PPOAgent():
     def train(self, max_Time: int, max_Time_steps: int):
         self.mem_buffer = AgentMemBuffer(max_Time, action_space_n=self.action_space_n)
         level = 0
-        level_tries_n = 10
+        level_tries_n = 50
         level_done_n = 0
         level_reward = 0
         self.env.load(level)
@@ -99,15 +105,16 @@ class PPOAgent():
 
                 if d:
                     self.reward_level_ckpt[level].append(level_reward)
-                    if (level_done_n + 1) % level_tries_n + 1 == 0:
+                    if (level_done_n + 1) % level_tries_n == 0:
+                        level += 1
                         level = level % 10
                         self.env.load(level)
                     level_done_n += 1
                     level_reward = 0
                     s1 = self.env.reset()
 
-            self.__update()
             s1 = self.env.reset()
+            self.__update()
             level_reward = 0
             ep_t = 0
 
@@ -133,7 +140,9 @@ class PPOAgent():
         torch.save(torch.tensor(self.intrinsic_reward_ckpt), "ckpt/intrinsic_rewards.ckpt")
         torch.save(torch.tensor(self.actor_loss_ckpt), "ckpt/losses_actor.ckpt")
         torch.save(torch.tensor(self.critic_loss_ckpt), "ckpt/losses_critic.ckpt")
-        with open('ckpt/reward_level_ckpt.pickle', 'wb') as handle:
+
+        delete_file('ckpt/reward_level.ckpt')
+        with open('ckpt/reward_level.ckpt', 'wb') as handle:
             pickle.dump(self.reward_level_ckpt, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         self.t_update += 1
