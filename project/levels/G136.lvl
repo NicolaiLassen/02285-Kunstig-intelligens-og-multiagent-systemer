@@ -1,0 +1,23 @@
+#domain
+hospital
+#levelname
+G136
+#colors
+blue: 0, B
+#initial
++++++++
++     +
++B+   +
++   + +
++ 0+  +
++   + +
++++++++
+#goal
++++++++
++     +
++B+   +
++   + +
++  +  +
++   + +
++++++++
+#end

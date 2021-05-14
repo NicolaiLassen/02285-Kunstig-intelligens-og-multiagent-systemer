@@ -1,0 +1,23 @@
+#domain
+hospital
+#levelname
+G498
+#colors
+blue: 0, 1, 2, A
+#initial
++++++++
++ 21A +
++   + +
++ +   +
++ +A 0+
++     +
++++++++
+#goal
++++++++
++  0  +
++  2+ +
++A+  1+
++ +   +
++     +
++++++++
+#end

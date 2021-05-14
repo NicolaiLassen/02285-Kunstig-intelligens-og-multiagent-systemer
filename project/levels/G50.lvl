@@ -1,0 +1,23 @@
+#domain
+hospital
+#levelname
+G50
+#colors
+blue: 0, A, C
+#initial
++++++++++
++   + 0 +
++ +     +
++ +   + +
++ ++ ++ +
++   CA  +
++++++++++
+#goal
++++++++++
++  0+ A +
++ +     +
++ +   + +
++ ++ ++ +
++       +
++++++++++
+#end

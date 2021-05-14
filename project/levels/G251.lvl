@@ -1,0 +1,23 @@
+#domain
+hospital
+#levelname
+G251
+#colors
+blue: 0, A, B, D
+#initial
++++++++++++
++   +   D +
++++ +   + +
++   A  0  +
++ ++ ++ A +
++ B     + +
++++++++++++
+#goal
++++++++++++
++   +    D+
++++A+  A+ +
++         +
++ ++ ++0  +
++  B    + +
++++++++++++
+#end

@@ -1,0 +1,23 @@
+#domain
+hospital
+#levelname
+G304
+#colors
+blue: 0, C
+#initial
++++++++
++     +
++ ++0 +
++C+   +
++   + +
++     +
++++++++
+#goal
++++++++
++C0 C +
++ ++  +
++ +   +
++   + +
++     +
++++++++
+#end

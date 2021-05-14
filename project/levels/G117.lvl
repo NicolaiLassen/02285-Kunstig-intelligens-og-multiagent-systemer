@@ -1,0 +1,23 @@
+#domain
+hospital
+#levelname
+G117
+#colors
+blue: 0, 1
+#initial
++++++++
++     +
+++ ++ +
++     +
++++01 +
++     +
++++++++
+#goal
++++++++
++     +
+++ ++ +
++     +
++++ 0 +
++     +
++++++++
+#end

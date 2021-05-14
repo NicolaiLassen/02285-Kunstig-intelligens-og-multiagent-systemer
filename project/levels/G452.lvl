@@ -1,0 +1,23 @@
+#domain
+hospital
+#levelname
+G452
+#colors
+blue: 0, 1, 2, A
+#initial
++++++++
++2+0  +
++   A +
++ 1   +
++  +  +
++     +
++++++++
+#goal
++++++++
++ +   +
++   1 +
++    A+
++  +  +
++2    +
++++++++
+#end
