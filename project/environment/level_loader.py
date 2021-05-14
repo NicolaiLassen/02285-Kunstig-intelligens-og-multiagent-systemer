@@ -11,6 +11,7 @@ LEVELS_DIR = './levels'
 
 level_names = os.listdir(LEVELS_DIR)
 level_names.sort()
+# print({i:level_names[i] for i in range(len(level_names))})
 
 
 def load_level(index: int) -> Tuple[LevelState, LevelState, str]:

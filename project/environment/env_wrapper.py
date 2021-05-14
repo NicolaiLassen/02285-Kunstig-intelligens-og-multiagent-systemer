@@ -21,7 +21,6 @@ class EnvWrapper:
     agents_n = 0
     rows_n = 0
     cols_n = 0
-    step_n = 0
     goal_state_positions = {}
     file_name = None
     valid_agent_actions = None
@@ -61,8 +60,6 @@ class EnvWrapper:
                     self.goal_state_positions[str([row, col])] = val.item()
 
         self.t0_state = copy.deepcopy(initial_state)
-        self.step_n = 0
-        self.valid_agent_actions = torch.ones(initial_state.agents_n, 29)  # action_space validate
 
     def step(self, action_idxs: Tensor) -> Tuple[bool, List[Tensor], int, bool]:
 
@@ -70,26 +67,22 @@ class EnvWrapper:
         valid = True
         for index, action in enumerate(actions):
             if not self.__is_applicable(index, action):
-                self.valid_agent_actions[index][action_idxs[0][index].item()] = 0
                 valid = False
 
-        if valid != len(actions):
+        if not valid:
             return False, [self.t0_state.level.float(), self.t0_state.colors.float(),
-                           self.t0_state.agents.float(), self.valid_agent_actions.float()], 0, False
+                           self.t0_state.agents.float()], 0, False
 
         if self.__is_conflict(actions):
             # TODO
             return False, [self.t0_state.level.float(), self.t0_state.colors.float(),
-                           self.t0_state.agents.float(), self.valid_agent_actions.float()], 0, False
+                           self.t0_state.agents.float()], 0, False
 
         t1_state = self.__act(actions)
         reward = self.reward(t1_state)
         done = reward == len(self.goal_state_positions)
         self.t0_state = t1_state
-        self.step_n += 1
-        self.valid_agent_actions = torch.ones(self.initial_state.agents_n, 29)
-        return True, [t1_state.level.float(), t1_state.colors.float(), t1_state.agents.float(),
-                      self.valid_agent_actions.float()], reward, done
+        return True, [t1_state.level.float(), t1_state.colors.float(), t1_state.agents.float()], reward, done
 
     def reward(self, state) -> int:
         # check sparse reward system
@@ -101,15 +94,11 @@ class EnvWrapper:
                     continue
                 val = state.level[row][col].item()
                 goal_count += 1 if self.goal_state_positions[key] == val else 0
-
         return goal_count
 
     def reset(self) -> List[Tensor]:
-        self.step_n = 0
         self.t0_state = copy.deepcopy(self.initial_state)
-        self.valid_agent_actions = torch.ones(self.initial_state.agents_n, 29)
-        return [self.t0_state.level.float(), self.t0_state.colors.float(), self.t0_state.agents.float(),
-                self.valid_agent_actions.float()]
+        return [self.t0_state.level.float(), self.t0_state.colors.float(), self.t0_state.agents.float()]
 
     def __is_applicable(self, index: int, action: Action):
         agent_row, agent_col = self.t0_state.agent_row_col(index)

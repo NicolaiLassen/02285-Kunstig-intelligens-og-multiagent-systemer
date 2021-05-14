@@ -84,16 +84,15 @@ class PPOAgent():
         self.env.load(level)
         t = 0
         ep_t = 0
-        s1 = self.env.reset()
         while t < max_Time_steps:
+            s1 = self.env.reset()
             total_steps_level = 0
             while ep_t < max_Time:
                 s = s1
                 action_idxs, probs, log_prob = self.act(s[0].cuda(),
                                                         self.env.goal_state.level.float().cuda(),
                                                         s[1].cuda(),
-                                                        s[2].cuda(),
-                                                        s[3].cuda())
+                                                        s[2].cuda())
                 valid, s1, r, d = self.env.step(action_idxs)
                 ep_t += 1
                 t += 1
@@ -111,16 +110,13 @@ class PPOAgent():
 
             level = random_level()
             self.env.load(level)
-            s1 = self.env.reset()
             self.__update()
             ep_t = 0
 
     def act(self, map_state: Tensor,
             map_goal_state: Tensor,
             color_state: Tensor,
-            agent_state: Tensor,
-            valid_actions: Tensor
-            ) -> Tuple[
+            agent_state: Tensor) -> Tuple[
         Tensor, Tensor, Tensor]:
 
         map_state = normalize_dist(map_state)
@@ -129,8 +125,7 @@ class PPOAgent():
         actions_logs_prob = self.actor_old(map_state.unsqueeze(0).unsqueeze(0),
                                            map_goal_state.unsqueeze(0).unsqueeze(0),
                                            color_state.unsqueeze(0).unsqueeze(0),
-                                           agent_state.unsqueeze(0),
-                                           valid_actions.unsqueeze(0))
+                                           agent_state.unsqueeze(0))
 
         actions_dist = Categorical(actions_logs_prob)
         actions = actions_dist.sample()
@@ -195,8 +190,7 @@ class PPOAgent():
         actions_prob = self.actor(self.mem_buffer.map_states.unsqueeze(1),
                                   self.mem_buffer.map_goal_states.unsqueeze(1),
                                   self.mem_buffer.map_color_states.unsqueeze(1),
-                                  self.mem_buffer.agent_states,
-                                  self.mem_buffer.agent_validate_states)
+                                  self.mem_buffer.agent_states)
         actions_dist = Categorical(actions_prob)
         action_log_prob = actions_dist.log_prob(self.mem_buffer.actions)
         state_values = self.critic(self.mem_buffer.map_states)

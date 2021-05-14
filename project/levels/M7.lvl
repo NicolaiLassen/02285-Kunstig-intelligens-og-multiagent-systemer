@@ -1,7 +1,7 @@
 #domain
 hospital
 #levelname
-M9
+M7
 #colors
 blue: 0, 1, A, B
 #initial
@@ -11,7 +11,7 @@ blue: 0, 1, A, B
 +++++++++
 #goal
 +++++++++
-+A  +  B+
++B  +  A+
 ++0+++1++
 +++++++++
 #end

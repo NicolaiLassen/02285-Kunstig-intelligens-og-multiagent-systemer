@@ -16,7 +16,7 @@ def smooth(y, box_pts):
 def plot_i():
     rewards = torch.load('ckpt/intrinsic_rewards.ckpt')
 
-    x = np.array([i * 2000 * 4 for i in range(len(rewards))])
+    x = np.array([i * 1000 for i in range(len(rewards))])
     y = rewards.numpy()
 
     # Don't smooth ends
@@ -45,6 +45,7 @@ def plot_i():
 
 
 if __name__ == '__main__':
+    # plot_i()
     with open('ckpt/reward_level.ckpt', 'rb') as handle:
         b = pickle.load(handle)
     print(b)
