@@ -1,0 +1,27 @@
+#domain
+hospital
+#levelname
+M7
+#colors
+blue: 0, A
+red: 1, B
+cyan: 2, C
+purple: 3, D
+green: 4, F
+#initial
++++++++++
++A  +  E+
+++0+++4++
++ +++++ +
++ 1+2+3 +
++B+C  +D+
++++++++++
+#goal
++++++++++
++  A+E  +
+++0+++4++
++B+++++D+
++ 1+2+3 +
++ +  C+ +
++++++++++
+#end

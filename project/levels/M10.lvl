@@ -1,0 +1,23 @@
+#domain
+hospital
+#levelname
+M10
+#colors
+blue: 0, A, B
+#initial
++++++++
++B    +
++ +++ +
++ +A+ +
++ + + +
++    0+
++++++++
+#goal
++++++++
++A   B+
++ +++ +
++ +0+ +
++ + + +
++     +
++++++++
+#end
