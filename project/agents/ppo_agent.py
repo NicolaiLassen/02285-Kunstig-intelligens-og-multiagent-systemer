@@ -31,9 +31,8 @@ def random_level():
 class PPOAgent():
     mem_buffer: mem_buffer = None
 
-    # counters ckpt
-    t_update = 0  # t * 1000
-    model_save_every = 100
+    t_update = 0
+    model_save_every = 200
 
     intrinsic_reward_ckpt = []
     curiosity_loss_ckpt = []
@@ -99,7 +98,6 @@ class PPOAgent():
                 ep_t += 1
                 t += 1
                 self.mem_buffer.set_next(s, s1, self.env.goal_state.level.float(), r, action_idxs, probs, log_prob, d)
-
                 if not valid:
                     continue
 
