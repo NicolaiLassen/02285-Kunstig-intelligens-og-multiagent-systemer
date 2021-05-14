@@ -1,9 +1,11 @@
-from typing import List, Tuple, Optional
+import copy
+from typing import List, Tuple
 
 import torch
 from torch import Tensor
 
-from environment.action import Action, ActionType
+from environment.action import Action, ActionType, idxs_to_actions
+from environment.level_loader import load_level
 from utils.preprocess import LevelState
 
 
@@ -13,12 +15,20 @@ def debug_print(s):
 
 
 class EnvWrapper:
+    initial_state = None
+    goal_state = None
+    t0_state = None
+    agents_n = 0
+    rows_n = 0
+    cols_n = 0
+    step_n = 0
+    goal_state_positions = {}
+    file_name = None
+    valid_agent_actions = None
 
     def __init__(
             self,
-            action_space_n: int,
-            initial_state: LevelState,
-            goal_state: LevelState
+            action_space_n: int = 29,
     ) -> None:
         self.free_value = 32  # ord(" ")
         self.agent_0_value = 48  # ord("0")
@@ -27,6 +37,13 @@ class EnvWrapper:
         self.box_z_value = 90  # ord("Z")
 
         self.action_space_n = action_space_n
+
+    def __repr__(self):
+        return self.t0_state.__repr__()
+
+    def load(self, i: int):
+        initial_state, goal_state, file_name = load_level(i)
+        self.file_name = file_name
         self.initial_state = initial_state
         self.goal_state = goal_state
 
@@ -39,53 +56,60 @@ class EnvWrapper:
             for col in range(len(self.goal_state.level[row])):
                 val = goal_state.level[row][col]
                 if self.box_a_value <= val <= self.box_z_value:
-                    self.goal_state_positions[val.item()] = [row, col]
+                    self.goal_state_positions[str([row, col])] = val.item()
                 if self.agent_0_value <= val <= self.agent_9_value:
-                    self.goal_state_positions[val.item()] = [row, col]
+                    self.goal_state_positions[str([row, col])] = val.item()
 
-        self.mask = None
-        self.t0_state = initial_state
+        self.t0_state = copy.deepcopy(initial_state)
+        self.step_n = 0
+        self.valid_agent_actions = torch.ones(initial_state.agents_n, 29)  # action_space validate
 
-    def __repr__(self):
-        return self.t0_state.__repr__()
+    def step(self, action_idxs: Tensor) -> Tuple[bool, List[Tensor], int, bool]:
 
-    def step(self, actions: List[Action]) -> Optional[Tuple[List[Tensor], int, bool]]:
-
-        # TODO FIX NONE
+        actions = idxs_to_actions(action_idxs)
+        valid = True
         for index, action in enumerate(actions):
             if not self.__is_applicable(index, action):
-                debug_print('# action not applicable\n{}: {}'.format(index, action))
-                return None
+                self.valid_agent_actions[index][action_idxs[0][index].item()] = 0
+                valid = False
+
+        if valid != len(actions):
+            return False, [self.t0_state.level.float(), self.t0_state.colors.float(),
+                           self.t0_state.agents.float(), self.valid_agent_actions.float()], 0, False
 
         if self.__is_conflict(actions):
-            debug_print('# actions contain conflict\n{}'.format(actions))
-            return None
+            # TODO
+            return False, [self.t0_state.level.float(), self.t0_state.colors.float(),
+                           self.t0_state.agents.float(), self.valid_agent_actions.float()], 0, False
 
         t1_state = self.__act(actions)
-        done = self.__check_done(t1_state)
         reward = self.reward(t1_state)
-        return [t1_state.level.float(), t1_state.agents.float()], reward, done
+        done = reward == len(self.goal_state_positions)
+        self.t0_state = t1_state
+        self.step_n += 1
+        self.valid_agent_actions = torch.ones(self.initial_state.agents_n, 29)
+        return True, [t1_state.level.float(), t1_state.colors.float(), t1_state.agents.float(),
+                      self.valid_agent_actions.float()], reward, done
 
     def reward(self, state) -> int:
-
-        sum_distance = 0
+        # check sparse reward system
+        goal_count = 0
         for row in range(len(state.level)):
             for col in range(len(state.level[row])):
-                val = state.level[row][col].item()
-                if val not in self.goal_state_positions:
+                key = str([row, col])
+                if key not in self.goal_state_positions:
                     continue
-                goal_row, goal_col = self.goal_state_positions[val]
-                distance = abs(goal_row - row) + abs(goal_col - col)
-                sum_distance += distance
+                val = state.level[row][col].item()
+                goal_count += 1 if self.goal_state_positions[key] == val else 0
 
-        return sum_distance * -1
+        return goal_count
 
     def reset(self) -> List[Tensor]:
-        self.t0_state = self.initial_state
-        return [self.t0_state.level.float(), self.t0_state.agents.float()]
-
-    def __check_done(self, state: LevelState) -> bool:
-        return torch.equal(state.level, self.goal_state.level)
+        self.step_n = 0
+        self.t0_state = copy.deepcopy(self.initial_state)
+        self.valid_agent_actions = torch.ones(self.initial_state.agents_n, 29)
+        return [self.t0_state.level.float(), self.t0_state.colors.float(), self.t0_state.agents.float(),
+                self.valid_agent_actions.float()]
 
     def __is_applicable(self, index: int, action: Action):
         agent_row, agent_col = self.t0_state.agent_row_col(index)

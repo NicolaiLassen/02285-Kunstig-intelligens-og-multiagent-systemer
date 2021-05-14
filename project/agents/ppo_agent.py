@@ -1,4 +1,7 @@
 import copy
+import os
+import pickle
+from random import randint
 from typing import Tuple
 
 import torch
@@ -8,31 +11,42 @@ import torch.optim as optim
 from torch import Tensor
 from torch.distributions import Categorical
 
-from agents.agent_base import BaseAgent
-from environment.action import idxs_to_actions
 from environment.env_wrapper import EnvWrapper
-from models.curiosity import IntrinsicCuriosityModule
+from environment.level_loader import level_names
 from utils import mem_buffer
 # PPO Actor Critic
 from utils.mem_buffer import AgentMemBuffer
-# TODO: WE NEED TO BE DONE
-# TODO: UPDATE WITH NEW RL IMC
-# TODO: MEM BUFFER
-# TODO: REWARD
-# TODO: Optim code performance
-# TODO: self.mem_buffer.states [map,agents], [map,colors,agents]
-# TODO: CUDA for train
 from utils.normalize_dist import normalize_dist
 
 
-class PPOAgent(BaseAgent):
+def delete_file(path):
+    if os.path.exists(path):
+        os.remove(path)
+
+
+def random_level():
+    return randint(0, len(level_names))
+
+
+class PPOAgent():
     mem_buffer: mem_buffer = None
+
+    # counters ckpt
+    t_update = 0  # t * 1000
+    model_save_every = 100
+
+    intrinsic_reward_ckpt = []
+    curiosity_loss_ckpt = []
+    actor_loss_ckpt = []
+    critic_loss_ckpt = []
+    total_steps_level_ckpt = {name: [] for name in level_names}
 
     def __init__(self,
                  env: EnvWrapper,
                  actor: nn.Module,
                  critic: nn.Module,
-                 optimizer: optim.Optimizer,
+                 curiosity: nn.Module = None,
+                 optimizer: optim.Optimizer = None,
                  n_acc_gradient=10,
                  gamma=0.9,
                  lamda=0.5,
@@ -52,7 +66,7 @@ class PPOAgent(BaseAgent):
 
         self.action_space_n = env.action_space_n
         # Curiosity
-        self.ICM = IntrinsicCuriosityModule(self.action_space_n)
+        self.curiosity = curiosity
         # Hyper n
         self.n_acc_grad = n_acc_gradient
         self.n_max_Times_update = n_max_Times_update
@@ -67,40 +81,77 @@ class PPOAgent(BaseAgent):
 
     def train(self, max_Time: int, max_Time_steps: int):
         self.mem_buffer = AgentMemBuffer(max_Time, action_space_n=self.action_space_n)
+        level = random_level()
+        self.env.load(level)
         t = 0
-
+        ep_t = 0
+        s1 = self.env.reset()
         while t < max_Time_steps:
-            self.save_actor()
-            s1 = self.env.reset()
-            for ep_T in range(max_Time + 1):
+            total_steps_level = 0
+            while ep_t < max_Time:
                 s = s1
-                action_idxs, probs, log_prob = self.act(s)
-                actions = idxs_to_actions(action_idxs)
+                action_idxs, probs, log_prob = self.act(s[0].cuda(),
+                                                        self.env.goal_state.level.float().cuda(),
+                                                        s[1].cuda(),
+                                                        s[2].cuda(),
+                                                        s[3].cuda())
+                valid, s1, r, d = self.env.step(action_idxs)
+                ep_t += 1
+                t += 1
+                self.mem_buffer.set_next(s, s1, self.env.goal_state.level.float(), r, action_idxs, probs, log_prob, d)
 
-                temp_step = self.env.step(actions)
-                if temp_step is None:
+                if not valid:
                     continue
 
-                t += 1
-                s1, r, d = temp_step
-                self.mem_buffer.set_next(s, s1, r, action_idxs, probs, log_prob, d)
-                if t % max_Time == 0:
-                    self.__update()
+                total_steps_level += 1
+                if d:
+                    self.total_steps_level_ckpt[self.env.file_name].append(total_steps_level)
+                    level = random_level()
+                    self.env.load(level)
+                    s1 = self.env.reset()
+                    total_steps_level = 0
 
-    def act(self, state) -> Tuple[Tensor, Tensor, Tensor]:
-        state_map = normalize_dist(state[0])
-        actions_logs_prob = self.actor_old(state_map.unsqueeze(0).unsqueeze(0),
-                                           state[1].unsqueeze(0),
-                                           self.env.mask)
+            level = random_level()
+            self.env.load(level)
+            s1 = self.env.reset()
+            self.__update()
+            ep_t = 0
+
+    def act(self, map_state: Tensor,
+            map_goal_state: Tensor,
+            color_state: Tensor,
+            agent_state: Tensor,
+            valid_actions: Tensor
+            ) -> Tuple[
+        Tensor, Tensor, Tensor]:
+
+        map_state = normalize_dist(map_state)
+        agent_state = normalize_dist(agent_state)
+        color_state = normalize_dist(color_state)
+        actions_logs_prob = self.actor_old(map_state.unsqueeze(0).unsqueeze(0),
+                                           map_goal_state.unsqueeze(0).unsqueeze(0),
+                                           color_state.unsqueeze(0).unsqueeze(0),
+                                           agent_state.unsqueeze(0),
+                                           valid_actions.unsqueeze(0))
 
         actions_dist = Categorical(actions_logs_prob)
         actions = actions_dist.sample()
         action_dist_log_prob = actions_dist.log_prob(actions)
         return actions.detach(), actions_dist.probs.detach(), action_dist_log_prob.detach()
 
-    def save_actor(self):
-        return
-        # torch.save(self.actor_old.state_dict(), "encoder_actor.ckpt")
+    def save_ckpt(self):
+        if self.t_update % self.model_save_every == 0:
+            torch.save(self.actor_old.state_dict(), "ckpt/actor_{}.ckpt".format(self.t_update))
+        torch.save(torch.tensor(self.curiosity_loss_ckpt), "ckpt/losses_curiosity.ckpt")
+        torch.save(torch.tensor(self.intrinsic_reward_ckpt), "ckpt/intrinsic_rewards.ckpt")
+        torch.save(torch.tensor(self.actor_loss_ckpt), "ckpt/losses_actor.ckpt")
+        torch.save(torch.tensor(self.critic_loss_ckpt), "ckpt/losses_critic.ckpt")
+
+        delete_file('ckpt/reward_level.ckpt')
+        with open('ckpt/reward_level.ckpt', 'wb') as handle:
+            pickle.dump(self.total_steps_level_ckpt, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+        self.t_update += 1
 
     def load_actor(self, path):
         self.actor.load_state_dict(torch.load(path))
@@ -110,7 +161,6 @@ class PPOAgent(BaseAgent):
         # ACC Gradient traning
         # We have the samples why not train a bit on it?
         torch.cuda.empty_cache()
-        print(self.mem_buffer.actions)
 
         action_log_probs, state_values, entropy = self.__eval()
         d_r = self.__discounted_rewards()
@@ -133,14 +183,22 @@ class PPOAgent(BaseAgent):
         total_loss.backward()
         self.optimizer.step()
 
-        print("Total ep reward: ", self.mem_buffer.rewards.sum())
+        with torch.no_grad():
+            self.intrinsic_reward_ckpt.append(r_i_ts.sum().item())
+            self.curiosity_loss_ckpt.append(curiosity_loss.item())
+            self.actor_loss_ckpt.append(actor_loss.sum().item())
+            self.critic_loss_ckpt.append(critic_loss.sum().item())
+            self.save_ckpt()
+
         self.actor_old.load_state_dict(self.actor.state_dict())
         self.mem_buffer.clear()
 
     def __eval(self):
         actions_prob = self.actor(self.mem_buffer.map_states.unsqueeze(1),
+                                  self.mem_buffer.map_goal_states.unsqueeze(1),
+                                  self.mem_buffer.map_color_states.unsqueeze(1),
                                   self.mem_buffer.agent_states,
-                                  self.env.mask)
+                                  self.mem_buffer.agent_validate_states)
         actions_dist = Categorical(actions_prob)
         action_log_prob = actions_dist.log_prob(self.mem_buffer.actions)
         state_values = self.critic(self.mem_buffer.map_states)
@@ -155,17 +213,18 @@ class PPOAgent(BaseAgent):
             advantages[t] = discounted_reward - state_values[t] + last_state_value * (
                     self.gamma ** (T - t))
             t += 1
-        return advantages.float().detach()
+        return advantages.float().cuda().detach()
 
     def __discounted_rewards(self):
         discounted_rewards = torch.zeros(len(self.mem_buffer.rewards))
         running_reward = 0
         t = 0
         for r, d in zip(reversed(self.mem_buffer.rewards), reversed(self.mem_buffer.done)):
-            running_reward = r + (running_reward * self.gamma) * (1. - d)  # Zero out done states
+            running_reward = r + (
+                    running_reward * self.gamma)  # We wan't done rewards due to sparse env # * (1. - d)
             discounted_rewards[-t] = running_reward
             t += 1
-        return discounted_rewards.float()
+        return discounted_rewards.float().cuda()
 
     def __intrinsic_reward_objective(self):
         states = self.mem_buffer.map_states.unsqueeze(1)
@@ -173,7 +232,7 @@ class PPOAgent(BaseAgent):
         action_probs = self.mem_buffer.action_probs
         actions = self.mem_buffer.actions
 
-        a_t_hats, phi_t1_hats, phi_t1s, phi_ts = self.ICM(states, next_states, action_probs)
+        a_t_hats, phi_t1_hats, phi_t1s, phi_ts = self.curiosity(states, next_states, action_probs)
         r_i_ts = F.mse_loss(phi_t1_hats, phi_t1s, reduction='none').sum(-1)
 
         multi_cross_loss = 0
