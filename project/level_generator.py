@@ -274,18 +274,3 @@ if __name__ == '__main__':
     for i in range(500):
         print(i)
         create_level(i)
-
-"""
-
-+++
-+0+
-+1+
-+++
-
-+++
-+1+
-+0+
-+++
-
-
-"""
