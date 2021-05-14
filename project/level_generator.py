@@ -215,9 +215,9 @@ def box_name():
     return b_name
 
 
-def create_level(index: int):
-    width = randint(3, 24)
-    height = randint(3, 24)
+def create_level(index: int, max_width=24, max_height=24):
+    width = randint(3, max_width)
+    height = randint(3, max_height)
     maze = Maze.generate(width, height)
     matrix = maze.to_str_matrix()
 
@@ -273,4 +273,4 @@ if __name__ == '__main__':
 
     for i in range(500):
         print(i)
-        create_level(i)
+        create_level(i, 10, 10)

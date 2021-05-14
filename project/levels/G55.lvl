@@ -1,0 +1,23 @@
+#domain
+hospital
+#levelname
+G55
+#colors
+blue: 0
+#initial
++++++++
++   + +
++ ++0 +
++     +
++ + + +
++   + +
++++++++
+#goal
++++++++
++   + +
++ ++  +
++     +
++ + + +
++   + +
++++++++
+#end
