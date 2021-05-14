@@ -102,7 +102,6 @@ class PPOAgent():
                 if not valid:
                     continue
 
-                print(r)
                 total_steps_level += 1
                 if d:
                     self.total_steps_level_ckpt[self.env.file_name].append(total_steps_level)

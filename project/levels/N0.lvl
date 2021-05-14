@@ -3,12 +3,12 @@ hospital
 #levelname
 N1
 #colors
-blue: 0,1
+blue: 0
 #initial
 +++++
-+ 1 +
++  0+
 + +++
-+ 0 +
++   +
 +++++
 #goal
 +++++
