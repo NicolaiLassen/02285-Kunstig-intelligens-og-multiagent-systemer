@@ -31,9 +31,8 @@ def random_level():
 class PPOAgent():
     mem_buffer: mem_buffer = None
 
-    # counters ckpt
-    t_update = 0  # t * 1000
-    model_save_every = 100
+    t_update = 0
+    model_save_every = 200
 
     intrinsic_reward_ckpt = []
     curiosity_loss_ckpt = []
