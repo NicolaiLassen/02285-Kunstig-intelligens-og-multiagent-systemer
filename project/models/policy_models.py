@@ -58,9 +58,7 @@ class ActorPolicyModel(nn.Module):
         # 2 features [x,y]
         # scale up embeds
         self.fc_agent_1 = nn.Linear(2, self.encoder_out_dim)
-
-        # validate embeds
-        self.fc_validate = nn.Linear(29, self.encoder_out_dim)
+        self.fc_agent_2 = nn.Linear(self.encoder_out_dim, self.encoder_out_dim)
 
         self.fc_passes = nn.Linear(self.encoder_out_dim, self.encoder_out_dim)
         self.fc_out = nn.Linear(self.encoder_out_dim, action_dim)
@@ -87,6 +85,7 @@ class ActorPolicyModel(nn.Module):
 
         # agent pass
         agent_pos_out = self.activation(self.fc_agent_1(agent_pos))
+        agent_pos_out = self.activation(self.fc_agent_2(agent_pos_out))
 
         # out pass
         # combine pos of agents with passes
