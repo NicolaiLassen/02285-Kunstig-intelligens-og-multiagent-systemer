@@ -99,10 +99,10 @@ class PPOAgent():
                 ep_t += 1
                 t += 1
                 self.mem_buffer.set_next(s, s1, self.env.goal_state.level.float(), r, action_idxs, probs, log_prob, d)
-
                 if not valid:
                     continue
 
+                print(r)
                 total_steps_level += 1
                 if d:
                     self.total_steps_level_ckpt[self.env.file_name].append(total_steps_level)
