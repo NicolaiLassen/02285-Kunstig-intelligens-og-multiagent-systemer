@@ -67,6 +67,7 @@ class EnvWrapper:
         valid_actions = []
         for index, action in enumerate(actions):
             if not self.__is_applicable(index, action):
+                valid_actions.append(Action.NoOp)
                 continue
             valid_actions.append(action)
 
@@ -75,7 +76,7 @@ class EnvWrapper:
                            self.t0_state.agents.float()], 0, False
 
         if self.__is_conflict(valid_actions):
-            # TODO
+            # TODO filter out
             return False, [self.t0_state.level.float(), self.t0_state.colors.float(),
                            self.t0_state.agents.float()], 0, False
 
