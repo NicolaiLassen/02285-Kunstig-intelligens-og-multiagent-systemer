@@ -232,7 +232,7 @@ class PPOAgent():
             multi_cross_loss += F.cross_entropy(a_t_hats, actions[:, i])
         multi_cross_loss /= self.max_agents
 
-        return (self.eta * r_i_ts).detach(), r_i_ts.mean(), multi_cross_loss / self.max_agents
+        return (self.eta * r_i_ts).detach(), r_i_ts.mean(), multi_cross_loss
 
     def __clipped_surrogate_objective(self, actions_log_probs, R_T):
         r_T_theta = torch.exp(actions_log_probs - self.mem_buffer.action_log_prob)

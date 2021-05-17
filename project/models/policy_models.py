@@ -56,9 +56,7 @@ class ActorPolicyModel(nn.Module):
         self.color_map_encoder = NaturalBlock()
 
         # 2 features [x,y]
-        # scale up embeds
         self.fc_agent_1 = nn.Linear(2, self.encoder_out_dim)
-        self.fc_agent_2 = nn.Linear(self.encoder_out_dim, self.encoder_out_dim)
 
         self.fc_passes = nn.Linear(self.encoder_out_dim, self.encoder_out_dim)
         self.fc_out = nn.Linear(self.encoder_out_dim, action_dim)
@@ -70,22 +68,21 @@ class ActorPolicyModel(nn.Module):
                 agent_pos: Tensor) -> Tensor:
         # see current state
         map_out = self.map_encoder(map)
-        map_out = map_out.view(-1, 1, 32 * 4)
+        map_out = map_out.view(-1, 1, 64 * 2)
 
         # see end state
         map_goal_out = self.goal_map_encoder(map_goal)
-        map_goal_out = map_goal_out.view(-1, 1, 32 * 4)
+        map_goal_out = map_goal_out.view(-1, 1, 64 * 2)
 
         # see colors
         map_colors_out = self.color_map_encoder(map_colors)
-        map_colors_out = map_colors_out.view(-1, 1, 32 * 4)
+        map_colors_out = map_colors_out.view(-1, 1, 64 * 2)
 
         # map passes out
         maps_out = torch.cat((map_out, map_goal_out, map_colors_out))
 
         # agent pass
         agent_pos_out = self.activation(self.fc_agent_1(agent_pos))
-        agent_pos_out = self.activation(self.fc_agent_2(agent_pos_out))
 
         # out pass
         # combine pos of agents with passes

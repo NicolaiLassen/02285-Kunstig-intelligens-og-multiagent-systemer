@@ -71,12 +71,7 @@ class EnvWrapper:
                 continue
             valid_actions.append(action)
 
-        if len(valid_actions) == 0:
-            return False, [self.t0_state.level.float(), self.t0_state.colors.float(),
-                           self.t0_state.agents.float()], 0, False
-
         if self.__is_conflict(valid_actions):
-            # TODO filter out
             return False, [self.t0_state.level.float(), self.t0_state.colors.float(),
                            self.t0_state.agents.float()], 0, False
 
@@ -156,6 +151,7 @@ class EnvWrapper:
         for i in range(num_agents):
             agent_row, agent_col = self.t0_state.agent_row_col(i)
             action = actions[i]
+
             if action.type is ActionType.NoOp:
                 continue
             elif action.type is ActionType.Move:

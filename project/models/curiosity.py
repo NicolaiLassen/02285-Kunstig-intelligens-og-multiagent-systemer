@@ -15,8 +15,6 @@ class ICMHead(nn.Module):
         self.activation = nn.ReLU()
 
     def forward(self, state):
-        ## TODO FORMAT STATE map agent # no motion blur
-
         out = self.activation(self.conv1(state))
         out = self.activation(self.conv2(out))
         out = self.activation(self.conv3(out))
