@@ -74,12 +74,12 @@ class EnvWrapper:
             return False, [self.t0_state.level.float(), self.t0_state.colors.float(),
                            self.t0_state.agents.float()], 0, False
 
-        if self.__is_conflict(actions):
+        if self.__is_conflict(valid_actions):
             # TODO
             return False, [self.t0_state.level.float(), self.t0_state.colors.float(),
                            self.t0_state.agents.float()], 0, False
 
-        t1_state = self.__act(actions)
+        t1_state = self.__act(valid_actions)
         reward = self.reward(t1_state)
         done = reward == len(self.goal_state_positions)
         self.t0_state = t1_state
