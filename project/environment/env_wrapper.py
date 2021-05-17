@@ -64,12 +64,13 @@ class EnvWrapper:
     def step(self, action_idxs: Tensor) -> Tuple[bool, List[Tensor], int, bool]:
 
         actions = idxs_to_actions(action_idxs)
-        valid = True
+        valid_actions = []
         for index, action in enumerate(actions):
             if not self.__is_applicable(index, action):
-                valid = False
+                continue
+            valid_actions.append(action)
 
-        if not valid:
+        if len(valid_actions) == 0:
             return False, [self.t0_state.level.float(), self.t0_state.colors.float(),
                            self.t0_state.agents.float()], 0, False
 
