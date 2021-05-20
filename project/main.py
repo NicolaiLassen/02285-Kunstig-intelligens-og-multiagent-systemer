@@ -28,7 +28,7 @@ def absolute_file_paths(directory):
 
 
 if __name__ == '__main__':
-    ray.init()
+    ray.init(include_dashboard=False)
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--ckpt", default="ckpt", help="ckpt name")
     args = parser.parse_args()
