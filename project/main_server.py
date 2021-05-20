@@ -38,14 +38,18 @@ if __name__ == '__main__':
                                "framework": "torch"
                            })
 
-    agent.restore('./ckpt/checkpoint_000401/checkpoint-401')
+    # agent.restore('./ckpt/checkpoint_000401/checkpoint-401')
     final_actions = []
     s1 = env.reset()
     r1 = None
     a1 = None
-    for i in range(1000):
-        actions = agent.compute_actions(s1, prev_reward=r1, prev_action=a1)
+    for i in range(10):
+        s = s1
+        actions = agent.compute_actions(s, prev_reward=r1, prev_action=a1)
         s1, r, d, _ = env.step(actions)
+        print(s1)
+        if (s[0][0]==s1[0][0]).all():
+            continue
         actions_s1 = actions
         final_actions.append(actions)
         print(r)

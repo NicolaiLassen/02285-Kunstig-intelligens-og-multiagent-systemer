@@ -44,7 +44,8 @@ class EnvWrapper(MultiAgentEnv):
         self.observation_space = Tuple([
             Box(0, 100, shape=(50, 50)),  # map
             Box(0, 100, shape=(50, 50)),  # color map
-            Box(0, 100, shape=(50, 50))  # goal map
+            Box(0, 100, shape=(50, 50)),  # goal map
+            Box(0, 100, shape=(2,))
         ])
 
         self.random_from_files: bool = False if 'random' not in env_config else env_config['random']
@@ -109,7 +110,8 @@ class EnvWrapper(MultiAgentEnv):
         for i in range(self.agents_n):
             obs[i] = [state.level.numpy(),
                       state.colors.numpy(),
-                      self.goal_state.level.numpy()]
+                      self.goal_state.level.numpy(),
+                      state.agents[i].numpy()]
         return obs
 
     def __count_goals(self, state):
