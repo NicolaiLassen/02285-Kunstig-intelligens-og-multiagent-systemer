@@ -1,0 +1,43 @@
+#domain
+hospital
+#levelname
+HiveMind
+#colors
+blue: 0, A, B, C, D
+red: 1, F, E, G
+cyan: 2, H, I, J
+orange: 3, K, L, M
+grey: 4, N, O, P
+#initial
++++++++++++++++
++      4      +
++      +      +
++      +      +
++    0 +      +
++    LM+PO    +
++    KD+CN    +
++1+++++++++++2+
++    JA+BE    +
++    IH+FG    +
++      +      +
++      +      +
++      +      +
++      3      +
++++++++++++++++
+#goal
++++++++++++++++
++             +
++      +      +
++      +      +
++      +      +
++    FE+HI    +
++    GA+BJ    +
++ +++++++++++ +
++    PC+DK    +
++    ON+ML    +
++      +      +
++      +      +
++      +      +
++             +
++++++++++++++++
+#end

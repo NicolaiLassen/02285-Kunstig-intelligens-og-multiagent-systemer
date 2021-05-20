@@ -1,0 +1,26 @@
+#domain
+hospital
+#levelname
+Deadlock
+#colors
+red: 0, A, B, C
+blue: 1
+green: 2, D
+pink: 3,F,E,G
+#initial
++++++++++++++++++
++2             1+
+++++++++        +
++FGE            +
+++++++++       3+
++ABCD          0+
++++++++++++++++++
+#goal
++++++++++++++++++
++ABC            +
+++++++++        +
++EFG            +
+++++++++        +
++3             2+
++++++++++++++++++
+#end

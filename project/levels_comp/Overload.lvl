@@ -1,0 +1,28 @@
+#domain
+hospital
+#levelname
+Overload
+#colors
+blue: 0, A
+orange: 1, B
+green: 2, C, D
+red: 3, E
+brown: 4, F
+pink: 5, G
+#initial
++++++++++++++++++
++0 F   3      D +
++F        C  ++++
++  B        4   +
++E    DB  1  ++A+
++  2     G   5+ +
++++++++++++++++++
+#goal
++++++++++++++++++
++    F      0   +
++ 4    C     ++++
++               +
++   2   D    ++ +
++E B    3   5G+A+
++++++++++++++++++
+#end

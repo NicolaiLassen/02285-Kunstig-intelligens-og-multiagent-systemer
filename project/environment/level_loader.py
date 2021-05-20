@@ -59,12 +59,13 @@ def parse_level_lines(color_dict, level_lines: List[str], width=50, height=50) -
 
 
 color_map = {
-    'blue': 1,
-    'red': 2,
-    'cyan': 3,
-    'purple': 4,
-    'green': 5,
-    'orange': 6,
+    'blue': 0,
+    'red': 1,
+    'cyan': 2,
+    'purple': 3,
+    'green': 4,
+    'orange': 5,
+    'pink': 6,
     'grey': 7,
     'lightblue': 8,
     'brown': 9,

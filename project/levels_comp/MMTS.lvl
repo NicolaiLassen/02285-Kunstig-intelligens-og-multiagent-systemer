@@ -1,0 +1,36 @@
+#domain
+hospital
+#levelname
+MMTS
+#colors
+blue: 0, E, J
+orange: 4, K, L
+purple: 3, D
+pink: 9, I
+green: 5, F
+grey: 2, C
+cyan: 8, H
+brown: 6, A
+red: 1, 7, B, G
+lightblue: S
+#initial
+++++++++++++++++++++++++
++ S SG  SSSSSSSS7 AS S +
++ S SH 2SSSSSSSS8 DS S +
++ S  E 3SS SS SS9 KS S +
++                      +
++ S SJ 4SS SS SS0 L  S +
++ S SI 5SSSSSSSS1 FS S +
++ S SB 6SSSSSSSS  CS S +
+++++++++++++++++++++++++
+#goal
+++++++++++++++++++++++++
++ES3S   SSSSSSSS   SKS0+
++IS5S   SSSSSSSS   SCSF+
++6S     SS SS SS   S1S8+
++                      +
++BSGS   SS SS SS     S7+
++HS2S   SSSSSSSS   SAS9+
++JS4S   SSSSSSSS   SLSD+
+++++++++++++++++++++++++
+#end

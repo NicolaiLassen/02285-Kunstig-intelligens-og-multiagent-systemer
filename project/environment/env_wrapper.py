@@ -73,7 +73,7 @@ class EnvWrapper(MultiAgentEnv):
             dones[i] = False
             rewards[i] = 0
             if not self.__is_applicable(i, action):
-                rewards[i] = -0.5  # penalty for wrong move
+                rewards[i] = -0.1  # constant penalty for wrong move
                 valid_actions.append(Action.NoOp)
                 continue
             valid_actions.append(action)
@@ -87,7 +87,7 @@ class EnvWrapper(MultiAgentEnv):
         # TODO make each reward applie to that agent
         goal_count_disc = goal_count / len(self.goal_state_positions)
         for key in rewards.keys():
-            rewards[key] += goal_count_disc
+            rewards[key] += goal_count_disc  # joined score for reward
             dones[key] = done
 
         dones["__all__"] = done
