@@ -1,8 +1,10 @@
 import copy
-from typing import List, Tuple
+from random import randint
+from typing import List
 
 import torch
-from torch import Tensor
+from gym.spaces import Discrete, Box, Tuple
+from ray.rllib import MultiAgentEnv
 
 from environment.action import Action, ActionType, idxs_to_actions
 from environment.level_loader import load_level
@@ -14,20 +16,22 @@ def debug_print(s):
     return
 
 
-class EnvWrapper:
+class EnvWrapper(MultiAgentEnv):
     initial_state = None
     goal_state = None
     t0_state = None
+    visited_state = None
     agents_n = 0
     rows_n = 0
     cols_n = 0
     goal_state_positions = {}
+    observation_space = None
     file_name = None
     valid_agent_actions = None
 
     def __init__(
             self,
-            action_space_n: int = 29,
+            env_config
     ) -> None:
         self.free_value = 32  # ord(" ")
         self.agent_0_value = 48  # ord("0")
@@ -35,54 +39,80 @@ class EnvWrapper:
         self.box_a_value = 65  # ord("A")
         self.box_z_value = 90  # ord("Z")
 
-        self.action_space_n = action_space_n
+        self.num_agents = 9  # max agents
+        self.action_space = Discrete(29)  # Hard code 29 actions
+        self.observation_space = Tuple([
+            Box(0, 100, shape=(50, 50)),  # map
+            Box(0, 100, shape=(50, 50)),  # color map
+            Box(0, 100, shape=(50, 50))  # goal map
+        ])
+
+        self.random_from_files: bool = False if 'random' not in env_config else env_config['random']
+
+        if self.random_from_files and 'level_names' not in env_config:
+            raise Exception("If random is selected you must give paths to levels")
+
+        if self.random_from_files:
+            self.level_names: List[str] = env_config['level_names']
+            index = randint(0, len(self.level_names))
+            self.load(index=index)
+        else:
+            if 'level_lines' not in env_config:
+                raise Exception("If not in train add a map")
+            self.load(file_lines=env_config['level_lines'])
 
     def __repr__(self):
         return self.t0_state.__repr__()
 
-    def load(self, i: int):
-        initial_state, goal_state, file_name = load_level(i)
-        self.file_name = file_name
-        self.initial_state = initial_state
-        self.goal_state = goal_state
-
-        self.agents_n = initial_state.agents_n
-        self.rows_n = initial_state.rows_n
-        self.cols_n = initial_state.cols_n
-
-        self.goal_state_positions = {}
-        for row in range(len(self.goal_state.level)):
-            for col in range(len(self.goal_state.level[row])):
-                val = goal_state.level[row][col]
-                if self.box_a_value <= val <= self.box_z_value:
-                    self.goal_state_positions[str([row, col])] = val.item()
-                if self.agent_0_value <= val <= self.agent_9_value:
-                    self.goal_state_positions[str([row, col])] = val.item()
-
-        self.t0_state = copy.deepcopy(initial_state)
-
-    def step(self, action_idxs: Tensor) -> Tuple[bool, List[Tensor], int, bool]:
-
-        actions = idxs_to_actions(action_idxs)
+    def step(self, actions: dict):
+        actions = idxs_to_actions(list(actions.values()))
         valid_actions = []
-        for index, action in enumerate(actions):
-            if not self.__is_applicable(index, action):
+        rewards = {}
+        dones = {"__all__": False}
+        for i, action in enumerate(actions):
+            dones[i] = False
+            rewards[i] = 0
+            if not self.__is_applicable(i, action):
+                rewards[i] = -0.5  # penalty for wrong move
                 valid_actions.append(Action.NoOp)
                 continue
             valid_actions.append(action)
 
         if self.__is_conflict(valid_actions):
-            return False, [self.t0_state.level.float(), self.t0_state.colors.float(),
-                           self.t0_state.agents.float()], 0, False
+            return self.__duplicate_obs(self.t0_state), rewards, dones, {}
 
         t1_state = self.__act(valid_actions)
-        reward = self.reward(t1_state)
-        done = reward == len(self.goal_state_positions)
-        self.t0_state = t1_state
-        return True, [t1_state.level.float(), t1_state.colors.float(), t1_state.agents.float()], reward, done
+        goal_count = self.__count_goals(t1_state)
+        done = goal_count == len(self.goal_state_positions)
+        # TODO make each reward applie to that agent
+        goal_count_disc = goal_count / len(self.goal_state_positions)
+        for key in rewards.keys():
+            rewards[key] += goal_count_disc
+            dones[key] = done
 
-    def reward(self, state) -> int:
-        # check sparse reward system
+        dones["__all__"] = done
+        if done:
+            print(done)
+        self.t0_state = t1_state
+        return self.__duplicate_obs(self.t0_state), rewards, dones, {}
+
+    def reset(self):
+        if self.random_from_files:
+            index = randint(0, len(self.level_names))
+            self.load(index=index)
+        else:
+            self.t0_state = copy.deepcopy(self.initial_state)
+        return self.__duplicate_obs(self.t0_state)
+
+    def __duplicate_obs(self, state):
+        obs = {}
+        for i in range(self.agents_n):
+            obs[i] = [state.level.numpy(),
+                      state.colors.numpy(),
+                      self.goal_state.level.numpy()]
+        return obs
+
+    def __count_goals(self, state):
         goal_count = 0
         for row in range(len(state.level)):
             for col in range(len(state.level[row])):
@@ -92,10 +122,6 @@ class EnvWrapper:
                 val = state.level[row][col].item()
                 goal_count += 1 if self.goal_state_positions[key] == val else 0
         return goal_count
-
-    def reset(self) -> List[Tensor]:
-        self.t0_state = copy.deepcopy(self.initial_state)
-        return [self.t0_state.level.float(), self.t0_state.colors.float(), self.t0_state.agents.float()]
 
     def __is_applicable(self, index: int, action: Action):
         agent_row, agent_col = self.t0_state.agent_row_col(index)
@@ -251,3 +277,39 @@ class EnvWrapper:
                 next_state.colors[prev_box_row][prev_box_col] = 0
 
         return next_state
+
+    # UTILS
+
+    def load(self, index: int = None, file_lines: List[str] = None, file_name: str = None):
+
+        if self.random_from_files:
+            file_lines, file_name = self.read_level_file(index)
+
+        initial_state, goal_state = load_level(file_lines)
+        self.file_name = file_name
+        self.initial_state = initial_state
+        self.goal_state = goal_state
+
+        self.agents_n = initial_state.agents_n
+        self.rows_n = initial_state.rows_n
+        self.cols_n = initial_state.cols_n
+
+        self.goal_state_positions = {}
+        for row in range(len(self.goal_state.level)):
+            for col in range(len(self.goal_state.level[row])):
+                val = goal_state.level[row][col]
+                if self.box_a_value <= val <= self.box_z_value:
+                    self.goal_state_positions[str([row, col])] = val.item()
+                if self.agent_0_value <= val <= self.agent_9_value:
+                    self.goal_state_positions[str([row, col])] = val.item()
+
+        self.t0_state = copy.deepcopy(initial_state)
+
+    def read_level_file(self, index: int):
+        file_name = self.level_names[index % len(self.level_names)]
+        level_file = open(file_name, 'r')
+
+        level_file_lines = [line.strip().replace("\n", "") if line.startswith("#") else line.replace("\n", "")
+                            for line in level_file.readlines()]
+        level_file.close()
+        return level_file_lines, file_name

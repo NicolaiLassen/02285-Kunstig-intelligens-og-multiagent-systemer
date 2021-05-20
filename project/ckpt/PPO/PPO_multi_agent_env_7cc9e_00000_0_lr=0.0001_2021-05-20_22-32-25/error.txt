@@ -1,0 +1,52 @@
+Failure # 1 (occurred at 2021-05-20_22-32-28)
+Traceback (most recent call last):
+  File "/home/nicolai/.local/lib/python3.8/site-packages/ray/tune/trial_runner.py", line 702, in _process_trial
+    results = self.trial_executor.fetch_result(trial)
+  File "/home/nicolai/.local/lib/python3.8/site-packages/ray/tune/ray_trial_executor.py", line 686, in fetch_result
+    result = ray.get(trial_future[0], timeout=DEFAULT_GET_TIMEOUT)
+  File "/home/nicolai/.local/lib/python3.8/site-packages/ray/_private/client_mode_hook.py", line 47, in wrapper
+    return func(*args, **kwargs)
+  File "/home/nicolai/.local/lib/python3.8/site-packages/ray/worker.py", line 1483, in get
+    raise value
+ray.exceptions.RayActorError: The actor died because of an error raised in its creation task, [36mray::PPO.__init__()[39m (pid=941, ip=192.168.1.14)
+  File "python/ray/_raylet.pyx", line 505, in ray._raylet.execute_task
+  File "python/ray/_raylet.pyx", line 449, in ray._raylet.execute_task.function_executor
+  File "/home/nicolai/.local/lib/python3.8/site-packages/ray/_private/function_manager.py", line 556, in actor_method_executor
+    return method(__ray_actor, *args, **kwargs)
+  File "/home/nicolai/.local/lib/python3.8/site-packages/ray/rllib/agents/trainer_template.py", line 121, in __init__
+    Trainer.__init__(self, config, env, logger_creator)
+  File "/home/nicolai/.local/lib/python3.8/site-packages/ray/rllib/agents/trainer.py", line 516, in __init__
+    super().__init__(config, logger_creator)
+  File "/home/nicolai/.local/lib/python3.8/site-packages/ray/tune/trainable.py", line 98, in __init__
+    self.setup(copy.deepcopy(self.config))
+  File "/home/nicolai/.local/lib/python3.8/site-packages/ray/rllib/agents/trainer.py", line 707, in setup
+    self._init(self.config, self.env_creator)
+  File "/home/nicolai/.local/lib/python3.8/site-packages/ray/rllib/agents/trainer_template.py", line 148, in _init
+    self.workers = self._make_workers(
+  File "/home/nicolai/.local/lib/python3.8/site-packages/ray/rllib/agents/trainer.py", line 783, in _make_workers
+    return WorkerSet(
+  File "/home/nicolai/.local/lib/python3.8/site-packages/ray/rllib/evaluation/worker_set.py", line 79, in __init__
+    remote_spaces = ray.get(self.remote_workers(
+  File "/home/nicolai/.local/lib/python3.8/site-packages/ray/_private/client_mode_hook.py", line 47, in wrapper
+    return func(*args, **kwargs)
+ray.exceptions.RayActorError: The actor died because of an error raised in its creation task, [36mray::RolloutWorker.__init__()[39m (pid=939, ip=192.168.1.14)
+  File "python/ray/_raylet.pyx", line 505, in ray._raylet.execute_task
+  File "python/ray/_raylet.pyx", line 449, in ray._raylet.execute_task.function_executor
+  File "/home/nicolai/.local/lib/python3.8/site-packages/ray/_private/function_manager.py", line 556, in actor_method_executor
+    return method(__ray_actor, *args, **kwargs)
+  File "/home/nicolai/.local/lib/python3.8/site-packages/ray/rllib/evaluation/rollout_worker.py", line 516, in __init__
+    self.policy_map, self.preprocessors = self._build_policy_map(
+  File "/home/nicolai/.local/lib/python3.8/site-packages/ray/rllib/evaluation/rollout_worker.py", line 1158, in _build_policy_map
+    policy_map[name] = cls(obs_space, act_space, merged_conf)
+  File "/home/nicolai/.local/lib/python3.8/site-packages/ray/rllib/policy/policy_template.py", line 243, in __init__
+    self.parent_cls.__init__(
+  File "/home/nicolai/.local/lib/python3.8/site-packages/ray/rllib/policy/torch_policy.py", line 130, in __init__
+    self.exploration = self._create_exploration()
+  File "/home/nicolai/.local/lib/python3.8/site-packages/ray/rllib/policy/policy.py", line 537, in _create_exploration
+    exploration = from_config(
+  File "/home/nicolai/.local/lib/python3.8/site-packages/ray/rllib/utils/from_config.py", line 182, in from_config
+    object_ = constructor(*ctor_args, **ctor_kwargs)
+  File "/home/nicolai/.local/lib/python3.8/site-packages/ray/rllib/utils/exploration/curiosity.py", line 109, in __init__
+    raise ValueError(
+ValueError: Curiosity exploration currently does not support parallelism. `num_workers` must be 0!
+

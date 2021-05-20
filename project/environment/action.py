@@ -1,8 +1,6 @@
 from enum import Enum, unique
 from typing import List
 
-from torch import Tensor
-
 
 @unique
 class ActionType(Enum):
@@ -97,5 +95,5 @@ action_dict = {
 }
 
 
-def idxs_to_actions(actions: Tensor) -> List[Action]:
-    return [action_dict[a] for a in actions[0].cpu().numpy()]
+def idxs_to_actions(actions: List) -> List[Action]:
+    return [action_dict[int(a)] for a in actions]

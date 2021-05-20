@@ -1,11 +1,9 @@
 import os
 
-import torch
+import ray
+from ray.tune import register_env, tune, grid_search
 
-from agents.ppo_agent import PPOAgent
 from environment.env_wrapper import EnvWrapper
-from models.curiosity import IntrinsicCuriosityModule
-from models.policy_models import ActorPolicyModel, PolicyModel
 
 
 def get_n_params(model):
@@ -23,25 +21,38 @@ def create_dir(directory):
         os.makedirs(directory)
 
 
+def absolute_file_paths(directory):
+    path = os.path.abspath(directory)
+    return [entry.path for entry in os.scandir(path) if entry.is_file()]
+
+
 if __name__ == '__main__':
-    width = 50
-    height = 50
-    create_dir("./ckpt")
+    ray.init()
+    create_dir('./ckpt')
 
-    lr_actor = 3e-4
-    lr_critic = 1e-3
-    lr_icm = 1e-3
 
-    env = EnvWrapper()
-    actor = ActorPolicyModel(width, height, env.action_space_n).cuda()
-    critic = PolicyModel(width, height).cuda()
-    icm = IntrinsicCuriosityModule(env.action_space_n).cuda()
+    def env_creator(_):
+        level_file_paths = absolute_file_paths('./levels_manual')
+        return EnvWrapper({'random': True, 'level_names': level_file_paths})
 
-    optimizer = torch.optim.Adam([
-        {'params': actor.parameters(), 'lr': lr_actor},
-        {'params': icm.parameters(), 'lr': lr_icm},
-        {'params': critic.parameters(), 'lr': lr_critic}
-    ])
 
-    agent = PPOAgent(env, actor, critic, icm, optimizer)
-    agent.train(500, 200000000)
+    env_name = "multi_agent_env"
+    register_env(env_name, env_creator)
+
+    analysis = tune.run("PPO",
+                        local_dir='./ckpt',
+                        checkpoint_at_end=True,
+                        stop={"training_iteration": 1000},
+                        config={
+                            "env": "multi_agent_env",
+                            "horizon": 1000,
+                            "num_gpus": 1,
+                            "num_workers": 6,
+                            "framework": "torch",
+                            "lr": grid_search([0.0001]),
+                            "model": {
+                                "conv_filters": None,
+                                "conv_activation": "relu",
+                                "num_framestacks": 0
+                            }
+                        })

@@ -43,7 +43,7 @@ class NaturalBlock(nn.Module):
 
 
 class ActorPolicyModel(nn.Module):
-    def __init__(self, width: int, height: int, action_dim: int):
+    def __init__(self, width: int = 50, height: int = 50, action_dim: int = 29):
         super(ActorPolicyModel, self).__init__()
 
         self.width = width
@@ -55,17 +55,11 @@ class ActorPolicyModel(nn.Module):
         self.goal_map_encoder = NaturalBlock()
         self.color_map_encoder = NaturalBlock()
 
-        # 2 features [x,y]
-        self.fc_agent_1 = nn.Linear(2, self.encoder_out_dim)
-
         self.fc_passes = nn.Linear(self.encoder_out_dim, self.encoder_out_dim)
         self.fc_out = nn.Linear(self.encoder_out_dim, action_dim)
         self.activation = nn.ReLU()
 
-    def forward(self, map: Tensor,
-                map_goal: Tensor,
-                map_colors: Tensor,
-                agent_pos: Tensor) -> Tensor:
+    def forward(self, map: Tensor, map_goal: Tensor, map_colors: Tensor) -> Tensor:
         # see current state
         map_out = self.map_encoder(map)
         map_out = map_out.view(-1, 1, 64 * 2)
@@ -81,13 +75,9 @@ class ActorPolicyModel(nn.Module):
         # map passes out
         maps_out = torch.cat((map_out, map_goal_out, map_colors_out))
 
-        # agent pass
-        agent_pos_out = self.activation(self.fc_agent_1(agent_pos))
-
         # out pass
         # combine pos of agents with passes
-        out = torch.einsum("ijk,tjk -> tjk", maps_out, agent_pos_out)
-        out = self.activation(self.fc_passes(out))
+        out = self.activation(self.fc_passes(maps_out))
         out = self.fc_out(out)
 
         return F.log_softmax(out, dim=-1)

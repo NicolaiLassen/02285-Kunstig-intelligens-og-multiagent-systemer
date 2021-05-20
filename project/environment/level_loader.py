@@ -1,4 +1,3 @@
-import os
 from typing import List
 from typing import Tuple
 
@@ -7,15 +6,8 @@ from torch import Tensor
 
 from environment.level_state import LevelState
 
-LEVELS_DIR = './levels'
 
-level_names = os.listdir(LEVELS_DIR)
-level_names.sort()
-# print({i:level_names[i] for i in range(len(level_names))})
-
-
-def load_level(index: int) -> Tuple[LevelState, LevelState, str]:
-    file_lines, file_name = read_level_file(index)
+def load_level(file_lines: List[str]) -> Tuple[LevelState, LevelState]:
     colors_index = file_lines.index("#colors")
     initial_index = file_lines.index("#initial")
     goal_index = file_lines.index("#goal")
@@ -37,17 +29,7 @@ def load_level(index: int) -> Tuple[LevelState, LevelState, str]:
     level_goal_lines = file_lines[goal_index + 1:end_index]
     level_goal_state = parse_level_lines(color_dict, level_goal_lines)
 
-    return level_initial_state, level_goal_state, file_name
-
-
-def read_level_file(index: int):
-    file_name = level_names[index % len(level_names)]
-    level_file = open(os.path.join(LEVELS_DIR, file_name), 'r')
-
-    level_file_lines = [line.strip().replace("\n", "") if line.startswith("#") else line.replace("\n", "")
-                        for line in level_file.readlines()]
-    level_file.close()
-    return level_file_lines, file_name
+    return level_initial_state, level_goal_state
 
 
 def parse_level_lines(color_dict, level_lines: List[str], width=50, height=50) -> LevelState:

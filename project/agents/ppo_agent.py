@@ -12,7 +12,7 @@ from torch import Tensor
 from torch.distributions import Categorical
 
 from environment.env_wrapper import EnvWrapper
-from environment.level_loader import level_names
+
 from utils import mem_buffer
 # PPO Actor Critic
 from utils.mem_buffer import AgentMemBuffer
@@ -93,13 +93,10 @@ class PPOAgent():
                                                         self.env.goal_state.level.float().cuda(),
                                                         s[1].cuda(),
                                                         s[2].cuda())
-                valid, s1, r, d = self.env.step(action_idxs)
+                s1, r, d, _ = self.env.step(action_idxs)
                 ep_t += 1
                 t += 1
                 self.mem_buffer.set_next(s, s1, self.env.goal_state.level.float(), r, action_idxs, probs, log_prob, d)
-                if not valid:
-                    continue
-
                 total_steps_level += 1
                 if d:
                     self.total_steps_level_ckpt[self.env.file_name].append(total_steps_level)
