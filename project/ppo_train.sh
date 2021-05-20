@@ -9,6 +9,5 @@
  #BSUB -o logs/%J.out
  #BSUB -e logs/%J.err
  module load python3/3.6.2
- pip3 install --user -r requirements.txt
  echo "Traning..."
  python3 main.py -c "job_ckpt"
