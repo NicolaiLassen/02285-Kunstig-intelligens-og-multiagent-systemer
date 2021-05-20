@@ -1,3 +1,4 @@
+import argparse
 import os
 
 import ray
@@ -28,8 +29,11 @@ def absolute_file_paths(directory):
 
 if __name__ == '__main__':
     ray.init()
-    create_dir('./ckpt')
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-c", "--ckpt", default="ckpt", help="ckpt name")
+    args = parser.parse_args()
 
+    create_dir('./{}'.format(args.ckpt))
 
     def env_creator(_):
         level_file_paths_man = absolute_file_paths('./levels_manual')
@@ -42,7 +46,7 @@ if __name__ == '__main__':
     register_env(env_name, env_creator)
 
     analysis = tune.run("PPO",
-                        local_dir='./ckpt',
+                        local_dir='./{}}'.format(args.ckpt),
                         checkpoint_freq=100,
                         checkpoint_at_end=True,
                         stop={"training_iteration": 10000},
