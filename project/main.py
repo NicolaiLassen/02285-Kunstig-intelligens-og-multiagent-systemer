@@ -46,7 +46,7 @@ if __name__ == '__main__':
     register_env(env_name, env_creator)
 
     analysis = tune.run("PPO",
-                        local_dir='./{}}'.format(args.ckpt),
+                        local_dir='./{}'.format(args.ckpt),
                         checkpoint_freq=100,
                         checkpoint_at_end=True,
                         stop={"training_iteration": 10000},
