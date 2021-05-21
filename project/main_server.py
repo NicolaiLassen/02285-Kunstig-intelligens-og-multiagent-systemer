@@ -1,8 +1,10 @@
 import sys
-# import ray
-# from ray.rllib.agents.ppo import ppo
-# from ray.tune import register_env
 from typing import List
+
+import numpy as np
+import ray
+from ray.rllib.agents.ppo import ppo
+from ray.tune import register_env
 
 from environment.action import Action
 from environment.env_wrapper import EnvWrapper
@@ -11,12 +13,12 @@ client_name = "46"
 
 
 def get_server_lines(server_out):
-    level_lines = []
+    lines = []
     line = ""
     while not line.startswith("#end"):
         line = server_out.readline()
-        level_lines.append(line)
-    return level_lines
+        lines.append(line)
+    return lines
 
 
 def send_plan(server_out, plan: List[List[Action]]):
@@ -46,7 +48,7 @@ def get_server_out():
 
 if __name__ == '__main__':
     # BEFORE SERVER
-    # ray.init(include_dashboard=False)
+    ray.init(include_dashboard=False)
 
     server_out = get_server_out()
     level_lines = get_server_lines(server_out)
@@ -63,6 +65,8 @@ if __name__ == '__main__':
 
     agent = ppo.PPOTrainer(env='multi_agent_env',
                            config={
+                               "in_evaluation": True,
+                               "num_workers": 0,
                                "model": {
                                    "use_lstm": True,
                                    "max_seq_len": 100,
@@ -75,23 +79,30 @@ if __name__ == '__main__':
                                "framework": "torch"
                            })
 
-    agent.restore('./ckpt/cevents.out.tfevents.1621554386.n-62-20-3')
+    agent.restore('./ckpt/checkpoint_000501/checkpoint-501')
     final_actions = []
     s1 = env.reset()
     r1 = None
     a1 = None
-    for i in range(10):
+
+    state = {}
+    for i in range(env.num_agents):
+        state[i] = [np.zeros(256, np.float32), np.zeros(256, np.float32)]
+
+    while True:
+
         s = s1
-        actions = agent.compute_actions(s, prev_reward=r1, prev_action=a1)
-        s1, r, d, _ = env.step(actions)
-        print(s1)
+        actions, state, _ = agent.compute_actions(s, state=state, prev_action=a1)
+
+        s1, r1, d, _ = env.step(actions)
+        a1 = actions
+
         if (s[0][0] == s1[0][0]).all():
             continue
-        actions_s1 = actions
+
         final_actions.append(actions)
-        print(r)
+
         if d['__all__']:
-            print(d)
             break
 
     send_plan(server_out, final_actions)

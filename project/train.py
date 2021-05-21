@@ -38,10 +38,10 @@ if __name__ == '__main__':
 
 
     def env_creator(_):
-        level_file_paths_man = absolute_file_paths('./levels_manual')
-        level_file_paths_comp = absolute_file_paths('./levels_comp')
-        level_file_paths = level_file_paths_man + level_file_paths_comp
-        return EnvWrapper({'random': True, 'level_names': level_file_paths})
+        level_file_paths_man = absolute_file_paths('./test')
+        # level_file_paths_comp = absolute_file_paths('./levels_comp')
+        # level_file_paths = level_file_paths_man + level_file_paths_comp
+        return EnvWrapper({'random': True, 'level_names': level_file_paths_man})
 
 
     env_name = "multi_agent_env"
@@ -52,6 +52,7 @@ if __name__ == '__main__':
                                "horizon": 1000,
                                "num_gpus": 1,
                                "num_workers": 6,
+                               "explore": False,
                                "model": {
                                    "use_lstm": True,
                                    "max_seq_len": 100,
