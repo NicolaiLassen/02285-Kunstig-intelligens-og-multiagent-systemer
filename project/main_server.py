@@ -60,7 +60,7 @@ if __name__ == '__main__':
     for i in range(env.num_agents):
         state[i] = [np.zeros(256, np.float32), np.zeros(256, np.float32)]
 
-    for i in range(100):
+    while True:
 
         s = s1
         actions, state, _ = agent.compute_actions(s, state=state, prev_action=a1)
