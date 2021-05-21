@@ -14,7 +14,7 @@ def absolute_file_paths(directory):
 
 if __name__ == '__main__':
     # BEFORE SERVER
-    ray.init()
+    ray.init(include_dashboard=False)
     level_file = open('./levels_manual/N0.lvl', 'r')
     level_file_lines = [line.strip().replace("\n", "") if line.startswith("#") else line.replace("\n", "")
                         for line in level_file.readlines()]
@@ -34,11 +34,19 @@ if __name__ == '__main__':
 
     agent = ppo.PPOTrainer(env='multi_agent_env',
                            config={
+                               "model": {
+                                   "use_lstm": True,
+                                   "max_seq_len": 100,
+                                   "lstm_cell_size": 256,
+                                   "conv_filters": None,
+                                   "conv_activation": "relu",
+                                   "num_framestacks": 0
+                               },
                                "log_level": "ERROR",
                                "framework": "torch"
                            })
 
-    # agent.restore('./ckpt/checkpoint_000401/checkpoint-401')
+    agent.restore('./ckpt/cevents.out.tfevents.1621554386.n-62-20-3')
     final_actions = []
     s1 = env.reset()
     r1 = None
@@ -48,7 +56,7 @@ if __name__ == '__main__':
         actions = agent.compute_actions(s, prev_reward=r1, prev_action=a1)
         s1, r, d, _ = env.step(actions)
         print(s1)
-        if (s[0][0]==s1[0][0]).all():
+        if (s[0][0] == s1[0][0]).all():
             continue
         actions_s1 = actions
         final_actions.append(actions)
