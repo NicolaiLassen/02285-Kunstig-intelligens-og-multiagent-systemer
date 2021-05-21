@@ -52,6 +52,7 @@ if __name__ == '__main__':
                                "horizon": 1000,
                                "num_gpus": 1,
                                "num_workers": 6,
+                               "explore": False,
                                "model": {
                                    "use_lstm": True,
                                    "max_seq_len": 100,

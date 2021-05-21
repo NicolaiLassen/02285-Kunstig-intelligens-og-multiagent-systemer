@@ -66,6 +66,7 @@ class EnvWrapper(MultiAgentEnv):
         return self.t0_state.__repr__()
 
     def step(self, actions: dict):
+        print(actions)
         actions = idxs_to_actions(list(actions.values()))
         valid_actions = []
         rewards = {}
@@ -94,6 +95,7 @@ class EnvWrapper(MultiAgentEnv):
         dones["__all__"] = done
         if done:
             print(done)
+
         self.t0_state = t1_state
         return self.__duplicate_obs(self.t0_state), rewards, dones, {}
 

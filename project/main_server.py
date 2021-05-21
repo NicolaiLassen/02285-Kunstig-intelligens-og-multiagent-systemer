@@ -1,5 +1,6 @@
 import os
 
+import numpy as np
 import ray
 from ray.rllib.agents.ppo import ppo
 from ray.tune import register_env
@@ -15,7 +16,8 @@ def absolute_file_paths(directory):
 if __name__ == '__main__':
     # BEFORE SERVER
     ray.init(include_dashboard=False)
-    level_file = open('./levels_manual/N0.lvl', 'r')
+
+    level_file = open('./levels_manual/N1.lvl', 'r')
     level_file_lines = [line.strip().replace("\n", "") if line.startswith("#") else line.replace("\n", "")
                         for line in level_file.readlines()]
     level_file.close()
@@ -34,6 +36,8 @@ if __name__ == '__main__':
 
     agent = ppo.PPOTrainer(env='multi_agent_env',
                            config={
+                               "in_evaluation": True,
+                               "num_workers": 0,
                                "model": {
                                    "use_lstm": True,
                                    "max_seq_len": 100,
@@ -46,23 +50,30 @@ if __name__ == '__main__':
                                "framework": "torch"
                            })
 
-    agent.restore('./ckpt/cevents.out.tfevents.1621554386.n-62-20-3')
+    agent.restore('./ckpt/checkpoint_000501/checkpoint-501')
     final_actions = []
     s1 = env.reset()
     r1 = None
     a1 = None
-    for i in range(10):
+
+    state = {}
+    for i in range(env.num_agents):
+        state[i] = [np.zeros(256, np.float32), np.zeros(256, np.float32)]
+
+    for i in range(100):
+
         s = s1
-        actions = agent.compute_actions(s, prev_reward=r1, prev_action=a1)
-        s1, r, d, _ = env.step(actions)
-        print(s1)
+        actions, state, _ = agent.compute_actions(s, state=state, prev_action=a1)
+
+        s1, r1, d, _ = env.step(actions)
+        a1 = actions
+
         if (s[0][0] == s1[0][0]).all():
             continue
-        actions_s1 = actions
+
         final_actions.append(actions)
-        print(r)
+
         if d['__all__']:
-            print(d)
             break
 
     print(final_actions)
