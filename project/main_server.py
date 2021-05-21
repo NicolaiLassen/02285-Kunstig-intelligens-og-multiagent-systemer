@@ -1,28 +1,57 @@
-import os
+import sys
+# import ray
+# from ray.rllib.agents.ppo import ppo
+# from ray.tune import register_env
+from typing import List
 
-import ray
-from ray.rllib.agents.ppo import ppo
-from ray.tune import register_env
-
+from environment.action import Action
 from environment.env_wrapper import EnvWrapper
 
+client_name = "46"
 
-def absolute_file_paths(directory):
-    path = os.path.abspath(directory)
-    return [entry.path for entry in os.scandir(path) if entry.is_file()]
+
+def get_server_lines(server_out):
+    level_lines = []
+    line = ""
+    while not line.startswith("#end"):
+        line = server_out.readline()
+        level_lines.append(line)
+    return level_lines
+
+
+def send_plan(server_out, plan: List[List[Action]]):
+    # Print plan to server.
+    if plan is None:
+        print('Unable to solve level.', file=sys.stderr, flush=True)
+        sys.exit(0)
+    else:
+        print('Found solution of length {}.'.format(len(plan)), file=sys.stderr, flush=True)
+        for joint_action in plan:
+            print("|".join(a.name_ for a in joint_action), flush=True)
+            # We must read the server's response to not fill up the stdin buffer and block the server.
+            response = server_out.readline()
+
+
+def get_server_out():
+    # Send client name to server.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding='ASCII')
+    print(client_name, flush=True)
+
+    server_out = sys.stdin
+    if hasattr(server_out, "reconfigure"):
+        server_out.reconfigure(encoding='ASCII')
+    return server_out
 
 
 if __name__ == '__main__':
     # BEFORE SERVER
-    ray.init(include_dashboard=False)
-    level_file = open('./levels_manual/N0.lvl', 'r')
-    level_file_lines = [line.strip().replace("\n", "") if line.startswith("#") else line.replace("\n", "")
-                        for line in level_file.readlines()]
-    level_file.close()
+    # ray.init(include_dashboard=False)
 
-    # server here
+    server_out = get_server_out()
+    level_lines = get_server_lines(server_out)
 
-    env = EnvWrapper({'level_lines': level_file_lines})
+    env = EnvWrapper({'level_lines': level_lines})
     env_name = "multi_agent_env"
 
 
@@ -65,4 +94,4 @@ if __name__ == '__main__':
             print(d)
             break
 
-    print(final_actions)
+    send_plan(server_out, final_actions)

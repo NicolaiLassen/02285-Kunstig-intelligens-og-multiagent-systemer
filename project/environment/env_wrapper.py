@@ -4,7 +4,7 @@ from typing import List
 
 import torch
 from gym.spaces import Discrete, Box, Tuple
-from ray.rllib import MultiAgentEnv
+# from ray.rllib import MultiAgentEnv
 
 from environment.action import Action, ActionType, idxs_to_actions
 from environment.level_loader import load_level
@@ -16,7 +16,7 @@ def debug_print(s):
     return
 
 
-class EnvWrapper(MultiAgentEnv):
+class EnvWrapper():
     initial_state = None
     goal_state = None
     t0_state = None
