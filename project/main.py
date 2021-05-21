@@ -69,4 +69,5 @@ if __name__ == '__main__':
         agent.train()
         if i % 100 == 0:
             checkpoint = agent.save('./{}'.format(args.ckpt))
+            print("checkpoint saved at", checkpoint)
         i += 1
