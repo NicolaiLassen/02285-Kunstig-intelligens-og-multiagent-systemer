@@ -59,6 +59,7 @@ if __name__ == '__main__':
         {'params': critic.parameters(), 'lr': lr_critic}
     ])
 
+
     agent_trainer = MADDPG(
         [deepcopy(actor) for _ in range(agent_num)],
         [deepcopy(actor) for _ in range(agent_num)],
