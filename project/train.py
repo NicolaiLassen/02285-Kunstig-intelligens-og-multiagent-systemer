@@ -59,7 +59,6 @@ if __name__ == '__main__':
         {'params': critic.parameters(), 'lr': lr_critic}
     ])
 
-
     agent_trainer = MADDPG(
         [deepcopy(actor) for _ in range(agent_num)],
         [deepcopy(actor) for _ in range(agent_num)],
@@ -69,5 +68,25 @@ if __name__ == '__main__':
         optimizer=torch.optim.Adam,
         criterion=nn.MSELoss(reduction="sum")
     )
+
+    episode, step, reward_fulfilled = 0, 0, 0
+    smoothed_total_reward = 0
+    max_episodes = 1000
+    max_steps = 200
+
+    while episode < max_episodes:
+        episode += 1
+        total_reward = 0
+        done = False
+        step = 0
+        s1 = env_wrapper.reset()
+
+        while not done and step <= max_steps:
+            step += 1
+            with torch.no_grad():
+                s = s1
+                results = agent_trainer.act_discrete_with_noise(
+                    [{"state": st} for st in s1]
+                )
 
     # agent_trainer.save("./{}".format(args.ckpt), version=1)
