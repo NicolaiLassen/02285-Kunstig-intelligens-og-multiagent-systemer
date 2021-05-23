@@ -85,8 +85,10 @@ if __name__ == '__main__':
             step += 1
             with torch.no_grad():
                 s = s1
+                print(s)
+                
                 results = agent_trainer.act_discrete_with_noise(
-                    [{"state": st} for st in s1]
+                    [{"state": st} for st in s]
                 )
 
     # agent_trainer.save("./{}".format(args.ckpt), version=1)
