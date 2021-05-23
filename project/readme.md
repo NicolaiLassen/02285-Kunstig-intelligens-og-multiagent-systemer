@@ -1,15 +1,11 @@
-/*******************************************************\
-|                AI and MAS: Searchclient               |
-|                        README                         |
-\*******************************************************/
-
+### AI and MAS: Searchclient
 
 ```
 # Run server on level
 java -jar server.jar -l levels/G0.lvl -c "python main_server.py" -g -s 150 -t 180
 
 # Run server on competition levels
-java -jar server.jar -c "python main_server.py" -l "levels_comp" -t 180 -o "output/46.zip"
+java -jar server.jar -c "python main_server.py" -l "levels_comp" -t 180 -o "46.zip"
 
 ```
 
