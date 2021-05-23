@@ -74,21 +74,23 @@ if __name__ == '__main__':
     max_episodes = 1000
     max_steps = 200
 
+    dim_size = 50 * 50
     while episode < max_episodes:
         episode += 1
         total_reward = 0
         done = False
         step = 0
-        s1 = env_wrapper.reset()
+        s1 = [
+            torch.tensor(st, dtype=torch.float32).view(1, -1) for st in env_wrapper.reset().values()
+        ]
 
         while not done and step <= max_steps:
             step += 1
             with torch.no_grad():
                 s = s1
 
-                print([{"state": st} for st in s.items()])
                 results = agent_trainer.act_discrete_with_noise(
-                    [{"state": st} for st in s.items()]
+                    [{"state": st} for st in s]
                 )
 
     # agent_trainer.save("./{}".format(args.ckpt), version=1)
