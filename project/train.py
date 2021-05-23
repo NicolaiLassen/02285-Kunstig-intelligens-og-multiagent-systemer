@@ -86,7 +86,8 @@ if __name__ == '__main__':
             with torch.no_grad():
                 s = s1
                 print(s)
-                
+
+                print([{"state": st} for st in s])
                 results = agent_trainer.act_discrete_with_noise(
                     [{"state": st} for st in s]
                 )
