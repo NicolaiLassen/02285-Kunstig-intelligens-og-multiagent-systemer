@@ -1,11 +1,14 @@
 import argparse
 import os
+from copy import deepcopy
 
-import ray
-from ray.rllib.agents.ppo import ppo
-from ray.tune import register_env
+import torch
+from machin.frame.algorithms import MADDPG
+from torch import nn
 
-from environment.env_wrapper import EnvWrapper
+from environment.env_wrapper import MultiAgentEnvWrapper
+from models.curiosity import IntrinsicCuriosityModule
+from models.policy_models import CriticPolicyModel, ActorPolicyModel
 
 
 def get_n_params(model):
@@ -29,46 +32,41 @@ def absolute_file_paths(directory):
 
 
 if __name__ == '__main__':
-    ray.init(include_dashboard=False)
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--ckpt", default="ckpt", help="ckpt name")
     args = parser.parse_args()
 
     create_dir('./{}'.format(args.ckpt))
 
+    level_file_paths_man = absolute_file_paths('./levels_manual')
 
-    def env_creator(_):
-        level_file_paths_man = absolute_file_paths('./test')
-        # level_file_paths_comp = absolute_file_paths('./levels_comp')
-        # level_file_paths = level_file_paths_man + level_file_paths_comp
-        return EnvWrapper({'random': True, 'level_names': level_file_paths_man})
+    width = 50
+    height = 50
+    lr_actor = 3e-4
+    lr_critic = 1e-3
+    lr_icm = 1e-3
 
+    agent_num = 10
 
-    env_name = "multi_agent_env"
-    register_env(env_name, env_creator)
+    env_wrapper = MultiAgentEnvWrapper({'random': True, 'level_names': level_file_paths_man})
+    actor = ActorPolicyModel(width, height, env_wrapper.action_space_n).cuda()
+    critic = CriticPolicyModel(width, height).cuda()
+    icm = IntrinsicCuriosityModule(env_wrapper.action_space_n).cuda()
 
-    agent = ppo.PPOTrainer(env='multi_agent_env',
-                           config={
-                               "horizon": 1000,
-                               "num_gpus": 1,
-                               "num_workers": 6,
-                               "explore": False,
-                               "model": {
-                                   "use_lstm": True,
-                                   "max_seq_len": 100,
-                                   "lstm_cell_size": 256,
-                                   "conv_filters": None,
-                                   "conv_activation": "relu",
-                                   "num_framestacks": 0
-                               },
-                               "log_level": "ERROR",
-                               "framework": "torch"
-                           })
+    optimizer = torch.optim.Adam([
+        {'params': actor.parameters(), 'lr': lr_actor},
+        {'params': icm.parameters(), 'lr': lr_icm},
+        {'params': critic.parameters(), 'lr': lr_critic}
+    ])
 
-    i = 0
-    while True:
-        agent.train()
-        if i % 100 == 0:
-            checkpoint = agent.save('./{}'.format(args.ckpt))
-            print("checkpoint saved at", checkpoint)
-        i += 1
+    agent_trainer = MADDPG(
+        [deepcopy(actor) for _ in range(agent_num)],
+        [deepcopy(actor) for _ in range(agent_num)],
+        [deepcopy(critic) for _ in range(agent_num)],
+        [deepcopy(critic) for _ in range(agent_num)],
+        critic_visible_actors=[list(range(agent_num))] * agent_num,
+        optimizer=torch.optim.Adam,
+        criterion=nn.MSELoss(reduction="sum")
+    )
+
+    # agent_trainer.save("./{}".format(args.ckpt), version=1)

@@ -1,7 +1,6 @@
 import copy
 import os
 import pickle
-from random import randint
 from typing import Tuple
 
 import torch
@@ -11,9 +10,7 @@ import torch.optim as optim
 from torch import Tensor
 from torch.distributions import Categorical
 
-from environment.env_wrapper import EnvWrapper
-
-from utils import mem_buffer
+from environment.env_wrapper import MultiAgentEnvWrapper
 # PPO Actor Critic
 from utils.mem_buffer import AgentMemBuffer
 from utils.normalize_dist import normalize_dist
@@ -24,12 +21,8 @@ def delete_file(path):
         os.remove(path)
 
 
-def random_level():
-    return randint(0, len(level_names))
-
-
 class PPOAgent():
-    mem_buffer: mem_buffer = None
+    mem_buffer: AgentMemBuffer = None
 
     t_update = 0
     model_save_every = 200
@@ -38,10 +31,9 @@ class PPOAgent():
     curiosity_loss_ckpt = []
     actor_loss_ckpt = []
     critic_loss_ckpt = []
-    total_steps_level_ckpt = {name: [] for name in level_names}
 
     def __init__(self,
-                 env: EnvWrapper,
+                 env: MultiAgentEnvWrapper,
                  actor: nn.Module,
                  critic: nn.Module,
                  curiosity: nn.Module = None,
@@ -80,8 +72,6 @@ class PPOAgent():
 
     def train(self, max_Time: int, max_Time_steps: int):
         self.mem_buffer = AgentMemBuffer(max_Time, action_space_n=self.action_space_n)
-        level = random_level()
-        self.env.load(level)
         t = 0
         ep_t = 0
         while t < max_Time_steps:
@@ -100,13 +90,9 @@ class PPOAgent():
                 total_steps_level += 1
                 if d:
                     self.total_steps_level_ckpt[self.env.file_name].append(total_steps_level)
-                    level = random_level()
-                    self.env.load(level)
                     s1 = self.env.reset()
                     total_steps_level = 0
 
-            level = random_level()
-            self.env.load(level)
             self.__update()
             ep_t = 0
 
@@ -224,12 +210,7 @@ class PPOAgent():
         a_t_hats, phi_t1_hats, phi_t1s, phi_ts = self.curiosity(states, next_states, action_probs)
         r_i_ts = F.mse_loss(phi_t1_hats, phi_t1s, reduction='none').sum(-1)
 
-        multi_cross_loss = 0
-        for i in range(len(actions[1])):
-            multi_cross_loss += F.cross_entropy(a_t_hats, actions[:, i])
-        multi_cross_loss /= self.max_agents
-
-        return (self.eta * r_i_ts).detach(), r_i_ts.mean(), multi_cross_loss
+        return (self.eta * r_i_ts).detach(), r_i_ts.mean(), F.cross_entropy(a_t_hats, actions)
 
     def __clipped_surrogate_objective(self, actions_log_probs, R_T):
         r_T_theta = torch.exp(actions_log_probs - self.mem_buffer.action_log_prob)

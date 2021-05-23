@@ -1,22 +1,17 @@
 import copy
+from abc import ABC
 from random import randint
 from typing import List
 
+import gym as gym
 import torch
-from gym.spaces import Discrete, Box, Tuple
-# from ray.rllib import MultiAgentEnv
 
 from environment.action import Action, ActionType, idxs_to_actions
 from environment.level_loader import load_level
 from utils.preprocess import LevelState
 
 
-def debug_print(s):
-    # print(s, file=sys.stderr, flush=True)
-    return
-
-
-class EnvWrapper():
+class MultiAgentEnvWrapper(gym.Env, ABC):
     initial_state = None
     goal_state = None
     t0_state = None
@@ -39,14 +34,8 @@ class EnvWrapper():
         self.box_a_value = 65  # ord("A")
         self.box_z_value = 90  # ord("Z")
 
+        self.action_space_n = 29  # max actions
         self.num_agents = 9  # max agents
-        self.action_space = Discrete(29)  # Hard code 29 actions
-        self.observation_space = Tuple([
-            Box(0, 100, shape=(50, 50)),  # map
-            Box(0, 100, shape=(50, 50)),  # color map
-            Box(0, 100, shape=(50, 50)),  # goal map
-            Box(0, 100, shape=(2,))
-        ])
 
         self.random_from_files: bool = False if 'random' not in env_config else env_config['random']
 
@@ -70,9 +59,8 @@ class EnvWrapper():
         actions = idxs_to_actions(list(actions.values()))
         valid_actions = []
         rewards = {}
-        dones = {"__all__": False}
+
         for i, action in enumerate(actions):
-            dones[i] = False
             rewards[i] = 0
             if not self.__is_applicable(i, action):
                 rewards[i] = -0.1  # constant penalty for wrong move
@@ -81,23 +69,22 @@ class EnvWrapper():
             valid_actions.append(action)
 
         if self.__is_conflict(valid_actions):
-            return self.__duplicate_obs(self.t0_state), rewards, dones, {}
+            return self.__duplicate_obs(self.t0_state), rewards, False, {}
 
         t1_state = self.__act(valid_actions)
         goal_count = self.__count_goals(t1_state)
         done = goal_count == len(self.goal_state_positions)
-        # TODO make each reward applie to that agent
+
+        # TODO: make each reward apply to the agent accomplished task
         goal_count_disc = goal_count / len(self.goal_state_positions)
         for key in rewards.keys():
             rewards[key] += goal_count_disc  # joined score for reward
-            dones[key] = done
 
-        dones["__all__"] = done
         if done:
-            print(done)
+            print("Solved {}".format(self.file_name))
 
         self.t0_state = t1_state
-        return self.__duplicate_obs(self.t0_state), rewards, dones, {}
+        return self.__duplicate_obs(self.t0_state), rewards, done, {}
 
     def reset(self):
         if self.random_from_files:
@@ -142,11 +129,9 @@ class EnvWrapper():
             next_agent_row = agent_row + action.agent_row_delta
             next_agent_col = agent_col + action.agent_col_delta
             if not self.__is_box(next_agent_row, next_agent_col):
-                debug_print('# next agent position is NOT box')
                 return False
             # check that agent and box is same color
             if not self.__is_same_color(agent_row, agent_col, next_agent_row, next_agent_col):
-                debug_print('# box and agent is NOT same color')
                 return False
             # check that next box position is free
             next_box_row = next_agent_row + action.box_row_delta
@@ -157,13 +142,11 @@ class EnvWrapper():
             next_agent_row = agent_row + action.agent_row_delta
             next_agent_col = agent_col + action.agent_col_delta
             if not self.__is_free(next_agent_row, next_agent_col):
-                debug_print('# next agent position is NOT free')
                 return False
             # check that box position is box
             box_row = agent_row + (action.box_row_delta * -1)
             box_col = agent_col + (action.box_col_delta * -1)
             if not self.__is_box(box_row, box_col):
-                debug_print('# box position is NOT box')
                 return False
             # check that agent and box is same color
             return self.__is_same_color(agent_row, agent_col, box_row, box_col)
@@ -207,15 +190,11 @@ class EnvWrapper():
                     continue
                 if actions[a2].type is ActionType.NoOp:
                     continue
-
                 # is moving same box
                 if box_rows[a1] == box_rows[a2] and box_cols[a1] == box_cols[a2]:
-                    debug_print('# actions.conflict\nis moving same box')
                     return True
-
                 # is moving into same position
                 if next_agent_rows[a1] == next_agent_rows[a2] and next_agent_cols[a1] == next_agent_cols[a2]:
-                    debug_print('# actions.conflict\nis moving into same position')
                     return True
 
         return False
@@ -242,7 +221,7 @@ class EnvWrapper():
             agent_color = self.t0_state.colors[prev_agent_row][prev_agent_col]
             next_state.agents[index] = torch.tensor([next_agent_row, next_agent_col])
 
-            # Update level matrix
+            # Update level matrices and agent pos
             if action.type is ActionType.NoOp:
                 continue
             elif action.type is ActionType.Move:

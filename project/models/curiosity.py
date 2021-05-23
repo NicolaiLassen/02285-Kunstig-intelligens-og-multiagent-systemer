@@ -25,17 +25,16 @@ class ICMHead(nn.Module):
 
 # Intrinsic Curiosity Model Reward
 class IntrinsicCuriosityModule(nn.Module):
-    def __init__(self, action_space_n: int, width: int = 64, height: int = 64, max_agents=9) -> None:
+    def __init__(self, action_space_n: int, width: int = 50, height: int = 50) -> None:
         super(IntrinsicCuriosityModule, self).__init__()
 
         self.head = ICMHead()
         self.state_size = width * height
         self.feature_size = 256
-        self.max_agents = max_agents
         self.action_space_n = action_space_n
 
         self.forward_model = nn.Sequential(
-            nn.Linear(self.feature_size + (max_agents * action_space_n), self.feature_size),
+            nn.Linear(self.feature_size + action_space_n, self.feature_size),
             nn.ReLU(),
             nn.Linear(self.feature_size, self.feature_size)
         )
@@ -51,7 +50,6 @@ class IntrinsicCuriosityModule(nn.Module):
         phi_t = self.head(state)
         phi_t1 = self.head(next_state)
 
-        action = action.view(-1, self.max_agents * self.action_space_n)
         phi_t1_hat = self.forward_model(torch.cat((phi_t, action), 1))
         a_t_hat = F.softmax(self.inverse_model(torch.cat((phi_t, phi_t1), 1)), dim=-1)
         return a_t_hat, phi_t1_hat, phi_t1, phi_t

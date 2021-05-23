@@ -1,12 +1,13 @@
-# Ref https://github.com/lukemelas/EfficientNet-PyTorch
+from typing import List
+
 import torch
 import torch.nn.functional as F
 from torch import nn, Tensor
 
 
-class PolicyModel(nn.Module):
+class CriticPolicyModel(nn.Module):
     def __init__(self, width: int, height: int, action_dim: int = 1):
-        super(PolicyModel, self).__init__()
+        super(CriticPolicyModel, self).__init__()
 
         self.width = width
         self.height = height
@@ -17,7 +18,8 @@ class PolicyModel(nn.Module):
         self.fc_out = nn.Linear(self.embed_dim, action_dim)
         self.activation = nn.ReLU()
 
-    def forward(self, x):
+    def forward(self, x, action):
+        state_action = torch.cat([x, action], 1)
         x = x.view(-1, self.width * self.height)
         out = self.fc_1(x)
         out = self.activation(out)
@@ -59,17 +61,21 @@ class ActorPolicyModel(nn.Module):
         self.fc_out = nn.Linear(self.encoder_out_dim, action_dim)
         self.activation = nn.ReLU()
 
-    def forward(self, map: Tensor, map_goal: Tensor, map_colors: Tensor) -> Tensor:
+    def forward(self, state: List[Tensor]) -> Tensor:
         # see current state
-        map_out = self.map_encoder(map)
+        map_x = state[0]
+        map_goal_x = state[1]
+        map_colors_x = state[2]
+
+        map_out = self.map_encoder(map_x)
         map_out = map_out.view(-1, 1, 64 * 2)
 
         # see end state
-        map_goal_out = self.goal_map_encoder(map_goal)
+        map_goal_out = self.goal_map_encoder(map_goal_x)
         map_goal_out = map_goal_out.view(-1, 1, 64 * 2)
 
         # see colors
-        map_colors_out = self.color_map_encoder(map_colors)
+        map_colors_out = self.color_map_encoder(map_colors_x)
         map_colors_out = map_colors_out.view(-1, 1, 64 * 2)
 
         # map passes out
