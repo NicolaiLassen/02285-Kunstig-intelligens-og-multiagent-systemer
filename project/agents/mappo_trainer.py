@@ -62,12 +62,14 @@ class MAPPOTrainer(object):
         return actions, probs, log_probs
 
     def train(self, step_max: int, batch=2000, horizon: int = 1000, save_every=200000, path: str = "./ckpt"):
+        solved = {}
         t = 0
         s1 = self.env.reset()
         self.replay_buffer = MultiAgentMemBuffer(max_length=batch)
         while t < step_max:
             for i in range(batch):
                 if t % save_every == 0:
+                    torch.save(solved, "{}/solved_{}.ckpt".format(path, t))
                     self.save("{}/agent_{}.ckpt".format(path, t))
 
                 t += 1
@@ -77,6 +79,12 @@ class MAPPOTrainer(object):
                 self.replay_buffer.append(s, actions, r, s1, probs, log_probs, d)
                 if t % horizon == 0 or d:
                     s1 = self.env.reset()
+                    if d:
+                        if self.env.file_name not in solved:
+                            solved[self.env.file_name] = 0
+                        else:
+                            solved[self.env.file_name] += 1
+
             self.update()
 
     def update(self):
