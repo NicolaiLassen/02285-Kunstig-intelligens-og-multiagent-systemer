@@ -10,4 +10,4 @@
  #BSUB -e logs/%J.err
  module load python3/3.6.2
  echo "Traning..."
- python3 main.py -c "job_ckpt"
+ python3 train.py -c "job_ckpt"
