@@ -101,10 +101,10 @@ class MultiAgentEnvWrapper(gym.Env, ABC):
     def __duplicate_obs(self, state):
         obs = {}
         for i in range(self.agents_n):
-            obs[i] = [state.level,
-                      state.colors,
-                      self.goal_state.level,
-                      state.agents[i]]
+            obs[i] = [state.level.float().cuda(),
+                      self.goal_state.level.float().cuda(),
+                      state.colors.float().cuda(),
+                      state.agents[i].float().cuda()]
         return obs
 
     def __count_goals(self, state):

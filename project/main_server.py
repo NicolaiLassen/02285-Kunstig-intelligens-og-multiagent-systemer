@@ -1,6 +1,10 @@
 import sys
 from typing import List
+
+from agents.mappo_trainer import MAPPOTrainer
 from environment.action import Action
+from environment.env_wrapper import MultiAgentEnvWrapper
+from models.policy_models import ActorPolicyModel, CriticPolicyModel
 
 client_name = "46"
 
@@ -40,4 +44,20 @@ def get_server_out():
 
 
 if __name__ == '__main__':
-    print()
+    width = 50
+    height = 50
+
+    env_wrapper = MultiAgentEnvWrapper({'random': True, 'level_names': level_file_paths_man})
+    actor = ActorPolicyModel(width, height, env_wrapper.action_space_n).cuda()
+    critic = CriticPolicyModel(width, height).cuda()
+
+    agent_trainer = MAPPOTrainer(
+        env_wrapper,
+        actor,
+        critic
+    )
+
+    agent_trainer.save("./ckpt/agent.ckpt")
+
+    agent_trainer.act()
+    agent_trainer.env.step()

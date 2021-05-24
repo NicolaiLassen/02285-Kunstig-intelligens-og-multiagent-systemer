@@ -1,9 +1,7 @@
 import argparse
 import os
-from copy import deepcopy
 
-from agents.ddpg_agent import DDPG
-from agents.multi_agent_ddpg_trainer import MADDPGTrainer
+from agents.mappo_trainer import MAPPOTrainer
 from environment.env_wrapper import MultiAgentEnvWrapper
 from models.policy_models import ActorPolicyModel, CriticPolicyModel
 
@@ -35,7 +33,7 @@ if __name__ == '__main__':
 
     create_dir('./{}'.format(args.ckpt))
 
-    level_file_paths_man = absolute_file_paths('./levels_manual')
+    level_file_paths_man = absolute_file_paths('./levels_manual') + absolute_file_paths('./levels_comp')
 
     width = 50
     height = 50
@@ -44,13 +42,10 @@ if __name__ == '__main__':
     actor = ActorPolicyModel(width, height, env_wrapper.action_space_n).cuda()
     critic = CriticPolicyModel(width, height).cuda()
 
-    agent = DDPG(actor, critic, actor_lr=3e-4, critic_lr=1e-3)
-    agent_trainer = MADDPGTrainer(
+    agent_trainer = MAPPOTrainer(
         env_wrapper,
-        {i: deepcopy(agent) for i in range(env_wrapper.max_agents_n)},
+        actor,
+        critic
     )
 
-    episodes = 100000
-    agent_trainer.train(2e6)
-
-    # agent_trainer.update()
+    agent_trainer.train(int(10e6))
