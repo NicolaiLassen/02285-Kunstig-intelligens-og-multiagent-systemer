@@ -48,4 +48,4 @@ if __name__ == '__main__':
         env_wrapper
     )
 
-    agent_trainer.train(int(200e6))
+    agent_trainer.train(int(200e6), path='./{}'.format(args.ckpt))

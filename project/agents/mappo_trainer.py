@@ -61,12 +61,15 @@ class MAPPOTrainer(object):
             log_probs[a_key] = log_prob
         return actions, probs, log_probs
 
-    def train(self, step_max: int, batch=2000, horizon: int = 1000, save_every=200000):
+    def train(self, step_max: int, batch=2000, horizon: int = 1000, save_every=200000, path: str = "./ckpt"):
         t = 0
         s1 = self.env.reset()
         self.replay_buffer = MultiAgentMemBuffer(max_length=batch)
         while t < step_max:
             for i in range(batch):
+                if t % save_every == 0:
+                    self.save("{}/agent_{}.ckpt".format(path, t))
+
                 t += 1
                 s = s1
                 actions, probs, log_probs = self.act(s)
@@ -74,8 +77,6 @@ class MAPPOTrainer(object):
                 self.replay_buffer.append(s, actions, r, s1, probs, log_probs, d)
                 if t % horizon == 0 or d:
                     s1 = self.env.reset()
-                if t % save_every == 0:
-                    self.save("./ckpt/agent_{}.ckpt".format(t))
             self.update()
 
     def update(self):
@@ -89,7 +90,7 @@ class MAPPOTrainer(object):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        
+
         self.replay_buffer.clear()
 
     def save(self, path: str):
