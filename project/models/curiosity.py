@@ -47,9 +47,9 @@ class IntrinsicCuriosityModule(nn.Module):
         )
 
     def forward(self, state, next_state, action):
-        phi_t = self.head(state)
-        phi_t1 = self.head(next_state)
+        pi_t = self.head(state)
+        pi_t1 = self.head(next_state)
 
-        phi_t1_hat = self.forward_model(torch.cat((phi_t, action), 1))
-        a_t_hat = F.softmax(self.inverse_model(torch.cat((phi_t, phi_t1), 1)), dim=-1)
-        return a_t_hat, phi_t1_hat, phi_t1, phi_t
+        pi_t1_hat = self.forward_model(torch.cat((pi_t, action), 1))
+        a_t_hat = F.softmax(self.inverse_model(torch.cat((pi_t, pi_t1), 1)), dim=-1)
+        return a_t_hat, pi_t1_hat, pi_t1, pi_t

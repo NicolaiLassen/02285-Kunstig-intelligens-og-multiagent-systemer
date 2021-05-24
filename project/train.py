@@ -2,13 +2,10 @@ import argparse
 import os
 from copy import deepcopy
 
-import torch
-from machin.frame.algorithms import MADDPG
-from torch import nn
-
+from agents.ddpg_agent import DDPG
+from agents.multi_agent_ddpg_trainer import MADDPGTrainer
 from environment.env_wrapper import MultiAgentEnvWrapper
-from models.curiosity import IntrinsicCuriosityModule
-from models.policy_models import CriticPolicyModel, ActorPolicyModel
+from models.policy_models import ActorPolicyModel, CriticPolicyModel
 
 
 def get_n_params(model):
@@ -42,55 +39,18 @@ if __name__ == '__main__':
 
     width = 50
     height = 50
-    lr_actor = 3e-4
-    lr_critic = 1e-3
-    lr_icm = 1e-3
-
-    agent_num = 10
 
     env_wrapper = MultiAgentEnvWrapper({'random': True, 'level_names': level_file_paths_man})
     actor = ActorPolicyModel(width, height, env_wrapper.action_space_n).cuda()
     critic = CriticPolicyModel(width, height).cuda()
-    icm = IntrinsicCuriosityModule(env_wrapper.action_space_n).cuda()
 
-    optimizer = torch.optim.Adam([
-        {'params': actor.parameters(), 'lr': lr_actor},
-        {'params': icm.parameters(), 'lr': lr_icm},
-        {'params': critic.parameters(), 'lr': lr_critic}
-    ])
-
-    agent_trainer = MADDPG(
-        [deepcopy(actor) for _ in range(agent_num)],
-        [deepcopy(actor) for _ in range(agent_num)],
-        [deepcopy(critic) for _ in range(agent_num)],
-        [deepcopy(critic) for _ in range(agent_num)],
-        critic_visible_actors=[list(range(agent_num))] * agent_num,
-        optimizer=torch.optim.Adam,
-        criterion=nn.MSELoss(reduction="sum")
+    agent = DDPG(actor, critic, actor_lr=3e-4, critic_lr=1e-3)
+    agent_trainer = MADDPGTrainer(
+        env_wrapper,
+        {i: deepcopy(agent) for i in range(env_wrapper.max_agents_n)},
     )
 
-    episode, step, reward_fulfilled = 0, 0, 0
-    smoothed_total_reward = 0
-    max_episodes = 1000
-    max_steps = 200
+    episodes = 100000
+    agent_trainer.train(2e6)
 
-    dim_size = 50 * 50
-    while episode < max_episodes:
-        episode += 1
-        total_reward = 0
-        done = False
-        step = 0
-        s1 = [
-            torch.tensor(st, dtype=torch.float32).view(1, -1) for st in env_wrapper.reset().values()
-        ]
-
-        while not done and step <= max_steps:
-            step += 1
-            with torch.no_grad():
-                s = s1
-
-                results = agent_trainer.act_discrete_with_noise(
-                    [{"state": st} for st in s]
-                )
-
-    # agent_trainer.save("./{}".format(args.ckpt), version=1)
+    # agent_trainer.update()

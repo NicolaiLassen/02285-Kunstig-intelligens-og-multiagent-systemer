@@ -2,7 +2,7 @@ import torch
 
 from environment.entity import Entity
 from environment.level_state import LevelState
-from utils.normalize_dist import normalize_dist
+from utils.misc import normalize_dist
 
 
 def parse_level_file(level_file):

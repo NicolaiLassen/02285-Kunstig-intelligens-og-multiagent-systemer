@@ -1,7 +1,7 @@
 import copy
 from abc import ABC
 from random import randint
-from typing import List
+from typing import List, Dict
 
 import gym as gym
 import torch
@@ -23,6 +23,7 @@ class MultiAgentEnvWrapper(gym.Env, ABC):
     observation_space = None
     file_name = None
     valid_agent_actions = None
+    penalty = 0.1
 
     def __init__(
             self,
@@ -35,7 +36,7 @@ class MultiAgentEnvWrapper(gym.Env, ABC):
         self.box_z_value = 90  # ord("Z")
 
         self.action_space_n = 29  # max actions
-        self.num_agents = 9  # max agents
+        self.max_agents_n = 10  # max agents
 
         self.random_from_files: bool = False if 'random' not in env_config else env_config['random']
 
@@ -55,15 +56,14 @@ class MultiAgentEnvWrapper(gym.Env, ABC):
         return self.t0_state.__repr__()
 
     def step(self, actions: dict):
-        print(actions)
         actions = idxs_to_actions(list(actions.values()))
         valid_actions = []
-        rewards = {}
+        rewards: Dict[int, float] = {}
 
         for i, action in enumerate(actions):
             rewards[i] = 0
             if not self.__is_applicable(i, action):
-                rewards[i] = -0.1  # constant penalty for wrong move
+                rewards[i] = -self.penalty  # constant penalty for wrong move
                 valid_actions.append(Action.NoOp)
                 continue
             valid_actions.append(action)
@@ -71,19 +71,23 @@ class MultiAgentEnvWrapper(gym.Env, ABC):
         if self.__is_conflict(valid_actions):
             return self.__duplicate_obs(self.t0_state), rewards, False, {}
 
-        t1_state = self.__act(valid_actions)
-        goal_count = self.__count_goals(t1_state)
-        done = goal_count == len(self.goal_state_positions)
+        # give agent reward for doing a move that changes the goal state
+        goal_count_t1 = self.__count_goals(self.t0_state)
+        for agent_index, action in enumerate(valid_actions):
+            t1_delta = self.__act(action, agent_index)
+            t1_h = self.__count_goals(t1_delta)
+            # if you moved something from the goal or set something on a goal
+            rewards[agent_index] = rewards[agent_index] + max(0, t1_h - goal_count_t1)
+            self.t0_state = t1_delta
+            goal_count_t1 = t1_h
 
-        # TODO: make each reward apply to the agent accomplished task
-        goal_count_disc = goal_count / len(self.goal_state_positions)
-        for key in rewards.keys():
-            rewards[key] += goal_count_disc  # joined score for reward
+        # did we make it?
+        done = goal_count_t1 == len(self.goal_state_positions)
 
         if done:
+            # print solve for logging
             print("Solved {}".format(self.file_name))
 
-        self.t0_state = t1_state
         return self.__duplicate_obs(self.t0_state), rewards, done, {}
 
     def reset(self):
@@ -97,10 +101,10 @@ class MultiAgentEnvWrapper(gym.Env, ABC):
     def __duplicate_obs(self, state):
         obs = {}
         for i in range(self.agents_n):
-            obs[i] = [state.level.numpy(),
-                      state.colors.numpy(),
-                      self.goal_state.level.numpy(),
-                      state.agents[i].numpy()]
+            obs[i] = [state.level,
+                      state.colors,
+                      self.goal_state.level,
+                      state.agents[i]]
         return obs
 
     def __count_goals(self, state):
@@ -208,56 +212,55 @@ class MultiAgentEnvWrapper(gym.Env, ABC):
     def __is_free(self, row, col):
         return self.t0_state.level[row][col].item() == self.free_value
 
-    def __act(self, actions: List[Action]) -> LevelState:
+    def __act(self, action: Action, index) -> LevelState:
 
         next_state = self.t0_state
 
-        for index, action in enumerate(actions):
-            # Update agent location
-            prev_agent_row, prev_agent_col = self.t0_state.agent_row_col(index)
-            next_agent_row = prev_agent_row + action.agent_row_delta
-            next_agent_col = prev_agent_col + action.agent_col_delta
-            agent_value = self.t0_state.level[prev_agent_row][prev_agent_col]
-            agent_color = self.t0_state.colors[prev_agent_row][prev_agent_col]
-            next_state.agents[index] = torch.tensor([next_agent_row, next_agent_col])
+        # Update agent location
+        prev_agent_row, prev_agent_col = self.t0_state.agent_row_col(index)
+        next_agent_row = prev_agent_row + action.agent_row_delta
+        next_agent_col = prev_agent_col + action.agent_col_delta
+        agent_value = self.t0_state.level[prev_agent_row][prev_agent_col]
+        agent_color = self.t0_state.colors[prev_agent_row][prev_agent_col]
+        next_state.agents[index] = torch.tensor([next_agent_row, next_agent_col])
 
-            # Update level matrices and agent pos
-            if action.type is ActionType.NoOp:
-                continue
-            elif action.type is ActionType.Move:
-                next_state.level[next_agent_row][next_agent_col] = agent_value
-                next_state.level[prev_agent_row][prev_agent_col] = self.free_value
+        # Update level matrices and agent pos
+        if action.type is ActionType.NoOp:
+            return next_state
+        elif action.type is ActionType.Move:
+            next_state.level[next_agent_row][next_agent_col] = agent_value
+            next_state.level[prev_agent_row][prev_agent_col] = self.free_value
 
-                next_state.colors[next_agent_row][next_agent_col] = agent_color
-                next_state.colors[prev_agent_row][prev_agent_col] = 0
+            next_state.colors[next_agent_row][next_agent_col] = agent_color
+            next_state.colors[prev_agent_row][prev_agent_col] = 0
 
-            elif action.type is ActionType.Push:
-                box_value = self.t0_state.level[next_agent_row][next_agent_col]
-                box_color = self.t0_state.colors[next_agent_row][next_agent_col]
-                next_box_row = next_agent_row + action.box_row_delta
-                next_box_col = next_agent_col + action.box_col_delta
+        elif action.type is ActionType.Push:
+            box_value = self.t0_state.level[next_agent_row][next_agent_col]
+            box_color = self.t0_state.colors[next_agent_row][next_agent_col]
+            next_box_row = next_agent_row + action.box_row_delta
+            next_box_col = next_agent_col + action.box_col_delta
 
-                next_state.level[next_box_row][next_box_col] = box_value
-                next_state.level[next_agent_row][next_agent_col] = agent_value
-                next_state.level[prev_agent_row][prev_agent_col] = self.free_value
+            next_state.level[next_box_row][next_box_col] = box_value
+            next_state.level[next_agent_row][next_agent_col] = agent_value
+            next_state.level[prev_agent_row][prev_agent_col] = self.free_value
 
-                next_state.colors[next_box_row][next_box_col] = box_color
-                next_state.colors[next_agent_row][next_agent_col] = agent_color
-                next_state.colors[prev_agent_row][prev_agent_col] = 0
+            next_state.colors[next_box_row][next_box_col] = box_color
+            next_state.colors[next_agent_row][next_agent_col] = agent_color
+            next_state.colors[prev_agent_row][prev_agent_col] = 0
 
-            elif action.type is ActionType.Pull:
-                prev_box_row = prev_agent_row + (action.box_row_delta * -1)
-                prev_box_col = prev_agent_col + (action.box_col_delta * -1)
-                box_value = self.t0_state.level[prev_box_row][prev_box_col]
-                box_color = self.t0_state.colors[prev_box_row][prev_box_col]
+        elif action.type is ActionType.Pull:
+            prev_box_row = prev_agent_row + (action.box_row_delta * -1)
+            prev_box_col = prev_agent_col + (action.box_col_delta * -1)
+            box_value = self.t0_state.level[prev_box_row][prev_box_col]
+            box_color = self.t0_state.colors[prev_box_row][prev_box_col]
 
-                next_state.level[next_agent_row][next_agent_col] = agent_value
-                next_state.level[prev_agent_row][prev_agent_col] = box_value
-                next_state.level[prev_box_row][prev_box_col] = self.free_value
+            next_state.level[next_agent_row][next_agent_col] = agent_value
+            next_state.level[prev_agent_row][prev_agent_col] = box_value
+            next_state.level[prev_box_row][prev_box_col] = self.free_value
 
-                next_state.colors[next_agent_row][next_agent_col] = agent_color
-                next_state.colors[prev_agent_row][prev_agent_col] = box_color
-                next_state.colors[prev_box_row][prev_box_col] = 0
+            next_state.colors[next_agent_row][next_agent_col] = agent_color
+            next_state.colors[prev_agent_row][prev_agent_col] = box_color
+            next_state.colors[prev_box_row][prev_box_col] = 0
 
         return next_state
 

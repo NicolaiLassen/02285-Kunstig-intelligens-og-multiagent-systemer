@@ -143,7 +143,7 @@ instance/
 # Scrapy stuff:
 .scrapy
 
-# Sphinx documentation
+# Spinx documentation
 docs/_build/
 
 # PyBuilder
