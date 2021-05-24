@@ -5,6 +5,7 @@ from agents.mappo_trainer import MAPPOTrainer
 from environment.action import Action
 from environment.env_wrapper import MultiAgentEnvWrapper
 from models.policy_models import ActorPolicyModel, CriticPolicyModel
+from train import absolute_file_paths
 
 client_name = "46"
 
@@ -47,17 +48,15 @@ if __name__ == '__main__':
     width = 50
     height = 50
 
+    level_file_paths_man = absolute_file_paths('./levels_comp')
     env_wrapper = MultiAgentEnvWrapper({'random': True, 'level_names': level_file_paths_man})
     actor = ActorPolicyModel(width, height, env_wrapper.action_space_n).cuda()
     critic = CriticPolicyModel(width, height).cuda()
 
     agent_trainer = MAPPOTrainer(
-        env_wrapper,
         actor,
         critic
     )
 
-    agent_trainer.save("./ckpt/agent.ckpt")
-
-    agent_trainer.act()
-    agent_trainer.env.step()
+    agent_trainer.eval()
+    agent_trainer.restore("./ckpt/agent.ckpt")

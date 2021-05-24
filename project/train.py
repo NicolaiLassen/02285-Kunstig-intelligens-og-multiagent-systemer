@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
     create_dir('./{}'.format(args.ckpt))
 
-    level_file_paths_man = absolute_file_paths('./levels_manual') + absolute_file_paths('./levels_comp')
+    level_file_paths_man = absolute_file_paths('./levels_comp')
 
     width = 50
     height = 50
@@ -43,9 +43,9 @@ if __name__ == '__main__':
     critic = CriticPolicyModel(width, height).cuda()
 
     agent_trainer = MAPPOTrainer(
-        env_wrapper,
         actor,
-        critic
+        critic,
+        env_wrapper
     )
 
-    agent_trainer.train(int(10e6))
+    agent_trainer.train(int(200e6))

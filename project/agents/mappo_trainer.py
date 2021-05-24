@@ -16,16 +16,17 @@ class MAPPOTrainer(object):
     replay_buffer: MultiAgentMemBuffer = None
 
     def __init__(self,
-                 env: MultiAgentEnvWrapper,
-                 actor: nn.Module = None,
-                 critic: nn.Module = None,
+                 actor: nn.Module,
+                 critic: nn.Module,
+                 env: MultiAgentEnvWrapper = None,
                  actor_lr: float = 0.0005,
                  critic_lr: float = 0.001,
+                 eval=False,
                  gamma=0.9,
                  eta=0.5,
                  beta=0.8,
                  eps_c=0.2,
-                 loss_entropy_c=0.01
+                 loss_entropy_c=0.01,
                  ):
         self.env = env
 
@@ -40,7 +41,8 @@ class MAPPOTrainer(object):
                          eta=eta,
                          beta=beta,
                          eps_c=eps_c,
-                         loss_entropy_c=loss_entropy_c)
+                         loss_entropy_c=loss_entropy_c,
+                         eval=eval)
 
         self.agents: Dict[int, PPOAgent] = {i: deepcopy(agent) for i in range(self.env.max_agents_n)}
 
@@ -59,7 +61,7 @@ class MAPPOTrainer(object):
             log_probs[a_key] = log_prob
         return actions, probs, log_probs
 
-    def train(self, step_max: int, batch=1000, horizon: int = 500):
+    def train(self, step_max: int, batch=2000, horizon: int = 1000, save_every=200000):
         t = 0
         s1 = self.env.reset()
         self.replay_buffer = MultiAgentMemBuffer(max_length=batch)
@@ -72,8 +74,9 @@ class MAPPOTrainer(object):
                 self.replay_buffer.append(s, actions, r, s1, probs, log_probs, d)
                 if t % horizon == 0 or d:
                     s1 = self.env.reset()
+                if t % save_every == 0:
+                    self.save("./ckpt/agent_{}.ckpt".format(t))
             self.update()
-            self.save("./ckpt/agent.ckpt")
 
     def update(self):
         torch.cuda.empty_cache()
@@ -86,11 +89,16 @@ class MAPPOTrainer(object):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+        
         self.replay_buffer.clear()
 
     def save(self, path: str):
         save_dict = {'agent_params': [self.agents[a_key].get_params() for a_key in self.agents]}
         torch.save(save_dict, path)
+
+    def eval(self):
+        for a_key in self.agents:
+            self.agents[a_key].eval()
 
     def restore(self, path: str):
         save_dict = torch.load(path)
