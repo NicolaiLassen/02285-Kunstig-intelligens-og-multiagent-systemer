@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
     create_dir('./{}'.format(args.ckpt))
 
-    level_file_paths_man = absolute_file_paths('./levels_comp')
+    level_file_paths_man = absolute_file_paths('./levels')
 
     width = 50
     height = 50

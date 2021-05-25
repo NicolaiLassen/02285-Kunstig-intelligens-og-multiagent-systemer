@@ -48,9 +48,8 @@ class MultiAgentEnvWrapper(gym.Env, ABC):
             index = randint(0, len(self.level_names))
             self.load(index=index)
         else:
-            if 'level_lines' not in env_config:
-                raise Exception("If not in train add a map")
-            self.load(file_lines=env_config['level_lines'])
+            if 'level_lines' in env_config:
+                self.load(file_lines=env_config['level_lines'])
 
     def __repr__(self):
         return self.t0_state.__repr__()
