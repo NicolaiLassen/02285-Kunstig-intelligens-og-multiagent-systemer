@@ -78,12 +78,12 @@ class MAPPOTrainer(object):
                 s1, r, d, _ = self.env.step(actions)
                 self.replay_buffer.append(s, actions, r, s1, probs, log_probs, d)
                 if t % horizon == 0 or d:
-                    s1 = self.env.reset()
                     if d:
                         if self.env.file_name not in solved:
-                            solved[self.env.file_name] = 0
+                            solved[self.env.file_name] = 1
                         else:
-                            solved[self.env.file_name] += 1
+                            solved[self.env.file_name] = solved[self.env.file_name] + 1
+                    s1 = self.env.reset()
 
             self.update()
 

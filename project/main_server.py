@@ -50,6 +50,8 @@ if __name__ == '__main__':
     width = 50
     height = 50
 
+    print(torch.load("./ckpt/solved_1600000.ckpt"))
+
     # level_file_paths_man = absolute_file_paths('./levels_comp')
     # env_wrapper = MultiAgentEnvWrapper({'random': True, 'level_names': level_file_paths_man})
     # actor = ActorPolicyModel(width, height, env_wrapper.action_space_n).cuda()
