@@ -1,6 +1,6 @@
 from typing import Dict, List
 
-from ray.rllib.train import torch
+import torch
 
 
 class MemBuffer:
