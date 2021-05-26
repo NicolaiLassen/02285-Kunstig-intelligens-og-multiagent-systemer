@@ -3,10 +3,49 @@ from typing import Dict
 
 import torch
 from torch import nn
-from torch.distributions import Categorical
 
-from utils.misc import normalize_dist
 from utils.buffer import MemBuffer
+from utils.misc import normalize_dist
+
+
+class FixedCategorical(torch.distributions.Categorical):
+    def sample(self):
+        return super().sample().unsqueeze(-1)
+
+    def log_probs(self, actions):
+        return (
+            super()
+                .log_prob(actions.squeeze(-1))
+                .view(actions.size(0), -1)
+                .sum(-1)
+                .unsqueeze(-1)
+        )
+
+    def mode(self):
+        return self.probs.argmax(dim=-1, keepdim=True)
+
+
+def init(module, weight_init, bias_init, gain=1):
+    weight_init(module.weight.data, gain=gain)
+    bias_init(module.bias.data)
+    return module
+
+
+class Categorical(nn.Module):
+    def __init__(self, num_inputs, num_outputs):
+        super(Categorical, self).__init__()
+
+        init_ = lambda m: init(
+            m,
+            nn.init.orthogonal_,
+            lambda x: nn.init.constant_(x, 0),
+            gain=0.01)
+
+        self.linear = init_(nn.Linear(num_inputs, num_outputs))
+
+    def forward(self, x):
+        x = self.linear(x)
+        return FixedCategorical(logits=x)
 
 
 class PPOAgent(object):
@@ -36,6 +75,7 @@ class PPOAgent(object):
         self.critic = critic
         self.actor = actor
         self.actor_old = deepcopy(actor)
+        self.dist = Categorical(128, 29).cuda()  # 29 actions
 
         self.gamma = gamma
         self.eta = eta
@@ -53,7 +93,7 @@ class PPOAgent(object):
                                           state[1].unsqueeze(0).unsqueeze(0),
                                           state[2].unsqueeze(0).unsqueeze(0),
                                           state[3].unsqueeze(0))
-        action_dist = Categorical(action_logs_prob)
+        action_dist = self.dist(action_logs_prob)
         action = action_dist.sample()
         action_dist_log_prob = action_dist.log_prob(action)
         return action.detach().item(), action_dist.probs.detach(), action_dist_log_prob.detach()
@@ -63,7 +103,7 @@ class PPOAgent(object):
                                       transitions.map_goal.unsqueeze(1),
                                       transitions.map_color.unsqueeze(1),
                                       transitions.agent_pos)
-        dist = Categorical(action_logs_prob)
+        dist = self.dist(action_logs_prob)
         action_log_prob = dist.log_prob(transitions.actions)
         state_values = self.critic(transitions.map,
                                    transitions.map_goal)
@@ -113,6 +153,7 @@ class PPOAgent(object):
     def eval(self):
         self.actor.eval()
         self.critic.eval()
+        self.actor_old.eval()
         self.evaluating = True
 
     def train(self):
@@ -122,8 +163,11 @@ class PPOAgent(object):
 
     def get_params(self):
         return {'actor': self.actor.state_dict(),
-                'critic': self.critic.state_dict()}
+                'critic': self.critic.state_dict(),
+                'cat': self.critic.state_dict()}
 
     def restore(self, params: Dict):
         self.actor.load_state_dict(params['actor'])
+        self.actor_old.load_state_dict(params['actor'])
         self.critic.load_state_dict(params['critic'])
+        self.dist.load_state_dict(params['cat'])

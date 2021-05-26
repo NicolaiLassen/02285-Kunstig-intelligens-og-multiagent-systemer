@@ -38,6 +38,7 @@ def read_level_lines(file):
     level_lines = []
     line = file.readline()
     while not line.startswith('#'):
+        print(line, flush=True)
         level_lines.append(line.strip())
         line = file.readline()
     return level_lines

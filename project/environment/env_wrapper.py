@@ -82,11 +82,6 @@ class MultiAgentEnvWrapper(gym.Env, ABC):
 
         # did we make it?
         done = goal_count_t1 == len(self.goal_state_positions)
-
-        if done:
-            # print solve for logging
-            print("Solved {}".format(self.file_name))
-
         return self.__duplicate_obs(self.t0_state), rewards, done, {}
 
     def reset(self):

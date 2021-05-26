@@ -1,5 +1,4 @@
 import torch
-import torch.nn.functional as F
 from torch import nn, Tensor
 
 
@@ -62,7 +61,6 @@ class ActorPolicyModel(nn.Module):
         self.agent_embed = nn.Linear(2, self.embed_dim)
 
         self.fc_passes = nn.Linear(self.embed_dim * 2, self.embed_dim)
-        self.fc_out = nn.Linear(self.embed_dim, action_dim)
         self.activation = nn.ReLU()
 
     def forward(self, map: Tensor,
@@ -92,6 +90,4 @@ class ActorPolicyModel(nn.Module):
         all_passes_out = torch.cat((map_passes_out, agent_out)).view(-1, self.embed_dim * 2)
 
         # out the beast of all passes
-        out = self.activation(self.fc_passes(all_passes_out))
-        out = self.fc_out(out)
-        return F.log_softmax(out, dim=-1)
+        return self.activation(self.fc_passes(all_passes_out))
