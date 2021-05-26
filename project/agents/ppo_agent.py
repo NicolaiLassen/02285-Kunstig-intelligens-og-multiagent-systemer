@@ -94,7 +94,7 @@ class PPOAgent(object):
                                           state[2].unsqueeze(0).unsqueeze(0),
                                           state[3].unsqueeze(0))
         action_dist = self.dist(action_logs_prob)
-        action = action_dist.sample()
+        action = action_dist.mode()
         action_dist_log_prob = action_dist.log_prob(action)
         return action.detach().item(), action_dist.probs.detach(), action_dist_log_prob.detach()
 
