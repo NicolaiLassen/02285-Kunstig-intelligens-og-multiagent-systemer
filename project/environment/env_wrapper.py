@@ -1,33 +1,37 @@
 import copy
 from abc import ABC
-from random import randint
-from typing import List, Dict
+from typing import List
 
 import gym as gym
 import torch
 
-from environment.action import Action, ActionType, idxs_to_actions
+from environment.action import Action, ActionType
 from environment.level_loader import load_level
-from utils.preprocess import LevelState
+from environment.level_state import LevelState
 
 
-class MultiAgentEnvWrapper(gym.Env, ABC):
+class Node():
+    constraints = []
+    cost = 0
+    solution = []
+
+
+class CBSEnvWrapper(gym.Env, ABC):
     initial_state = None
     goal_state = None
+    goal_state_positions = {}
     t0_state = None
-    visited_state = None
+
+    n_solutions = []
+    open = []
+
     agents_n = 0
     rows_n = 0
     cols_n = 0
-    goal_state_positions = {}
-    observation_space = None
     file_name = None
-    valid_agent_actions = None
-    penalty = 0.1
 
     def __init__(
-            self,
-            env_config
+            self
     ) -> None:
         self.free_value = 32  # ord(" ")
         self.agent_0_value = 48  # ord("0")
@@ -38,79 +42,22 @@ class MultiAgentEnvWrapper(gym.Env, ABC):
         self.action_space_n = 29  # max actions
         self.max_agents_n = 10  # max agents
 
-        self.random_from_files: bool = False if 'random' not in env_config else env_config['random']
-
-        if self.random_from_files and 'level_names' not in env_config:
-            raise Exception("If random is selected you must give paths to levels")
-
-        if self.random_from_files:
-            self.level_names: List[str] = env_config['level_names']
-            index = randint(0, len(self.level_names))
-            self.load(index=index)
-        else:
-            if 'level_lines' in env_config:
-                self.load(file_lines=env_config['level_lines'])
-
     def __repr__(self):
         return self.t0_state.__repr__()
 
-    def step(self, actions: dict):
-        actions = idxs_to_actions(list(actions.values()))
-        valid_actions = []
-        rewards: Dict[int, float] = {}
+    def low_level(self, agent: int):
+        # find sol for single agent
+        print()
 
-        for i, action in enumerate(actions):
-            rewards[i] = 0
-            if not self.__is_applicable(i, action):
-                rewards[i] = -self.penalty  # constant penalty for wrong move
-                valid_actions.append(Action.NoOp)
-                continue
-            valid_actions.append(action)
+    def high_level(self):
+        print()
+        r_solutions = []
+        for a in range(self.agents_n):
+            sol = self.low_level(a)
+            r_solutions.append(sol)
 
-        if self.__is_conflict(valid_actions):
-            return self.__duplicate_obs(self.t0_state), rewards, False, {}
-
-        # give agent reward for doing a move that changes the goal state
-        goal_count_t1 = self.__count_goals(self.t0_state)
-        for agent_index, action in enumerate(valid_actions):
-            t1_delta = self.__act(action, agent_index)
-            t1_h = self.__count_goals(t1_delta)
-            # if you moved something from the goal or set something on a goal
-            rewards[agent_index] = rewards[agent_index] + max(0, t1_h - goal_count_t1)
-            self.t0_state = t1_delta
-            goal_count_t1 = t1_h
-
-        # did we make it?
-        done = goal_count_t1 == len(self.goal_state_positions)
-        return self.__duplicate_obs(self.t0_state), rewards, done, {}
-
-    def reset(self):
-        if self.random_from_files:
-            index = randint(0, len(self.level_names))
-            self.load(index=index)
-        else:
-            self.t0_state = copy.deepcopy(self.initial_state)
-        return self.__duplicate_obs(self.t0_state)
-
-    def __duplicate_obs(self, state):
-        obs = {}
-        for i in range(self.agents_n):
-            obs[i] = [state.level.float().cuda(),
-                      self.goal_state.level.float().cuda(),
-                      state.colors.float().cuda(),
-                      state.agents[i].float().cuda()]
-        return obs
-
-    def __count_goals(self, state):
-        goal_count = 0
-        for row in range(len(state.level)):
-            for col in range(len(state.level[row])):
-                key = str([row, col])
-                if key not in self.goal_state_positions:
-                    continue
-                val = state.level[row][col].item()
-                goal_count += 1 if self.goal_state_positions[key] == val else 0
-        return goal_count
+        while len(self.open) != 0:
+            print()
 
     def __is_applicable(self, index: int, action: Action):
         agent_row, agent_col = self.t0_state.agent_row_col(index)
@@ -258,13 +205,7 @@ class MultiAgentEnvWrapper(gym.Env, ABC):
 
         return next_state
 
-    # UTILS
-
-    def load(self, index: int = None, file_lines: List[str] = None, file_name: str = None):
-
-        if self.random_from_files:
-            file_lines, file_name = self.read_level_file(index)
-
+    def load(self, file_lines: List[str] = None, file_name: str = None):
         initial_state, goal_state = load_level(file_lines)
         self.file_name = file_name
         self.initial_state = initial_state
@@ -284,12 +225,3 @@ class MultiAgentEnvWrapper(gym.Env, ABC):
                     self.goal_state_positions[str([row, col])] = val.item()
 
         self.t0_state = copy.deepcopy(initial_state)
-
-    def read_level_file(self, index: int):
-        file_name = self.level_names[index % len(self.level_names)]
-        level_file = open(file_name, 'r')
-
-        level_file_lines = [line.strip().replace("\n", "") if line.startswith("#") else line.replace("\n", "")
-                            for line in level_file.readlines()]
-        level_file.close()
-        return level_file_lines, file_name

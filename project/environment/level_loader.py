@@ -32,12 +32,12 @@ def load_level(file_lines: List[str]) -> Tuple[LevelState, LevelState]:
     return level_initial_state, level_goal_state
 
 
-def parse_level_lines(color_dict, level_lines: List[str], width=50, height=50) -> LevelState:
+def parse_level_lines(color_dict, level_lines: List[str]) -> LevelState:
     num_agents = len([char for char in color_dict.keys() if '0' <= char <= '9'])
     num_rows = len(level_lines)
     num_cols = len(level_lines[0])
-    level_matrix: Tensor = torch.zeros(width, height, dtype=torch.long)
-    color_matrix: Tensor = torch.zeros(width, height, dtype=torch.long)
+    level_matrix: Tensor = torch.zeros(num_rows, num_cols, dtype=torch.long)
+    color_matrix: Tensor = torch.zeros(num_rows, num_cols, dtype=torch.long)
     agent_positions = torch.zeros(num_agents, 2)
 
     for row, line in enumerate(level_lines):

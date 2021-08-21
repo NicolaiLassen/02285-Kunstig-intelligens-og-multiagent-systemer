@@ -32,8 +32,3 @@ class LevelState:
     def agent_row_col(self, index: int):
         agent_position = self.agents[index]
         return int(agent_position[0].detach().item()), int(agent_position[1].detach().item())
-
-#    def print(self):
-#        for row in self.level:
-#            print(row, file=sys.stderr, flush=True)
-#        print('', file=sys.stderr, flush=True)

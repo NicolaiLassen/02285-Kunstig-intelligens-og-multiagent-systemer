@@ -1,9 +1,7 @@
 import argparse
 import os
 
-from agents.mappo_trainer import MAPPOTrainer
-from environment.env_wrapper import MultiAgentEnvWrapper
-from models.policy_models import ActorPolicyModel, CriticPolicyModel
+from environment.env_wrapper import CBSEnvWrapper
 
 
 def get_n_params(model):
@@ -38,14 +36,12 @@ if __name__ == '__main__':
     width = 50
     height = 50
 
-    env_wrapper = MultiAgentEnvWrapper({'random': True, 'level_names': level_file_paths_man})
-    actor = ActorPolicyModel(width, height, env_wrapper.action_space_n).cuda()
-    critic = CriticPolicyModel(width, height).cuda()
+    env_wrapper = CBSEnvWrapper()
+    level_file = open(level_file_paths_man[0], 'r')
 
-    agent_trainer = MAPPOTrainer(
-        actor,
-        critic,
-        env_wrapper
-    )
+    level_file_lines = [line.strip().replace("\n", "") if line.startswith("#") else line.replace("\n", "")
+                        for line in level_file.readlines()]
+    level_file.close()
 
-    agent_trainer.train(int(200e6), path='./{}'.format(args.ckpt))
+    env_wrapper.load(level_file_lines, level_file_paths_man[0])
+    print(env_wrapper.initial_state)
