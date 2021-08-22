@@ -1,6 +1,6 @@
 from queue import PriorityQueue
 
-from environment.state import State
+from michael.a_state import AState
 
 
 class FrontierBestFirst:
@@ -10,11 +10,11 @@ class FrontierBestFirst:
         self.priorityQueue = PriorityQueue()
         self.set = set()
 
-    def add(self, state: State):
+    def add(self, state: AState):
         self.priorityQueue.put(state)
         self.set.add(state)
 
-    def pop(self) -> State:
+    def pop(self) -> AState:
         state = self.priorityQueue.get()
         self.set.remove(state)
         return state

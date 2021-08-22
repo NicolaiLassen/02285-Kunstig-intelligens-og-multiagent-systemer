@@ -4,6 +4,7 @@ from environment.action import Action
 from michael.a_state import AState
 from michael.parse_level import parse_level
 from server import get_server_out, get_server_lines, send_plan
+from utils.frontier import FrontierBestFirst
 
 
 class CTNode:
@@ -15,7 +16,6 @@ class CTNode:
         self.constraints = constraints
         self.solutions = solutions
         self.cost = cost
-
 
 def get_max_path_len(path_dict):
     max_path_len = 0
@@ -43,13 +43,14 @@ def merge_paths(path_dict):
 
 
 def get_low_level_plan(initial_state: AState, goal_state: AState, constraints=[]):
-    frontier = []
+    frontier = FrontierBestFirst()
     explored = set()
 
-    frontier.append(initial_state)
+    frontier.add(initial_state)
+    while True:
+        if frontier.is_empty():
+            break
 
-    while len(frontier) > 0:
-        # TODO priority queue
         state = frontier.pop()
 
         if state == goal_state:
@@ -61,7 +62,7 @@ def get_low_level_plan(initial_state: AState, goal_state: AState, constraints=[]
             is_not_frontier = state not in frontier
             is_explored = state not in explored
             if is_not_frontier and is_explored:
-                frontier.append(state)
+                frontier.add(state)
 
     return None
 
