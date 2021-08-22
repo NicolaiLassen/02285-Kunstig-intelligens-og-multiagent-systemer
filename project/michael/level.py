@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 
 from michael.a_state import AState
 
@@ -16,7 +16,7 @@ class Level:
             rows_n: int,
             cols_n: int,
             agents_n: int,
-            color_dict: dict[str, str],
+            color_dict: Dict[str, str],
             initial_state: List[List[str]],
             goal_state: List[List[str]],
     ) -> None:

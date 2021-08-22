@@ -17,6 +17,7 @@ class CTNode:
         self.solutions = solutions
         self.cost = cost
 
+
 def get_max_path_len(path_dict):
     max_path_len = 0
     for agent in path_dict.keys():
@@ -26,6 +27,7 @@ def get_max_path_len(path_dict):
 
 
 def merge_paths(path_dict):
+    print(path_dict, file=sys.stderr)
     max_path_len = get_max_path_len(path_dict)
     agents = path_dict.keys()
     agents_n = len(agents)
@@ -59,12 +61,10 @@ def get_low_level_plan(initial_state: AState, goal_state: AState, constraints=[]
         explored.add(state)
 
         for state in state.expand_state(constraints):
-            is_not_frontier = state not in frontier
+            is_not_frontier = not frontier.contains(state)
             is_explored = state not in explored
             if is_not_frontier and is_explored:
                 frontier.add(state)
-
-    return None
 
 
 if __name__ == '__main__':

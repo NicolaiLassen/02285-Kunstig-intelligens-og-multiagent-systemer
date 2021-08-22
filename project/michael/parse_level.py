@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 
 from michael.level import Level
 
@@ -10,7 +10,7 @@ def parse_level(file_lines: List[str]):
     end_index = file_lines.index("#end")
 
     # parse colors
-    color_dict: dict[str, str] = dict()
+    color_dict: Dict[str, str] = dict()
     for line in file_lines[colors_index + 1:initial_index]:
         split = line.split(':')
         color = split[0].strip().lower()

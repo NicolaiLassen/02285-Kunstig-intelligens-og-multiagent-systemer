@@ -155,6 +155,9 @@ class AState:
             self._hash = _hash
         return self._hash
 
+    def __lt__(self, other: 'State'):
+        return self.f < other.f
+
     def __eq__(self, other: 'AState'):
         for i, row in enumerate(self.map):
             for j, char in enumerate(row):
