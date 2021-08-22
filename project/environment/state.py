@@ -1,7 +1,6 @@
 from copy import deepcopy
 
-import torch
-from torch import Tensor
+import numpy as np
 
 from environment.action import ActionType, Action
 
@@ -12,24 +11,20 @@ class State:
     agent_9_value = 57  # ord("9")
     box_a_value = 65  # ord("A")
     box_z_value = 90  # ord("Z")
-    _hash = None
 
     g = 0
     parent = None
     action = None
 
     def __init__(self, map, colors, agents, goal_state_positions):
-        self.map: Tensor = map
-        self.colors: Tensor = colors
-        self.agents: Tensor = agents
+        self.map: np.ndarray = map
+        self.colors: np.ndarray = colors
+        self.agents: np.ndarray = agents
         self.goal_state_positions = goal_state_positions
-
 
     def __act(self, action: Action, index) -> 'State':
 
-        ## TODO
         next_state = deepcopy(self)
-        next_state._hash = None
 
         # Update agent location
         prev_agent_row, prev_agent_col = self.agent_row_col(index)
@@ -37,7 +32,7 @@ class State:
         next_agent_col = prev_agent_col + action.agent_col_delta
         agent_value = self.map[prev_agent_row][prev_agent_col]
         agent_color = self.colors[prev_agent_row][prev_agent_col]
-        next_state.agents[index] = torch.tensor([next_agent_row, next_agent_col])
+        next_state.agents[index] = np.asarray([next_agent_row, next_agent_col])
 
         # Update level matrices and agent pos
         if action.type is ActionType.NoOp:
@@ -105,7 +100,7 @@ class State:
 
     def agent_row_col(self, index: int):
         agent_position = self.agents[index]
-        return int(agent_position[0].detach().item()), int(agent_position[1].detach().item())
+        return int(agent_position[0]), int(agent_position[1])
 
     def __is_applicable(self, index: int, action: Action) -> bool:
         agent_row, agent_col = self.agent_row_col(index)
@@ -167,17 +162,12 @@ class State:
         return self.map[row][col].item() == self.free_value
 
     def __hash__(self):
-        if self._hash is None:
-            prime = 31
-            _hash = 1
-            #_hash = _hash * prime + hash(tuple(self.action))
-            _hash = _hash * prime + hash(tuple(tuple(e) for e in self.map.tolist()))
-            _hash = _hash * prime + hash(tuple(self.agents))
-            self._hash = _hash
-        return self._hash
+        prime = 31
+        _hash = 1
+        _hash = _hash * prime + hash(str((self.map)))
+        return _hash
 
     def __eq__(self, other: 'State'):
-        # print("AAAAAAAAAAAAAAAAAAA")
         return self.__hash__() == other.__hash__()
 
     def __lt__(self, other: 'State'):

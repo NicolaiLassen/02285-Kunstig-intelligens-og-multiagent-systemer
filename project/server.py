@@ -1,4 +1,7 @@
 import sys
+from typing import List
+
+from environment.action import Action
 
 client_name = "46"
 
