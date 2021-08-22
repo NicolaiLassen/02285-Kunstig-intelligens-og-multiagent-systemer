@@ -1,21 +1,21 @@
 from torch import Tensor
-
+import numpy as np
 
 class TempState:
     rows_n: int
     cols_n: int
     agents_n: int
-    level: Tensor
-    colors: Tensor
-    agents: Tensor
+    level:  np.ndarray
+    colors:  np.ndarray
+    agents:  np.ndarray
 
     def __init__(
             self,
             rows_n: int,
             cols_n: int,
-            level: Tensor,
-            colors: Tensor,
-            agents: Tensor,
+            level: np.ndarray,
+            colors:  np.ndarray,
+            agents:  np.ndarray,
     ) -> None:
         self.rows_n = rows_n
         self.cols_n = cols_n

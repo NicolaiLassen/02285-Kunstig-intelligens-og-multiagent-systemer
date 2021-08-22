@@ -1,8 +1,8 @@
-import sys
 from queue import PriorityQueue
 
-from environment.level_loader import load_level
-from server import get_server_out, get_server_lines
+from environment.env_wrapper import CBSEnvWrapper
+from server import get_server_out, get_server_lines, send_plan
+from utils.frontier import FrontierBestFirst
 
 
 def get_astar_path(n, initial_state, goal_state):
@@ -12,8 +12,6 @@ def get_astar_path(n, initial_state, goal_state):
     q.put((0, initial_state))
 
     return [1, 2, 3, 4]
-
-
 
 
 def get_max_path_len(path_dict):
@@ -48,18 +46,45 @@ if __name__ == '__main__':
     lines = get_server_lines(server_out)
 
     # Parse level lines
-    agents_n, initial_state, goal_state = load_level(lines)
+    # agents_n, initial_state, goal_state = load_level(lines)
 
-    # Find a-star plan for each agent
-    path_dict = {}
-    for n in range(agents_n):
-        agent_plan = get_astar_path(n, initial_state, goal_state)
-        path_dict[n] = agent_plan
+    env_wrapper = CBSEnvWrapper()
+    s = env_wrapper.load(lines, "test")
 
-    master_plan = merge_paths(path_dict)
+    frontier = FrontierBestFirst()
 
-    print("master_plan", flush=True, file=sys.stderr)
-    print(master_plan, flush=True, file=sys.stderr)
+    frontier.add(s)
+
+    explored = set()
+
+    while True:
+        if frontier.is_empty():
+            break
+
+        node = frontier.pop()
+
+        if node.is_goal_state():
+            send_plan(server_out, [ [i] for i in node.extract_plan()])
+            break
+
+        explored.add(node)
+
+        for state in node.get_expanded_states():
+            is_not_frontier = not frontier.contains(state)
+            is_explored = state not in explored
+            if is_not_frontier and is_explored:
+                frontier.add(state)
+
+    # # Find a-star plan for each agent
+    # path_dict = {}
+    # for n in range(agents_n):
+    #     agent_plan = get_astar_path(n, initial_state, goal_state)
+    #     path_dict[n] = agent_plan
+    #
+    # master_plan = merge_paths(path_dict)
+    #
+    # print("master_plan", flush=True, file=sys.stderr)
+    # print(master_plan, flush=True, file=sys.stderr)
 
 
 def tplusone(step):

@@ -1,8 +1,7 @@
-import sys
 from typing import List, Tuple
 
+import numpy as np
 import torch
-from torch import Tensor
 
 from environment.level_state import TempState
 
@@ -38,9 +37,9 @@ def parse_level_lines(color_dict, level_lines: List[str]) -> TempState:
     num_agents = len([char for char in color_dict.keys() if '0' <= char <= '9'])
     num_rows = len(level_lines)
     num_cols = len(level_lines[0])
-    level_matrix: Tensor = torch.zeros(num_rows, num_cols, dtype=torch.long)
-    color_matrix: Tensor = torch.zeros(num_rows, num_cols, dtype=torch.long)
-    agent_positions = torch.zeros(num_agents, 2)
+    level_matrix: np.ndarray = np.zeros((num_rows, num_cols))
+    color_matrix: np.ndarray = np.zeros((num_rows, num_cols))
+    agent_positions = np.zeros((num_agents, 2))
 
     for row, line in enumerate(level_lines):
         for col, char in enumerate(line):

@@ -2,6 +2,9 @@ import argparse
 import os
 from queue import PriorityQueue
 
+import numpy
+import torch
+
 from environment.env_wrapper import CBSEnvWrapper
 from utils.frontier import FrontierBestFirst
 
@@ -36,13 +39,13 @@ if __name__ == '__main__':
     level_file_paths_man = absolute_file_paths('./levels')
 
     env_wrapper = CBSEnvWrapper()
+    s = env_wrapper.load(level_file_lines, level_file_paths_man[1])
     level_file = open(level_file_paths_man[1], 'r')
 
     level_file_lines = [line.strip().replace("\n", "") if line.startswith("#") else line.replace("\n", "")
                         for line in level_file.readlines()]
     level_file.close()
 
-    s = env_wrapper.load(level_file_lines, level_file_paths_man[1])
 
 
 
@@ -72,8 +75,5 @@ if __name__ == '__main__':
         for state in node.get_expanded_states():
             is_not_frontier = not frontier.contains(state)
             is_explored = state not in explored
-            # print('is_not_frontier: {}'.format(is_not_frontier))
-            # print('is_explored: {}'.format(is_explored))
-
             if is_not_frontier and is_explored:
                 frontier.add(state)
