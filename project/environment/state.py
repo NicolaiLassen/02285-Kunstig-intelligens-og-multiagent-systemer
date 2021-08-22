@@ -106,11 +106,11 @@ class State:
 
         return expanded_states
 
-    def extract_plan(self) -> '[Action, ...]':
+    def extract_plan(self) -> '[State, ...]':
         plan = [None for _ in range(self.g)]
         state = self
         while state.action is not None:
-            plan[state.g - 1] = state.action
+            plan[state.g - 1] = state
             state = state.parent
         return plan
 
