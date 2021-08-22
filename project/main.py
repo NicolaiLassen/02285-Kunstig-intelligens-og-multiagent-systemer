@@ -41,6 +41,6 @@ if __name__ == '__main__':
     level = parse_level(lines)
 
     # Create agent map
-    # agent_map = get_agent_state("0", level)
+    agent_map = get_agent_map("0", level)
 
-    # print(agent_map, flush=True, file=sys.stderr)
+    print(agent_map, flush=True, file=sys.stderr)
