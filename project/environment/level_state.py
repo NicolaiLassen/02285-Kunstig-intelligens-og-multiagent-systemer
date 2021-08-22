@@ -1,7 +1,7 @@
 from torch import Tensor
 
 
-class LevelState:
+class TempState:
     rows_n: int
     cols_n: int
     agents_n: int

@@ -1,26 +1,29 @@
-from collections import deque
+from queue import PriorityQueue
+
+from environment.state import State
 
 
-class FrontierDFS:
+class FrontierBestFirst:
+
     def __init__(self):
         super().__init__()
-        self.queue = deque()
+        self.priorityQueue = PriorityQueue()
         self.set = set()
 
-    def add(self, state):
-        self.queue.appendleft(state)
+    def add(self, state: State):
+        self.priorityQueue.put((0, state.__hash__(), state))
         self.set.add(state)
 
-    def pop(self):
-        state = self.queue.pop()
-        self.set.remove(state)
-        return state
+    def pop(self) -> State:
+        state = self.priorityQueue.get()
+        self.set.remove(state[2])
+        return state[2]
 
-    def is_empty(self):
-        return len(self.queue) == 0
+    def is_empty(self) -> bool:
+        return self.priorityQueue.empty()
 
     def size(self) -> int:
-        return len(self.queue)
+        return self.priorityQueue.qsize()
 
     def contains(self, state) -> bool:
         return state in self.set

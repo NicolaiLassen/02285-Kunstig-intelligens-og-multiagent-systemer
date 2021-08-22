@@ -2,6 +2,7 @@ import argparse
 import os
 
 from environment.env_wrapper import CBSEnvWrapper
+from utils.frontier import FrontierBestFirst
 
 
 def get_n_params(model):
@@ -33,9 +34,6 @@ if __name__ == '__main__':
 
     level_file_paths_man = absolute_file_paths('./levels')
 
-    width = 50
-    height = 50
-
     env_wrapper = CBSEnvWrapper()
     level_file = open(level_file_paths_man[0], 'r')
 
@@ -43,5 +41,27 @@ if __name__ == '__main__':
                         for line in level_file.readlines()]
     level_file.close()
 
-    env_wrapper.load(level_file_lines, level_file_paths_man[0])
-    print(env_wrapper.initial_state)
+    frontier = FrontierBestFirst()
+
+    s = env_wrapper.load(level_file_lines, level_file_paths_man[0])
+
+    frontier.add(s)
+
+    explored = set()
+
+    while True:
+        if frontier.is_empty():
+            print("false")
+            break
+
+        node = frontier.pop()
+
+        if node.is_goal_state():
+            print(node.extract_plan())
+            break
+
+        explored.add(node)
+
+        for state in node.get_expanded_states():
+            if not frontier.contains(state) and state not in explored:
+                frontier.add(state)

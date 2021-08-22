@@ -4,10 +4,10 @@ from typing import Tuple
 import torch
 from torch import Tensor
 
-from environment.level_state import LevelState
+from environment.level_state import TempState
 
 
-def load_level(file_lines: List[str]) -> Tuple[LevelState, LevelState]:
+def load_level(file_lines: List[str]) -> Tuple[TempState, TempState]:
     colors_index = file_lines.index("#colors")
     initial_index = file_lines.index("#initial")
     goal_index = file_lines.index("#goal")
@@ -32,7 +32,7 @@ def load_level(file_lines: List[str]) -> Tuple[LevelState, LevelState]:
     return level_initial_state, level_goal_state
 
 
-def parse_level_lines(color_dict, level_lines: List[str]) -> LevelState:
+def parse_level_lines(color_dict, level_lines: List[str]) -> TempState:
     num_agents = len([char for char in color_dict.keys() if '0' <= char <= '9'])
     num_rows = len(level_lines)
     num_cols = len(level_lines[0])
@@ -49,7 +49,7 @@ def parse_level_lines(color_dict, level_lines: List[str]) -> LevelState:
             if '0' <= char <= '9' or 'A' <= char <= 'Z':
                 color_matrix[row][col] = color_to_int(color_dict[char])
 
-    return LevelState(
+    return TempState(
         num_rows,
         num_cols,
         level_matrix,
@@ -70,7 +70,6 @@ color_map = {
     'lightblue': 8,
     'brown': 9,
 }
-
 
 def color_to_int(s: str):
     return color_map[s.lower()]
