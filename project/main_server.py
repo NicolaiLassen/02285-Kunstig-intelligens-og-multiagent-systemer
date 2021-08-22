@@ -108,7 +108,7 @@ def tplusone(step):
     return step[0] + 1, step[1], step[2]
 
 
-def get_conflicts(node: CTNode):
+def giget_conflicts(node: CTNode):
     num_agents = len(node.solutions)
 
     conflicts = []
