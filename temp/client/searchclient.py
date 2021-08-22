@@ -2,11 +2,11 @@ import sys
 import time
 
 import client.memory as memory
-from color import Color
-from frontier import FrontierBFS, FrontierDFS, FrontierBestFirst
-from graphsearch import search
-from heuristic import HeuristicAStar, HeuristicWeightedAStar, HeuristicGreedy
-from state import State
+from client.color import Color
+from client.frontier import FrontierBFS, FrontierDFS, FrontierBestFirst
+from client.graphsearch import search
+from client.heuristic import HeuristicAStar, HeuristicWeightedAStar, HeuristicGreedy
+from client.state import State
 
 
 class SearchClient:

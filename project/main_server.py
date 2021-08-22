@@ -1,53 +1,87 @@
 import sys
-from typing import List
+from queue import PriorityQueue
 
-from environment.action import Action
-from environment.env_wrapper import CBSEnvWrapper
-
-client_name = "46"
+from environment.level_loader import load_level
+from server import get_server_out, get_server_lines
 
 
-def get_server_lines(server_out):
-    lines = []
-    line = ""
-    while not line.startswith("#end"):
-        line = server_out.readline()
-        line = line.strip().replace("\n", "") if line.startswith("#") else line.replace("\n", "")
-        lines.append(line)
-    return lines
+def get_astar_path(n, initial_state, goal_state):
+    q = PriorityQueue()
+    visited = set()
+
+    q.put((0, initial_state))
+
+    return [1, 2, 3, 4]
 
 
-def send_plan(server_out, plan: List[List[Action]]):
-    # Print plan to server.
-    if plan is None:
-        print('Unable to solve level.', file=sys.stderr, flush=True)
-        sys.exit(0)
-    else:
-        print('Found solution of length {}.'.format(len(plan)), file=sys.stderr, flush=True)
-        for joint_action in plan:
-            print("|".join(a.name_ for a in joint_action), flush=True)
-            # We must read the server's response to not fill up the stdin buffer and block the server.
-            response = server_out.readline()
 
 
-def get_server_out():
-    # Send client name to server.
-    if hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(encoding='ASCII')
-    print(client_name, flush=True)
+def get_max_path_len(path_dict):
+    max_path_len = 0
+    for agent in path_dict.keys():
+        path_len = len(path_dict[agent])
+        max_path_len = path_len if path_len >= max_path_len else max_path_len
+    return max_path_len
 
-    server_out = sys.stdin
-    if hasattr(server_out, "reconfigure"):
-        server_out.reconfigure(encoding='ASCII')
-    return server_out
+
+def merge_paths(path_dict):
+    max_path_len = get_max_path_len(path_dict)
+    agents = path_dict.keys()
+    agents_n = len(agents)
+
+    merged_path = [[None for _ in range(agents_n)] for _ in range(max_path_len)]
+    for i in range(max_path_len):
+        for agent in agents:
+            agent_path = path_dict[agent]
+            merged_path[i][agent] = agent_path[i]
+
+    return merged_path
 
 
 if __name__ == '__main__':
     server_out = get_server_out()
+
+    # Send client name to server.
     print('SearchClient', flush=True)
 
+    # Read level lines from server
     lines = get_server_lines(server_out)
 
-    env_wrapper = CBSEnvWrapper()
-    env_wrapper.load(file_lines=lines)
-    print(env_wrapper.goal_state_positions)
+    # Parse level lines
+    agents_n, initial_state, goal_state = load_level(lines)
+
+    # Find a-star plan for each agent
+    path_dict = {}
+    for n in range(agents_n):
+        agent_plan = get_astar_path(n, initial_state, goal_state)
+        path_dict[n] = agent_plan
+
+    master_plan = merge_paths(path_dict)
+
+    print("master_plan", flush=True, file=sys.stderr)
+    print(master_plan, flush=True, file=sys.stderr)
+
+
+def tplusone(step):
+    return step[0] + 1, step[1], step[2]
+
+
+def get_conflicts(agents: [], path_dict, conflicts=None):
+    if not bool(conflicts):
+        conflicts_db = dict()
+
+    # random.shuffle(agents)
+
+    for agent in agents:
+        if agent not in conflicts:
+            conflicts[agent] = set()
+
+        if path_dict[agent]:
+            agent_path = path_dict[agent]
+            agent_path_len = len(agent_path)
+
+    return conflicts
+
+# env_wrapper = CBSEnvWrapper()
+# env_wrapper.load(file_lines=lines)
+# print(env_wrapper.goal_state_positions)
