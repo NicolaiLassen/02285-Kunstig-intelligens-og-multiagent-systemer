@@ -3,7 +3,7 @@ from queue import PriorityQueue
 from typing import List, Dict
 
 from environment.action import Action, ActionType
-from environment.env_wrapper import CBSEnvWrapper
+from environment.level_loader import load_level_state
 from environment.state import Constraint, State
 from server import get_server_out, get_server_lines, send_plan
 from utils.frontier import FrontierBestFirst
@@ -71,8 +71,7 @@ def merge_paths(node: CTNode):
 
 def get_low_level_plan(lines, index, constraints):
     frontier = FrontierBestFirst()
-    env_wrapper2 = CBSEnvWrapper()
-    s = env_wrapper2.load(lines, index)
+    s = load_level_state(lines, index)
 
     frontier.add(s)
 
@@ -166,8 +165,7 @@ if __name__ == '__main__':
     # Parse level lines
     # agents_n, initial_state, goal_state = load_level(lines)
 
-    env_wrapper = CBSEnvWrapper()
-    s = env_wrapper.load(lines, 0)
+    s = load_level_state(lines, 0)
 
     path_dict = {}
 

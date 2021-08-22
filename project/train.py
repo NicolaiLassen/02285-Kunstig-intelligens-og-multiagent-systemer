@@ -1,11 +1,7 @@
 import argparse
 import os
-from queue import PriorityQueue
 
-import numpy
-import torch
-
-from environment.env_wrapper import CBSEnvWrapper
+from environment.level_loader import load_level_state
 from utils.frontier import FrontierBestFirst
 
 
@@ -31,7 +27,6 @@ def absolute_file_paths(directory):
 
 if __name__ == '__main__':
 
-
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--ckpt", default="ckpt", help="ckpt name")
     args = parser.parse_args()
@@ -40,14 +35,13 @@ if __name__ == '__main__':
 
     level_file_paths_man = absolute_file_paths('./levels')
 
-    env_wrapper = CBSEnvWrapper()
     level_file = open(level_file_paths_man[1], 'r')
 
     level_file_lines = [line.strip().replace("\n", "") if line.startswith("#") else line.replace("\n", "")
                         for line in level_file.readlines()]
     level_file.close()
 
-    s = env_wrapper.load(level_file_lines, level_file_paths_man[1])
+    s = load_level_state(level_file_lines, level_file_paths_man[1])
 
     frontier = FrontierBestFirst()
 
