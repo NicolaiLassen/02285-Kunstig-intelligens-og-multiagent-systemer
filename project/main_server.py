@@ -196,7 +196,7 @@ if __name__ == '__main__':
             node.constraints = p.constraints
             node.constraints.append(c)
             solutions = p.solutions
-            solutions[a] = get_low_level_plan(lines, a, constraints=c)
+            solutions[a] = get_low_level_plan(lines, a, constraints=node.constraints)
             node.solutions = solutions
             node.cost = sic(solutions)
             open.append(node)

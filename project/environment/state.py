@@ -97,16 +97,14 @@ class State:
         for action in applicable_actions:
             expanded_states.append(self.__act(action, index))
 
-        # for contraint in constraints:
-        #     print("contraint: agent{}, index{}".format(contraint.agent,index), file=sys.stderr)
-        #     if contraint.agent != index:
-        #         continue
-        #     print("contraint: t{}, g{}".format(contraint.t, self.g), file=sys.stderr)
-        #     if contraint.t != self.g:
-        #         continue
-        #     for state in expanded_states:
-        #         if state == contraint.state:
-        #             expanded_states.remove(state)
+        for contraint in constraints:
+            if contraint.agent != index:
+                continue
+            if contraint.t != self.g:
+                continue
+            for state in expanded_states:
+                if state == contraint.state:
+                    expanded_states.remove(state)
 
         return expanded_states
 
