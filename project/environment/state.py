@@ -13,6 +13,7 @@ class State:
     box_z_value = 90  # ord("Z")
 
     g = 0
+    h = 0
     parent = None
     action = None
 
@@ -22,7 +23,7 @@ class State:
         self.agents: np.ndarray = agents
         self.goal_state_positions = goal_state_positions
 
-    def __act(self, action: Action, index) -> 'State':
+    def __act(self, action: Action, index: int) -> 'State':
 
         next_state = deepcopy(self)
 
@@ -75,15 +76,16 @@ class State:
         next_state.parent = self
         next_state.action = action
         next_state.g = self.g + 1
+        next_state.h = len(self.goal_state_positions) - self.__count_goals()
 
         return next_state
 
-    def get_expanded_states(self) -> '[State, ...]':
+    def get_expanded_states(self, index) -> '[State, ...]':
         expanded_states = []
-        applicable_actions = [action for action in Action if self.__is_applicable(0, action)]
+        applicable_actions = [action for action in Action if self.__is_applicable(index, action)]
 
         for action in applicable_actions:
-            expanded_states.append(self.__act(action, 0))
+            expanded_states.append(self.__act(action, index))
 
         return expanded_states
 
@@ -161,6 +163,9 @@ class State:
     def __is_free(self, row, col) -> bool:
         return self.map[row][col].item() == self.free_value
 
+    def f(self):
+        return self.g + self.h
+
     def __hash__(self):
         prime = 31
         _hash = 1
@@ -171,4 +176,4 @@ class State:
         return self.__hash__() == other.__hash__()
 
     def __lt__(self, other: 'State'):
-        return self.g < other.g
+        return self.f() < other.f()

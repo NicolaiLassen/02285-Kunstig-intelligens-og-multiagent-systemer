@@ -1,5 +1,7 @@
+import sys
 from queue import PriorityQueue
 
+from environment.action import Action
 from environment.env_wrapper import CBSEnvWrapper
 from server import get_server_out, get_server_lines, send_plan
 from utils.frontier import FrontierBestFirst
@@ -27,7 +29,7 @@ def merge_paths(path_dict):
     agents = path_dict.keys()
     agents_n = len(agents)
 
-    merged_path = [[None for _ in range(agents_n)] for _ in range(max_path_len)]
+    merged_path = [[Action.NoOp for _ in range(agents_n)] for _ in range(max_path_len)]
     for i in range(max_path_len):
         for agent in agents:
             agent_path = path_dict[agent]
@@ -51,29 +53,38 @@ if __name__ == '__main__':
     env_wrapper = CBSEnvWrapper()
     s = env_wrapper.load(lines, "test")
 
-    frontier = FrontierBestFirst()
+    path_dict = {}
 
-    frontier.add(s)
+    for i in range(len(s.agents)):
+        frontier = FrontierBestFirst()
 
-    explored = set()
+        frontier.add(s)
 
-    while True:
-        if frontier.is_empty():
-            break
+        explored = set()
 
-        node = frontier.pop()
+        while True:
+            if frontier.is_empty():
+                print("not FOUND")
+                break
 
-        if node.is_goal_state():
-            send_plan(server_out, [ [i] for i in node.extract_plan()])
-            break
+            node = frontier.pop()
 
-        explored.add(node)
+            if node.is_goal_state():
+                path_dict[i] = node.extract_plan()
+                print(path_dict[i], file=sys.stderr)
+                break
 
-        for state in node.get_expanded_states():
-            is_not_frontier = not frontier.contains(state)
-            is_explored = state not in explored
-            if is_not_frontier and is_explored:
-                frontier.add(state)
+            explored.add(node)
+
+            for state in node.get_expanded_states(i):
+                is_not_frontier = not frontier.contains(state)
+                is_explored = state not in explored
+                if is_not_frontier and is_explored:
+                    frontier.add(state)
+
+    print(merge_paths(path_dict), file=sys.stderr)
+    send_plan(server_out, merge_paths(path_dict))
+
 
     # # Find a-star plan for each agent
     # path_dict = {}

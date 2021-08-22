@@ -30,6 +30,8 @@ def absolute_file_paths(directory):
 
 
 if __name__ == '__main__':
+
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--ckpt", default="ckpt", help="ckpt name")
     args = parser.parse_args()
@@ -39,16 +41,13 @@ if __name__ == '__main__':
     level_file_paths_man = absolute_file_paths('./levels')
 
     env_wrapper = CBSEnvWrapper()
-    s = env_wrapper.load(level_file_lines, level_file_paths_man[1])
     level_file = open(level_file_paths_man[1], 'r')
 
     level_file_lines = [line.strip().replace("\n", "") if line.startswith("#") else line.replace("\n", "")
                         for line in level_file.readlines()]
     level_file.close()
 
-
-
-
+    s = env_wrapper.load(level_file_lines, level_file_paths_man[1])
 
     frontier = FrontierBestFirst()
 
@@ -57,8 +56,6 @@ if __name__ == '__main__':
     explored = set()
 
     while True:
-
-        print(frontier.size())
 
         if frontier.is_empty():
             print("false")
@@ -72,7 +69,7 @@ if __name__ == '__main__':
 
         explored.add(node)
 
-        for state in node.get_expanded_states():
+        for state in node.get_expanded_states(0):
             is_not_frontier = not frontier.contains(state)
             is_explored = state not in explored
             if is_not_frontier and is_explored:
