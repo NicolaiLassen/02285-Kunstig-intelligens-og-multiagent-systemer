@@ -1,8 +1,15 @@
+import sys
 from copy import deepcopy
-from typing import List
+from typing import List, Dict
 
 from environment.action import ActionType, Action
-from environment.state import Constraint
+
+
+class Constraint:
+    def __init__(self, agent, states, t):
+        self.agent: int = agent
+        self.states: Dict[str, AState] = states
+        self.t = t
 
 
 class AState:
@@ -29,6 +36,14 @@ class AState:
         self.h = 0
         self.f = 0
 
+    def extract_nodes(self) -> '[AState, ...]':
+        plan = [None for _ in range(self.g)]
+        state = self
+        while state.action is not None:
+            plan[state.g - 1] = state
+            state = state.parent
+        return plan
+
     def extract_plan(self) -> '[Action, ...]':
         plan = [Action.NoOp for _ in range(self.g)]
         state = self
@@ -38,17 +53,20 @@ class AState:
         return plan
 
     def expand_state(self, constraints: List[Constraint]):
-        applicable_actions = [action for action in Action if self.is_applicable(action)]
-        expanded_states = [self.act(action) for action in applicable_actions]
 
+        ## TODO THIS WORKS BUT MAKE IT BETTER!
+        ## DOES NOT WORK IN ALL CASES PLZ
+
+        ## LET'S make a fucking wall
         for constraint in constraints:
-            if constraint.agent != self.agent:
-                continue
             if constraint.t != self.g:
                 continue
-            for state in expanded_states:
-                if state == constraint.state:
-                    expanded_states.remove(state)
+            for state in constraint.states.values():
+                if state.agent != self.agent:
+                    self.map[state.agent_row][state.agent_col] = '+'
+
+        applicable_actions = [action for action in Action if self.is_applicable(action)]
+        expanded_states = [self.act(action) for action in applicable_actions]
 
         return expanded_states
 

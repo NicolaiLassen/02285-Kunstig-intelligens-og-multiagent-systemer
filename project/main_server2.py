@@ -1,38 +1,77 @@
-from typing import List
+import sys
+from typing import List, Dict
 
-from environment.action import Action
-from michael.a_state import AState
+from environment.action import Action, ActionType
+from michael.a_state import AState, Constraint
 from michael.parse_level import parse_level
 from server import get_server_out, get_server_lines, send_plan
 from utils.frontier import FrontierBestFirst
 
 
+## TODO ######!!!!!!!!!!!!!!!
+## Fix hvis agenten ikke kan finde en vej til at starte med pga blok
+
 class Conflict:
-    def __init__(self, agents, state, t):
+    def __init__(self, agents, states, t):
         self.agents: [int] = agents
-        self.state: AState = state
-        self.t = t
-
-
-class Constraint:
-    def __init__(self, agent, state, t):
-        self.agent: int = agent
-        self.state: AState = state
+        self.states: Dict[str, AState] = states
         self.t = t
 
 
 class CTNode:
     constraints: List[Constraint] = []
-    solutions: dict = {}
+    solutions: Dict[int, List[AState]] = {}
+    solution_nodes: Dict[int, List[AState]] = {}
     cost: int
 
-    def __init__(self, constraints=None, solutions=None, cost=None):
+    def __init__(self, constraints=None, solutions=None, solution_nodes=None, cost=None):
         self.constraints = constraints
         self.solutions = solutions
+        self.solution_nodes = solution_nodes
         self.cost = cost
 
 
-def check_conflict(p: CTNode) -> Conflict:
+def check_conflict(node: CTNode) -> Conflict:
+    num_agents = len(node.solution_nodes)
+    for step in range(get_max_path_len(node.solution_nodes)):
+
+        next_agent_rows = [-1 for _ in range(num_agents)]
+        next_agent_cols = [-1 for _ in range(num_agents)]
+        box_rows = [-1 for _ in range(num_agents)]
+        box_cols = [-1 for _ in range(num_agents)]
+
+        for a in range(num_agents):
+            if step >= len(node.solution_nodes[a]):
+                continue
+
+            next_agent_rows[a] = node.solution_nodes[a][step].agent_row
+            next_agent_cols[a] = node.solution_nodes[a][step].agent_col
+
+        for a1 in range(num_agents):
+            if step >= len(node.solution_nodes[a1]):
+                continue
+            if node.solution_nodes[a1][step].action is ActionType.NoOp:
+                continue
+
+            for a2 in range(num_agents):
+                if step >= len(node.solution_nodes[a2]):
+                    continue
+                if a1 == a2:
+                    continue
+                if node.solution_nodes[a2][step].action is ActionType.NoOp:
+                    continue
+
+                # is moving same box
+                # if box_rows[a1] == box_rows[a2] and box_cols[a1] == box_cols[a2]:
+                #     return Conflict([a1, a2], node.solution_nodes[a1][step].g)
+
+                # is moving into same position
+                if next_agent_rows[a1] == next_agent_rows[a2] and next_agent_cols[a1] == next_agent_cols[a2]:
+                    temp_fuck_states = {
+                        str(a1): node.solution_nodes[a1][step],
+                        str(a2): node.solution_nodes[a2][step]
+                    }
+                    return Conflict([str(a1), str(a2)], temp_fuck_states, node.solution_nodes[a1][step].g)
     return None
 
 
@@ -80,7 +119,7 @@ def get_low_level_plan(initial_state: AState, constraints=[]):
         state = frontier.pop()
 
         if state.is_goal_state():
-            return state.extract_plan()
+            return state.extract_nodes(), state.extract_plan()
 
         explored.add(state)
 
@@ -103,17 +142,20 @@ if __name__ == '__main__':
     # Parse level lines
     level = parse_level(lines)
 
-    solutions = {}
+    plans = {}
+    node_list = {}
 
     for a in range(level.agents_n):
         initial_state = level.get_agent_states(str(a))
-        plan = get_low_level_plan(initial_state)
-        solutions[a] = plan
+        plan_nodes, plan = get_low_level_plan(initial_state)
+        plans[a] = plan
+        node_list[a] = plan_nodes
 
     open = [CTNode(
         constraints=[],
-        solutions=solutions,
-        cost=sic(solutions)
+        solutions=plans,
+        solution_nodes=node_list,
+        cost=sic(plans)
     )]
 
     while len(open) > 0:
@@ -127,9 +169,12 @@ if __name__ == '__main__':
         for a in conflict.agents:
             node = CTNode()
             node.constraints = p.constraints
-            node.constraints.append(Constraint(a, conflict.state, conflict.t))
-            solutions = p.solutions
-            solutions[a] = get_low_level_plan(level.get_agent_states(str(a)), constraints=node.constraints)
-            node.solutions = solutions
-            node.cost = sic(solutions)
+            node.constraints.append(Constraint(a, conflict.states, conflict.t))
+            node.solutions = p.solutions
+            node.solution_nodes = p.solution_nodes
+
+            plan_nodes, plan = get_low_level_plan(level.get_agent_states(str(a)), constraints=node.constraints)
+            node.solution_nodes[int(a)] = plan_nodes
+            node.solutions[int(a)] = plan
+
             open.append(node)

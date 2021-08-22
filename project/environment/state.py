@@ -9,9 +9,9 @@ from environment.action import ActionType, Action
 
 class Constraint:
     def __init__(self, agent, state, t, agents):
-        self.agent: int = agent
+        self.agent: str = agent
         self.agents: [int] = agents
-        self.state: State = state
+        self.state: List[State] = state
         self.t = t
 
 
