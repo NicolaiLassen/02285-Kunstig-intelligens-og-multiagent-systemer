@@ -20,13 +20,15 @@ class State:
     box_a_value = 65  # ord("A")
     box_z_value = 90  # ord("Z")
 
+    agent = 0
     g = 0
     h = 0
     parent = None
     action = None
 
-    def __init__(self, map, colors, agents, goal_state_positions):
+    def __init__(self, map, agent, colors, agents, goal_state_positions):
         self.map: np.ndarray = map
+        self.agent = agent
         self.colors: np.ndarray = colors
         self.agents: np.ndarray = agents
         self.goal_state_positions = goal_state_positions
@@ -88,7 +90,8 @@ class State:
 
         return next_state
 
-    def get_expanded_states(self, index, constraints: List[Constraint]) -> '[State, ...]':
+    def get_expanded_states(self, constraints: List[Constraint]) -> '[State, ...]':
+        index = self.agent
         expanded_states = []
         applicable_actions = [action for action in Action if self.__is_applicable(index, action)]
 

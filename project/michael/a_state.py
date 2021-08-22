@@ -1,44 +1,163 @@
+from copy import deepcopy
 from typing import List
 
-from michael.level import Level
+from environment.action import ActionType, Action
+from environment.state import Constraint
 
 
 class AState:
+    _hash: int = None
+
     map: List[List[str]]
+    agent: str
     agent_row: int
     agent_col: int
+
+    action: Action = None
+    parent: 'AState'
     g: int
     h: int
     f: int
 
-    def __init__(self, map, agent_row, agent_col):
+    def __init__(self, map, agent, agent_row, agent_col):
         self.map = map
+        self.agent = agent
         self.agent_row = agent_row
         self.agent_col = agent_col
         self.g = 0
         self.h = 0
         self.f = 0
 
+    def extract_plan(self) -> '[Action, ...]':
+        plan = [Action.NoOp for _ in range(self.g)]
+        state = self
+        while state.action is not None:
+            plan[state.g - 1] = state.action
+            state = state.parent
+        return plan
 
-def get_agent_state(agent: str, level: Level) -> AState:
-    agent_map = level.initial_state.copy()
-    agent_color = level.color_dict[agent]
-    agent_row = 0
-    agent_col = 0
-    for ri, row in enumerate(agent_map):
-        for ci, char in enumerate(row):
-            if char == "+" or char == " ":
+    def extract_solution(self) -> '[AState, ...]':
+        plan = [None for _ in range(self.g)]
+        state = self
+        while state.action is not None:
+            plan[state.g - 1] = state
+            state = state.parent
+        return plan
+
+    def expand_state(self, constraints: List[Constraint]):
+        applicable_actions = [action for action in Action if self.is_applicable(action)]
+        expanded_states = [self.act(action) for action in applicable_actions]
+
+        for constraint in constraints:
+            if constraint.agent != self.agent:
                 continue
-            if char == agent:
-                agent_row = ri
-                agent_col = ci
-            if '0' <= char <= '9':
-                agent_map[ri][ci] = "+"
-            if 'A' <= char <= 'Z':
-                if not level.color_dict[char] == agent_color:
-                    agent_map[ri][ci] = "+"
-    return AState(
-        map=agent_map,
-        agent_row=agent_row,
-        agent_col=agent_col
-    )
+            if constraint.t != self.g:
+                continue
+            for state in expanded_states:
+                if state == constraint.state:
+                    expanded_states.remove(state)
+
+        return expanded_states
+
+    def act(self, action: Action) -> 'AState':
+        next_state = deepcopy(self)
+
+        # Update agent location
+        prev_agent_row = self.agent_row
+        prev_agent_col = self.agent_col
+        next_agent_row = prev_agent_row + action.agent_row_delta
+        next_agent_col = prev_agent_col + action.agent_col_delta
+        agent_value = self.map[prev_agent_row][prev_agent_col]
+
+        next_state.agent_row = next_agent_row
+        next_state.agent_col = next_agent_col
+
+        # Update level matrices and agent pos
+        if action.type is ActionType.NoOp:
+            return next_state
+        elif action.type is ActionType.Move:
+            next_state.map[next_agent_row][next_agent_col] = agent_value
+            next_state.map[prev_agent_row][prev_agent_col] = " "
+
+        elif action.type is ActionType.Push:
+            box_value = self.map[next_agent_row][next_agent_col]
+            next_box_row = next_agent_row + action.box_row_delta
+            next_box_col = next_agent_col + action.box_col_delta
+
+            next_state.map[next_box_row][next_box_col] = box_value
+            next_state.map[next_agent_row][next_agent_col] = agent_value
+            next_state.map[prev_agent_row][prev_agent_col] = " "
+
+
+        elif action.type is ActionType.Pull:
+            prev_box_row = prev_agent_row + (action.box_row_delta * -1)
+            prev_box_col = prev_agent_col + (action.box_col_delta * -1)
+            box_value = self.map[prev_box_row][prev_box_col]
+
+            next_state.map[next_agent_row][next_agent_col] = agent_value
+            next_state.map[prev_agent_row][prev_agent_col] = box_value
+            next_state.map[prev_box_row][prev_box_col] = " "
+
+        next_state.parent = self
+        next_state.action = action
+        next_state.g = self.g + 1
+
+        return next_state
+
+    def is_applicable(self, action: Action) -> bool:
+        agent_row = self.agent_row
+        agent_col = self.agent_col
+
+        if action.type is ActionType.NoOp:
+            return True
+        elif action.type is ActionType.Move:
+            # check that next position is free
+            next_agent_row = agent_row + action.agent_row_delta
+            next_agent_col = agent_col + action.agent_col_delta
+            return self.is_free(next_agent_row, next_agent_col)
+        elif action.type is ActionType.Push:
+            # check that next agent position is box
+            next_agent_row = agent_row + action.agent_row_delta
+            next_agent_col = agent_col + action.agent_col_delta
+            if not self.is_box(next_agent_row, next_agent_col):
+                return False
+            # check that next box position is free
+            next_box_row = next_agent_row + action.box_row_delta
+            next_box_col = next_agent_col + action.box_col_delta
+            return self.is_free(next_box_row, next_box_col)
+        elif action.type is ActionType.Pull:
+            # check that next agent position is free
+            next_agent_row = agent_row + action.agent_row_delta
+            next_agent_col = agent_col + action.agent_col_delta
+            if not self.is_free(next_agent_row, next_agent_col):
+                return False
+            # check that box position is box
+            box_row = agent_row + (action.box_row_delta * -1)
+            box_col = agent_col + (action.box_col_delta * -1)
+            if not self.is_box(box_row, box_col):
+                return False
+
+            return True
+        else:
+            return False
+
+    def is_box(self, row, col) -> bool:
+        return "A" <= self.map[row][col] <= "Z"
+
+    def is_free(self, row, col) -> bool:
+        return self.map[row][col] == " "
+
+    def __hash__(self):
+        if self._hash is None:
+            prime = 31
+            _hash = 1
+            _hash = _hash * prime + hash(tuple(tuple(row) for row in self.map))
+            self._hash = _hash
+        return self._hash
+
+    def __eq__(self, other: 'AState'):
+        for i, row in enumerate(self.map):
+            for j, char in enumerate(row):
+                if not char == other.map[i][j]:
+                    return False
+        return True

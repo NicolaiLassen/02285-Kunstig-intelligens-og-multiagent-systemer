@@ -1,5 +1,4 @@
 from enum import Enum, unique
-from typing import List
 
 
 @unique
@@ -58,42 +57,3 @@ class Action(Enum):
         self.agent_col_delta = acd  # vertical displacement agent
         self.box_row_delta = brd  # horisontal displacement box
         self.box_col_delta = bcd  # vertical displacement box
-
-
-action_dict = {
-    0: Action.NoOp,
-    1: Action.MoveN,
-    2: Action.MoveS,
-    3: Action.MoveE,
-    4: Action.MoveW,
-
-    5: Action.PushNN,
-    6: Action.PushNE,
-    7: Action.PushNW,
-    8: Action.PushSS,
-    9: Action.PushSE,
-    10: Action.PushSW,
-    11: Action.PushEE,
-    12: Action.PushEN,
-    13: Action.PushES,
-    14: Action.PushWW,
-    15: Action.PushWN,
-    16: Action.PushWS,
-
-    17: Action.PullNN,
-    18: Action.PullNE,
-    19: Action.PullNW,
-    20: Action.PullSS,
-    21: Action.PullSE,
-    22: Action.PullSW,
-    23: Action.PullEE,
-    24: Action.PullEN,
-    25: Action.PullES,
-    26: Action.PullWW,
-    27: Action.PullWN,
-    28: Action.PullWS,
-}
-
-
-def idxs_to_actions(actions: List) -> List[Action]:
-    return [action_dict[int(a)] for a in actions]

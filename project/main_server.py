@@ -1,8 +1,7 @@
-import sys
-from queue import PriorityQueue
-
 from environment.action import Action
-from environment.env_wrapper import CBSEnvWrapper
+from environment.level_loader import load_level_state
+from environment.state import State
+from michael.parse_level import parse_level
 from server import get_server_out, get_server_lines, send_plan
 from utils.frontier import FrontierBestFirst
 
@@ -16,15 +15,6 @@ class CTNode:
         self.constraints = constraints
         self.solutions = solutions
         self.cost = cost
-
-
-def get_astar_path(n, initial_state, goal_state):
-    q = PriorityQueue()
-    visited = set()
-
-    q.put((0, initial_state))
-
-    return [1, 2, 3, 4]
 
 
 def get_max_path_len(path_dict):
@@ -52,33 +42,27 @@ def merge_paths(path_dict):
     return merged_path
 
 
-def get_low_level_plan(lines, index, constraints=[]):
+def get_low_level_plan(initial_state: State, constraints=[]):
     frontier = FrontierBestFirst()
-    s = env_wrapper.load(lines, index)
-
-    frontier.add(s)
-
     explored = set()
 
-    while True:
-        if frontier.is_empty():
-            print("not FOUND")
-            break
+    frontier.add(initial_state)
 
+    while not frontier.is_empty():
         node = frontier.pop()
 
         if node.is_goal_state():
-            path_dict[i] = node.extract_plan()
-            print(path_dict[i], file=sys.stderr)
-            break
+            return node.extract_plan()
 
         explored.add(node)
 
-        for state in node.get_expanded_states(i, constraints):
+        for state in node.get_expanded_states(constraints):
             is_not_frontier = not frontier.contains(state)
             is_explored = state not in explored
             if is_not_frontier and is_explored:
                 frontier.add(state)
+
+    return None
 
 
 def sic(path_dict):
@@ -116,15 +100,14 @@ if __name__ == '__main__':
     lines = get_server_lines(server_out)
 
     # Parse level lines
-    # agents_n, initial_state, goal_state = load_level(lines)
+    level = parse_level(lines)
 
-    env_wrapper = CBSEnvWrapper()
-    s = env_wrapper.load(lines, 0)
 
     path_dict = {}
 
-    for i in range(len(s.agents)):
-        plan = get_low_level_plan(lines, i)
+    for i in range(level.agents_n):
+        s = load_level_state(lines, i)
+        plan = get_low_level_plan(s)
         path_dict[i] = plan
 
     open = [CTNode(
