@@ -99,7 +99,6 @@ def sic(path_dict):
     count = 0
     for agent_path in path_dict.values():
         count += len(agent_path)
-
     return count
 
 
