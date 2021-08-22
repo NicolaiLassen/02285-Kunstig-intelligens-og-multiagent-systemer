@@ -152,7 +152,7 @@ class State:
                     continue
                 val = self.map[row][col].item()
                 goal_count += 1 if self.goal_state_positions[key] == val else 0
-        return goal_count
+        return goal_count + 1
 
     def __is_same_color(self, a_row, a_col, b_row, b_col) -> bool:
         return self.colors[a_row][a_col] == self.colors[b_row][b_col]
