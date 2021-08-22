@@ -39,7 +39,7 @@ def parse_level_lines(color_dict, level_lines: List[str]) -> TempState:
     num_cols = len(level_lines[0])
     level_matrix: np.ndarray = np.zeros((num_rows, num_cols))
     color_matrix: np.ndarray = np.zeros((num_rows, num_cols))
-    agent_positions = np.zeros((num_agents, 2))
+    agent_positions = np.zeros((num_agents, 2), dtype=np.int8)
 
     for row, line in enumerate(level_lines):
         for col, char in enumerate(line):

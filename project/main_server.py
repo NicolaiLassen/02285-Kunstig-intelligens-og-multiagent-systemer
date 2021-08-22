@@ -7,6 +7,17 @@ from server import get_server_out, get_server_lines, send_plan
 from utils.frontier import FrontierBestFirst
 
 
+class CTNode:
+    constraints: set = set()
+    solutions: dict = {}
+    cost: int
+
+    def __init__(self, constraints=None, solutions=None, cost=None):
+        self.constraints = constraints
+        self.solutions = solutions
+        self.cost = cost
+
+
 def get_astar_path(n, initial_state, goal_state):
     q = PriorityQueue()
     visited = set()
@@ -33,69 +44,45 @@ def merge_paths(path_dict):
     for i in range(max_path_len):
         for agent in agents:
             agent_path = path_dict[agent]
-            merged_path[i][agent] = agent_path[i]
+            if i >= len(agent_path):
+                merged_path[i][agent] = Action.NoOp
+            else:
+                merged_path[i][agent] = agent_path[i]
 
     return merged_path
 
 
-if __name__ == '__main__':
-    server_out = get_server_out()
+def get_low_level_plan(lines, index):
+    frontier = FrontierBestFirst()
+    s = env_wrapper.load(lines, index)
 
-    # Send client name to server.
-    print('SearchClient', flush=True)
+    frontier.add(s)
 
-    # Read level lines from server
-    lines = get_server_lines(server_out)
+    explored = set()
 
-    # Parse level lines
-    # agents_n, initial_state, goal_state = load_level(lines)
+    while True:
+        if frontier.is_empty():
+            print("not FOUND")
+            break
 
-    env_wrapper = CBSEnvWrapper()
-    s = env_wrapper.load(lines, "test")
+        node = frontier.pop()
 
-    path_dict = {}
+        if node.is_goal_state():
+            path_dict[i] = node.extract_plan()
+            print(path_dict[i], file=sys.stderr)
+            break
 
-    for i in range(len(s.agents)):
-        frontier = FrontierBestFirst()
+        explored.add(node)
 
-        frontier.add(s)
-
-        explored = set()
-
-        while True:
-            if frontier.is_empty():
-                print("not FOUND")
-                break
-
-            node = frontier.pop()
-
-            if node.is_goal_state():
-                path_dict[i] = node.extract_plan()
-                print(path_dict[i], file=sys.stderr)
-                break
-
-            explored.add(node)
-
-            for state in node.get_expanded_states(i):
-                is_not_frontier = not frontier.contains(state)
-                is_explored = state not in explored
-                if is_not_frontier and is_explored:
-                    frontier.add(state)
-
-    print(merge_paths(path_dict), file=sys.stderr)
-    send_plan(server_out, merge_paths(path_dict))
+        for state in node.get_expanded_states(i):
+            is_not_frontier = not frontier.contains(state)
+            is_explored = state not in explored
+            if is_not_frontier and is_explored:
+                frontier.add(state)
 
 
-    # # Find a-star plan for each agent
-    # path_dict = {}
-    # for n in range(agents_n):
-    #     agent_plan = get_astar_path(n, initial_state, goal_state)
-    #     path_dict[n] = agent_plan
-    #
-    # master_plan = merge_paths(path_dict)
-    #
-    # print("master_plan", flush=True, file=sys.stderr)
-    # print(master_plan, flush=True, file=sys.stderr)
+def sic(path_dict):
+    return 0
 
 
 def tplusone(step):
@@ -117,6 +104,52 @@ def get_conflicts(agents: [], path_dict, conflicts=None):
             agent_path_len = len(agent_path)
 
     return conflicts
+
+
+if __name__ == '__main__':
+    server_out = get_server_out()
+
+    # Send client name to server.
+    print('SearchClient', flush=True)
+
+    # Read level lines from server
+    lines = get_server_lines(server_out)
+
+    # Parse level lines
+    # agents_n, initial_state, goal_state = load_level(lines)
+
+    env_wrapper = CBSEnvWrapper()
+    s = env_wrapper.load(lines, 0)
+
+    path_dict = {}
+
+    for i in range(len(s.agents)):
+        plan = get_low_level_plan(lines, i)
+        path_dict[i] = plan
+
+    open = [CTNode(
+        constraints=set(),
+        solutions=path_dict,
+        cost=sic(path_dict)
+    )]
+
+    while len(open) > 0:
+        p = open.pop()
+
+        conflicts = get_conflicts(p, 0)
+
+        if len(conflicts) == 0:
+            # return p
+            exit()
+
+        c = conflicts.pop()
+        for a in c.agents:
+            node = CTNode()
+            # constraints=set(p.constraints, (a, state, t))
+            solutions = p.solutions,
+            cost = p.cost
+
+    send_plan(server_out, merge_paths(path_dict))
 
 # env_wrapper = CBSEnvWrapper()
 # env_wrapper.load(file_lines=lines)

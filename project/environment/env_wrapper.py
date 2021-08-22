@@ -1,4 +1,5 @@
 import copy
+import sys
 from abc import ABC
 from typing import List
 
@@ -105,9 +106,8 @@ class CBSEnvWrapper(gym.Env, ABC):
 
         return False
 
-    def load(self, file_lines: List[str] = None, file_name: str = None) -> State:
+    def load(self, file_lines: List[str], index: int) -> State:
         initial_state, goal_state = load_level(file_lines)
-        self.file_name = file_name
         self.initial_state = initial_state
         self.goal_state = goal_state
 
@@ -115,14 +115,27 @@ class CBSEnvWrapper(gym.Env, ABC):
         self.rows_n = initial_state.rows_n
         self.cols_n = initial_state.cols_n
 
+        agent = self.initial_state.agents[index]
+        print('agent: {}'.format(agent), file=sys.stderr)
+        agent_color = self.initial_state.colors[agent[0]][agent[1]]
+
         self.goal_state_positions = {}
         for row in range(len(self.goal_state.level)):
             for col in range(len(self.goal_state.level[row])):
                 val = goal_state.level[row][col]
+                color = self.goal_state.colors[row][col]
+                if not agent_color == color:
+                    continue
                 if self.box_a_value <= val <= self.box_z_value:
                     self.goal_state_positions[str([row, col])] = val.item()
                 if self.agent_0_value <= val <= self.agent_9_value:
                     self.goal_state_positions[str([row, col])] = val.item()
+
+        # free_value = 32  # ord(" ")
+        # agent_0_value = 48  # ord("0")
+        # agent_9_value = 57  # ord("9")
+        # box_a_value = 65  # ord("A")
+        # box_z_value = 90  # ord("Z")
 
         self.t0_state = copy.deepcopy(initial_state)
         return State(map=self.t0_state.level, colors=self.t0_state.colors, agents=self.t0_state.agents,
