@@ -2,7 +2,7 @@
 
 ```
 # Run server on level
-java -jar server.jar -l levels/G0.lvl -c "python main_server.py" -g -s 150 -t 180
+java -jar server.jar -l levels/A2.lvl -c "python main_server2.py" -g -s 150 -t 180
 
 # Run server on competition levels
 java -jar server.jar -c "python main_server.py" -l "levels_comp" -t 180 -o "46.zip"

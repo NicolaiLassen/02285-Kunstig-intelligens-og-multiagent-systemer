@@ -1,3 +1,5 @@
+import sys
+import copy
 from typing import List, Dict
 
 from michael.a_state import AState
@@ -31,10 +33,25 @@ class Level:
         return self.initial_state.__str__()
 
     def get_agent_states(self, agent: str):
-        return self.__get_state(self.initial_state, agent), self.__get_state(self.goal_state, agent)
+        agent_goal_state = self.__get_state(self.goal_state, agent)
+        goals = self.__get_goals(agent_goal_state.map)
+        agent_initial_state = self.__get_state(self.initial_state, agent)
+        agent_initial_state.goal_state_positions = goals
+        return agent_initial_state
 
-    def __get_state(self, map, agent: str) -> AState:
-        agent_map = map.copy()
+    def __get_goals(self, map: List[List[str]]):
+        goals = {}
+        for row in range(len(map)):
+            for col in range(len(map[0])):
+                char = map[row][col]
+                if '0' <= char <= '9':
+                    goals[str([row, col])] = char
+                if 'A' <= char <= 'Z':
+                    goals[str([row, col])] = char
+        return goals
+
+    def __get_state(self, map: List[List[str]], agent: str) -> AState:
+        agent_map = copy.deepcopy(map)
         agent_color = self.color_dict[agent]
         agent_row = 0
         agent_col = 0
@@ -45,6 +62,7 @@ class Level:
                 if char == agent:
                     agent_row = ri
                     agent_col = ci
+                    continue
                 if '0' <= char <= '9':
                     agent_map[ri][ci] = "+"
                 if 'A' <= char <= 'Z':

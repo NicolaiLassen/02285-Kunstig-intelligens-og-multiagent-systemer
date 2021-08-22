@@ -44,7 +44,7 @@ def merge_paths(path_dict):
     return merged_path
 
 
-def get_low_level_plan(initial_state: AState, goal_state: AState, constraints=[]):
+def get_low_level_plan(initial_state: AState, constraints=[]):
     frontier = FrontierBestFirst()
     explored = set()
 
@@ -55,7 +55,7 @@ def get_low_level_plan(initial_state: AState, goal_state: AState, constraints=[]
 
         state = frontier.pop()
 
-        if state == goal_state:
+        if state.is_goal_state():
             return state.extract_plan()
 
         explored.add(state)
@@ -82,11 +82,11 @@ if __name__ == '__main__':
     solutions = {}
 
     for i in range(level.agents_n):
-        initial_state, goal_state = level.get_agent_states("{}".format(i))
-        plan = get_low_level_plan(initial_state, goal_state)
+        initial_state = level.get_agent_states(str(i))
+        plan = get_low_level_plan(initial_state)
         solutions[i] = plan
+        print("AAAAA", file=sys.stderr)
 
-    # print("AAAAA", file=sys.stderr)
     send_plan(server_out, merge_paths(solutions))
 
 # env_wrapper = CBSEnvWrapper()

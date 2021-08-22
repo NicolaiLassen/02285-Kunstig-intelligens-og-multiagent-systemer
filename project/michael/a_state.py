@@ -18,6 +18,7 @@ class AState:
     g: int
     h: int
     f: int
+    goal_state_positions: dict
 
     def __init__(self, map, agent, agent_row, agent_col):
         self.map = map
@@ -36,14 +37,6 @@ class AState:
             state = state.parent
         return plan
 
-    def extract_solution(self) -> '[AState, ...]':
-        plan = [None for _ in range(self.g)]
-        state = self
-        while state.action is not None:
-            plan[state.g - 1] = state
-            state = state.parent
-        return plan
-
     def expand_state(self, constraints: List[Constraint]):
         applicable_actions = [action for action in Action if self.is_applicable(action)]
         expanded_states = [self.act(action) for action in applicable_actions]
@@ -58,6 +51,9 @@ class AState:
                     expanded_states.remove(state)
 
         return expanded_states
+
+    def is_goal_state(self) -> bool:
+        return len(self.goal_state_positions) == self.__count_goals()
 
     def act(self, action: Action) -> 'AState':
         next_state = deepcopy(self)
@@ -87,7 +83,6 @@ class AState:
             next_state.map[next_box_row][next_box_col] = box_value
             next_state.map[next_agent_row][next_agent_col] = agent_value
             next_state.map[prev_agent_row][prev_agent_col] = " "
-
 
         elif action.type is ActionType.Pull:
             prev_box_row = prev_agent_row + (action.box_row_delta * -1)
@@ -146,6 +141,17 @@ class AState:
 
     def is_free(self, row, col) -> bool:
         return self.map[row][col] == " "
+
+    def __count_goals(self):
+        goal_count = 0
+        for row in range(len(self.map)):
+            for col in range(len(self.map[row])):
+                key = str([row, col])
+                if key not in self.goal_state_positions:
+                    continue
+                val = self.map[row][col]
+                goal_count += 1 if self.goal_state_positions[key] == val else 0
+        return goal_count
 
     def __hash__(self):
         if self._hash is None:
