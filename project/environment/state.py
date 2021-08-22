@@ -1,8 +1,16 @@
 from copy import deepcopy
+from typing import List
 
 import numpy as np
 
 from environment.action import ActionType, Action
+
+
+class Constraint:
+    def __init__(self, agent, state, t):
+        self.agent: int = agent
+        self.state: State = state
+        self.t = t
 
 
 class State:
@@ -80,12 +88,21 @@ class State:
 
         return next_state
 
-    def get_expanded_states(self, index) -> '[State, ...]':
+    def get_expanded_states(self, index, constraints: List[Constraint]) -> '[State, ...]':
         expanded_states = []
         applicable_actions = [action for action in Action if self.__is_applicable(index, action)]
 
         for action in applicable_actions:
             expanded_states.append(self.__act(action, index))
+
+        for contraint in constraints:
+            if contraint.agent != index:
+                continue
+            if contraint.t != self.g:
+                continue
+            for state in expanded_states:
+                if state == contraint.state:
+                    expanded_states.remove(state)
 
         return expanded_states
 

@@ -52,7 +52,7 @@ def merge_paths(path_dict):
     return merged_path
 
 
-def get_low_level_plan(lines, index):
+def get_low_level_plan(lines, index, constraints=[]):
     frontier = FrontierBestFirst()
     s = env_wrapper.load(lines, index)
 
@@ -74,7 +74,7 @@ def get_low_level_plan(lines, index):
 
         explored.add(node)
 
-        for state in node.get_expanded_states(i):
+        for state in node.get_expanded_states(i, constraints):
             is_not_frontier = not frontier.contains(state)
             is_explored = state not in explored
             if is_not_frontier and is_explored:
