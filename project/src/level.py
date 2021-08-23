@@ -66,7 +66,7 @@ class Level:
                     agent_map[ri][ci] = " "
                 if 'A' <= char <= 'Z':
                     if not self.color_dict[char] == agent_color:
-                        agent_map[ri][ci] = "+"
+                        agent_map[ri][ci] = " "
         return State(
             map=agent_map,
             agent=agent,

@@ -1,13 +1,16 @@
+import sys
 from copy import deepcopy
 from typing import List
 
 from src.action import ActionType, Action
+from src.position import Position
 
 
 class Constraint:
-    def __init__(self, agent, state, t):
+    def __init__(self, agent, state, other_state, t):
         self.agent: int = agent
         self.state: State = state
+        self.other_state: State = other_state
         self.t = t
 
 
@@ -28,8 +31,7 @@ class State:
 
     map: List[List[str]]
     agent: str
-    agent_row: int
-    agent_col: int
+    agent_pos: Position
     goal_state_positions: dict
 
     action: Action = None
@@ -48,10 +50,17 @@ class State:
         self.f = self.g + self.h
 
     def box_row(self):
-        if self.action.type is ActionType.Push:
-            return self.agent_row + self.action.box_row_delta
-        if self.action.type is ActionType.Pull:
-            return self.agent_row - self.action.box_row_delta
+        # if self.action.type is ActionType.Push:
+        #     return self.agent_row + self.action.box_row_delta
+        # if self.action.type is ActionType.Pull:
+        #     return self.agent_row - self.action.box_row_delta
+        return -1
+
+    def box_col(self):
+        # if self.action.type is ActionType.Push:
+        #     return self.agent_col + self.action.box_col_delta
+        # if self.action.type is ActionType.Pull:
+        #     return self.agent_col - self.action.box_col_delta
         return -1
 
     def get_solution(self) -> '[AState, ...]':
@@ -66,8 +75,6 @@ class State:
 
         ## TODO THIS WORKS BUT MAKE IT BETTER!
         ## DOES NOT WORK IN ALL CASES PLZ
-
-        ## LET'S make a fucking wall
 
         applicable_actions = [action for action in Action if self.is_applicable(action)]
         expanded_states = [self.act(action) for action in applicable_actions]
@@ -189,6 +196,12 @@ class State:
                 val = self.map[row][col]
                 goal_count += 1 if self.goal_state_positions[key] == val else 0
         return goal_count
+
+    def __repr__(self):
+        map_s = "\n".join(["".join(row) for row in self.map])
+        stats = "step: {} | agent: {},{} | box: {},{}" \
+            .format(self.g, self.agent_row, self.agent_col, self.box_row(), self.box_col())
+        return "{}\n{}".format(stats, map_s)
 
     def __hash__(self):
         if self._hash is None:

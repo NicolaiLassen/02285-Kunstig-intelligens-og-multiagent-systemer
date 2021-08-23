@@ -23,7 +23,6 @@ def get_conflict(node: CTNode) -> Conflict:
         for a1 in range(agents_n):
             a1s = node.solutions[a1]
 
-
             # Skip if step is past agent solution length
             if step >= len(a1s):
                 continue
@@ -47,18 +46,23 @@ def get_conflict(node: CTNode) -> Conflict:
                 if a2s[step].action is ActionType.NoOp:
                     continue
 
-                # CONFLICT if box position is
                 if a1s[step].action.type is ActionType.Push:
-                    box_row = a1s[step].agent_row + a1s[step].action.box_row_delta
-                    box_col = a1s[step].agent_col + a1s[step].action.box_col_delta
-                    log('PUSH: {}'.format(a1))
-                    log('box: {},{}'.format(box_row, box_col))
-                    log('a1: {},{}'.format(a1s[step].agent_row, a1s[step].agent_col))
-                    log('a2: {},{}'.format(a2s[step].agent_row, a2s[step].agent_col))
-                    log('')
+                    log("STEP {} ------------".format(step))
+                    log(a1s[step])
+                    log(a2s[step])
+                    log("")
 
-                    if box_row == a2s[step].agent_row and box_col == a2s[step].agent_col:
-                        exit("!!!!!!!!!!!")
+                # CONFLICT if box position is the same
+                if a1s[step].box_row() == a2s[step].agent_row and a1s[step].box_col() == a2s[step].agent_col:
+                    return Conflict(
+                        agents=[str(a1), str(a2)],
+                        position=[a1s[step].agent_row, a1s[step].agent_col],
+                        step=step,
+                        states={
+                            str(a1): node.solutions[a1][step],
+                            str(a2): node.solutions[a2][step]
+                        }
+                    )
 
                 # CONFLICT if agent 1 and agent 2 is at same position
                 if a1s[step].agent_row == a2s[step].agent_row and a1s[step].agent_col == a2s[step].agent_col:
@@ -152,8 +156,8 @@ if __name__ == '__main__':
 
         for a in conflict.agents:
             next_node = node.copy()
-
-            next_node.constraints.append(Constraint(a, conflict.states[a], conflict.step))
+            other = [e for e in conflict.agents if e != a][0]
+            next_node.constraints.append(Constraint(a, conflict.states[a], conflict.states[other], conflict.step))
             solution = get_low_level_plan(level.get_agent_state(a), constraints=next_node.constraints)
             next_node.solutions[int(a)] = solution
             next_node.cost = sic(next_node.solutions)
