@@ -23,6 +23,7 @@ def get_conflict(node: CTNode) -> Conflict:
         for a1 in range(agents_n):
             a1s = node.solutions[a1]
 
+
             # Skip if step is past agent solution length
             if step >= len(a1s):
                 continue
@@ -47,14 +48,25 @@ def get_conflict(node: CTNode) -> Conflict:
                     continue
 
                 # CONFLICT if box position is
+                if a1s[step].action.type is ActionType.Push:
+                    box_row = a1s[step].agent_row + a1s[step].action.box_row_delta
+                    box_col = a1s[step].agent_col + a1s[step].action.box_col_delta
+                    log('PUSH: {}'.format(a1))
+                    log('box: {},{}'.format(box_row, box_col))
+                    log('a1: {},{}'.format(a1s[step].agent_row, a1s[step].agent_col))
+                    log('a2: {},{}'.format(a2s[step].agent_row, a2s[step].agent_col))
+                    log('')
 
+                    if box_row == a2s[step].agent_row and box_col == a2s[step].agent_col:
+                        exit("!!!!!!!!!!!")
 
                 # CONFLICT if agent 1 and agent 2 is at same position
                 if a1s[step].agent_row == a2s[step].agent_row and a1s[step].agent_col == a2s[step].agent_col:
                     return Conflict(
                         agents=[str(a1), str(a2)],
                         position=[a1s[step].agent_row, a1s[step].agent_col],
-                        step=step, states={
+                        step=step,
+                        states={
                             str(a1): node.solutions[a1][step],
                             str(a2): node.solutions[a2][step]
                         }

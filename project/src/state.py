@@ -47,6 +47,13 @@ class State:
         self.h = 0
         self.f = self.g + self.h
 
+    def box_row(self):
+        if self.action.type is ActionType.Push:
+            return self.agent_row + self.action.box_row_delta
+        if self.action.type is ActionType.Pull:
+            return self.agent_row - self.action.box_row_delta
+        return -1
+
     def get_solution(self) -> '[AState, ...]':
         plan = [None for _ in range(self.g)]
         state = self
