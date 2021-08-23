@@ -1,31 +1,42 @@
-import sys
 from copy import deepcopy
-from typing import List, Dict
+from typing import List
 
-from environment.action import ActionType, Action
+from src.action import ActionType, Action
 
 
 class Constraint:
-    def __init__(self, agent, states, t):
+    def __init__(self, agent, state, t):
         self.agent: int = agent
-        self.states: Dict[str, AState] = states
+        self.state: State = state
         self.t = t
 
 
-class AState:
+class Conflict:
+    def __init__(self, agents, states, position, step):
+        self.agents: [int] = agents
+        self.states = states
+        self.position = position
+        self.step = step
+
+    def __repr__(self):
+        return 'Conflict!\nAgent: {} v {}\nPosition: {},{} step: {}\n' \
+            .format(self.agents[0], self.agents[1], self.position[0], self.position[1], self.step)
+
+
+class State:
     _hash: int = None
 
     map: List[List[str]]
     agent: str
     agent_row: int
     agent_col: int
+    goal_state_positions: dict
 
     action: Action = None
-    parent: 'AState'
+    parent: 'State'
     g: int
     h: int
     f: int
-    goal_state_positions: dict
 
     def __init__(self, map, agent, agent_row, agent_col):
         self.map = map
@@ -34,21 +45,13 @@ class AState:
         self.agent_col = agent_col
         self.g = 0
         self.h = 0
-        self.f = 0
+        self.f = self.g + self.h
 
-    def extract_nodes(self) -> '[AState, ...]':
+    def get_solution(self) -> '[AState, ...]':
         plan = [None for _ in range(self.g)]
         state = self
         while state.action is not None:
             plan[state.g - 1] = state
-            state = state.parent
-        return plan
-
-    def extract_plan(self) -> '[Action, ...]':
-        plan = [Action.NoOp for _ in range(self.g)]
-        state = self
-        while state.action is not None:
-            plan[state.g - 1] = state.action
             state = state.parent
         return plan
 
@@ -58,22 +61,25 @@ class AState:
         ## DOES NOT WORK IN ALL CASES PLZ
 
         ## LET'S make a fucking wall
-        for constraint in constraints:
-            if constraint.t != self.g:
-                continue
-            for state in constraint.states.values():
-                if state.agent != self.agent:
-                    self.map[state.agent_row][state.agent_col] = '+'
 
         applicable_actions = [action for action in Action if self.is_applicable(action)]
         expanded_states = [self.act(action) for action in applicable_actions]
 
-        return expanded_states
+        remove_index = []
+        for i, s in enumerate(expanded_states):
+            for constraint in constraints:
+                if constraint.t != self.g:
+                    continue
+                if s == constraint.state:
+                    remove_index.append(i)
+        filtered_states = [s for i, s in enumerate(expanded_states) if i not in remove_index]
+
+        return filtered_states
 
     def is_goal_state(self) -> bool:
         return len(self.goal_state_positions) == self.__count_goals()
 
-    def act(self, action: Action) -> 'AState':
+    def act(self, action: Action) -> 'State':
         next_state = deepcopy(self)
 
         # Update agent location
@@ -113,9 +119,15 @@ class AState:
 
         next_state.parent = self
         next_state.action = action
+
         next_state.g = self.g + 1
+        next_state.h = next_state.get_heuristic()
+        next_state.f = next_state.g + next_state.h
 
         return next_state
+
+    def get_heuristic(self):
+        return len(self.goal_state_positions) - self.__count_goals()
 
     def is_applicable(self, action: Action) -> bool:
         agent_row = self.agent_row
@@ -182,7 +194,7 @@ class AState:
     def __lt__(self, other: 'State'):
         return self.f < other.f
 
-    def __eq__(self, other: 'AState'):
+    def __eq__(self, other: 'State'):
         for i, row in enumerate(self.map):
             for j, char in enumerate(row):
                 if not char == other.map[i][j]:

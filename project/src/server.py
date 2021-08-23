@@ -1,7 +1,7 @@
 import sys
 from typing import List
 
-from environment.action import Action
+from src.action import Action
 
 client_name = "46"
 
@@ -39,3 +39,42 @@ def send_plan(server_out, plan: List[List[Action]]):
             print("|".join(a.name_ for a in joint_action), flush=True)
             # We must read the server's response to not fill up the stdin buffer and block the server.
             response = server_out.readline()
+
+
+def get_max_path_len(path_dict):
+    max_path_len = 0
+    for agent in path_dict.keys():
+        path_len = len(path_dict[agent])
+        max_path_len = path_len if path_len >= max_path_len else max_path_len
+    return max_path_len
+
+
+def get_path(solution: List[Action]):
+    solution_len = len(solution)
+    plan = [Action.NoOp for _ in range(solution_len)]
+    state = solution[solution_len - 1]
+    while state.action is not None:
+        plan[state.g - 1] = state.action
+        state = state.parent
+    return plan
+
+
+def merge_solutions(solutions):
+    path_dict = {}
+    for s in solutions.keys():
+        path_dict[s] = get_path(solutions[s])
+
+    max_path_len = get_max_path_len(path_dict)
+    agents = path_dict.keys()
+    agents_n = len(agents)
+
+    merged_path = [[Action.NoOp for _ in range(agents_n)] for _ in range(max_path_len)]
+    for i in range(max_path_len):
+        for agent in agents:
+            agent_path = path_dict[agent]
+            if i >= len(agent_path):
+                merged_path[i][agent] = Action.NoOp
+            else:
+                merged_path[i][agent] = agent_path[i]
+
+    return merged_path

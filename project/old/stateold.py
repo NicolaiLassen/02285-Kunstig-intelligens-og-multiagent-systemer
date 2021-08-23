@@ -4,18 +4,18 @@ from typing import List
 
 import numpy as np
 
-from environment.action import ActionType, Action
+from src.action import ActionType, Action
 
 
-class Constraint:
+class ConstraintOld:
     def __init__(self, agent, state, t, agents):
         self.agent: str = agent
         self.agents: [int] = agents
-        self.state: List[State] = state
+        self.state: List[StateOld] = state
         self.t = t
 
 
-class State:
+class StateOld:
     free_value = 32  # ord(" ")
     agent_0_value = 48  # ord("0")
     agent_9_value = 57  # ord("9")
@@ -35,7 +35,7 @@ class State:
         self.agents: np.ndarray = agents
         self.goal_state_positions = goal_state_positions
 
-    def __act(self, action: Action, index: int) -> 'State':
+    def __act(self, action: Action, index: int) -> 'StateOld':
 
         next_state = deepcopy(self)
 
@@ -92,7 +92,7 @@ class State:
 
         return next_state
 
-    def get_expanded_states(self, constraints: List[Constraint]) -> '[State, ...]':
+    def get_expanded_states(self, constraints: List[ConstraintOld]) -> '[State, ...]':
         index = self.agent
         expanded_states = []
         applicable_actions = [action for action in Action if self.__is_applicable(index, action)]
@@ -194,8 +194,8 @@ class State:
         _hash = _hash * prime + hash(str((self.map)))
         return _hash
 
-    def __eq__(self, other: 'State'):
+    def __eq__(self, other: 'StateOld'):
         return self.__hash__() == other.__hash__()
 
-    def __lt__(self, other: 'State'):
+    def __lt__(self, other: 'StateOld'):
         return self.f() < other.f()

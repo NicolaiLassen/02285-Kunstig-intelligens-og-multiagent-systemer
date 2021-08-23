@@ -1,8 +1,8 @@
 import argparse
 import os
 
-from environment.level_loader import load_level_state
-from utils.frontier import FrontierBestFirst
+from old.level_loader import load_level_state
+from src.frontier import FrontierBestFirst
 
 
 def get_n_params(model):

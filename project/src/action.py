@@ -57,3 +57,6 @@ class Action(Enum):
         self.agent_col_delta = acd  # vertical displacement agent
         self.box_row_delta = brd  # horisontal displacement box
         self.box_col_delta = bcd  # vertical displacement box
+
+    def __repr__(self):
+        return self.name_

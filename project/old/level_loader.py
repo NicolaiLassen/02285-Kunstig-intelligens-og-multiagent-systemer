@@ -4,11 +4,11 @@ from typing import List, Tuple
 import numpy as np
 import torch
 
-from environment.level_state import TempState
-from environment.state import State
+from old.level_state import TempState
+from old.stateold import StateOld
 
 
-def load_level_state(file_lines: List[str], index: int) -> State:
+def load_level_state(file_lines: List[str], index: int) -> StateOld:
     free_value = 32  # ord(" ")
     agent_0_value = 48  # ord("0")
     agent_9_value = 57  # ord("9")
@@ -39,7 +39,7 @@ def load_level_state(file_lines: List[str], index: int) -> State:
                 goal_state_positions[str([row, col])] = val.item()
 
     t0_state = copy.deepcopy(initial_state)
-    return State(
+    return StateOld(
         map=t0_state.level,
         agent=index,
         colors=t0_state.colors,

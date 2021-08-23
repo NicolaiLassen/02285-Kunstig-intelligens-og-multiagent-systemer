@@ -1,6 +1,6 @@
 from typing import List, Dict
 
-from michael.level import Level
+from src.level import Level
 
 
 def parse_level(file_lines: List[str]):

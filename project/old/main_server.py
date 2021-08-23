@@ -2,16 +2,16 @@ import sys
 from queue import PriorityQueue
 from typing import List, Dict
 
-from environment.action import Action, ActionType
-from environment.level_loader import load_level_state
-from environment.state import Constraint, State
-from server import get_server_out, get_server_lines, send_plan
-from utils.frontier import FrontierBestFirst
+from src.action import Action, ActionType
+from old.level_loader import load_level_state
+from old.stateold import ConstraintOld, StateOld
+from src.server import get_server_out, get_server_lines, send_plan
+from src.frontier import FrontierBestFirst
 
 
-class CTNode:
-    constraints: [Constraint] = []
-    solutions: Dict[int, List[State]] = {}
+class CTNodeOld:
+    constraints: [ConstraintOld] = []
+    solutions: Dict[int, List[StateOld]] = {}
     cost: int
 
     def __init__(self, constraints=None, solutions=None, cost=None):
@@ -37,7 +37,7 @@ def get_max_path_len(path_dict):
     return max_path_len
 
 
-def extract_plan(sol: State) -> '[Action, ...]':
+def extract_plan(sol: StateOld) -> '[Action, ...]':
     plan = [None for _ in range(sol.g)]
     state = sol
     while state.action is not None:
@@ -46,7 +46,7 @@ def extract_plan(sol: State) -> '[Action, ...]':
     return plan
 
 
-def merge_paths(node: CTNode):
+def merge_paths(node: CTNodeOld):
     path_dict = {}
 
     for i in range(len(node.solutions)):
@@ -106,7 +106,7 @@ def tplusone(step):
     return step[0] + 1, step[1], step[2]
 
 
-def giget_conflicts(node: CTNode):
+def giget_conflicts(node: CTNodeOld):
     num_agents = len(node.solutions)
 
     conflicts = []
@@ -139,14 +139,14 @@ def giget_conflicts(node: CTNode):
 
                 # is moving same box
                 if box_rows[a1] == box_rows[a2] and box_cols[a1] == box_cols[a2]:
-                    conflicts.append(Constraint(a1, node.solutions[a1][step], step, [a1, a2]))
-                    conflicts.append(Constraint(a2, node.solutions[a2][step], step, [a1, a2]))
+                    conflicts.append(ConstraintOld(a1, node.solutions[a1][step], step, [a1, a2]))
+                    conflicts.append(ConstraintOld(a2, node.solutions[a2][step], step, [a1, a2]))
                     break
 
                 # is moving into same position
                 if next_agent_rows[a1] == next_agent_rows[a2] and next_agent_cols[a1] == next_agent_cols[a2]:
-                    conflicts.append(Constraint(a1, node.solutions[a1][step], step, [a1, a2]))
-                    conflicts.append(Constraint(a2, node.solutions[a2][step], step, [a1, a2]))
+                    conflicts.append(ConstraintOld(a1, node.solutions[a1][step], step, [a1, a2]))
+                    conflicts.append(ConstraintOld(a2, node.solutions[a2][step], step, [a1, a2]))
                     break
 
     return conflicts
@@ -172,7 +172,7 @@ if __name__ == '__main__':
         plan = get_low_level_plan(lines, i, [])
         path_dict[i] = plan
 
-    open = [CTNode(
+    open = [CTNodeOld(
         constraints=[],
         solutions=path_dict,
         cost=sic(path_dict)
@@ -189,7 +189,7 @@ if __name__ == '__main__':
         c = conflicts.pop()
         print("conflicts.agents: {}".format(c.agents), file=sys.stderr)
         for a in c.agents:
-            node = CTNode()
+            node = CTNodeOld()
             node.constraints = p.constraints
             node.constraints.append(c)
             solutions = p.solutions

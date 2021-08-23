@@ -1,9 +1,105 @@
 import sys
+from queue import PriorityQueue
+from typing import Dict, List
 
-from michael.a_state import get_agent_state
-from michael.expand_state import expand_state
-from michael.parse_level import parse_level
-from michael.server import get_server_out, get_server_lines
+from src.action import ActionType
+from src.ct_node import CTNode
+from src.frontier import FrontierBestFirst
+from src.parse_level import parse_level
+from src.server import get_server_out, get_server_lines, send_plan, merge_solutions, get_max_path_len
+from src.state import State, Constraint, Conflict
+
+
+## TODO ######!!!!!!!!!!!!!!!
+## Fix hvis agenten ikke kan finde en vej til at starte med pga blok
+
+
+def get_conflict(node: CTNode) -> Conflict:
+    agents_n = len(node.solutions)
+    max_solution_len = get_max_path_len(node.solutions)
+
+    # For every step: for every agent and every other agent
+    for step in range(max_solution_len):
+        for a1 in range(agents_n):
+            a1s = node.solutions[a1]
+
+            # Skip if step is past agent solution length
+            if step >= len(a1s):
+                continue
+
+            # Skip if action is NoOp
+            if a1s[step].action is ActionType.NoOp:
+                continue
+
+            for a2 in range(agents_n):
+                a2s = node.solutions[a2]
+
+                # Skip if agent 1 is the same as agent 2
+                if a1 == a2:
+                    continue
+
+                # Skip if step is past agent solution length
+                if step >= len(a2s):
+                    continue
+
+                # Skip if action is NoOp
+                if a2s[step].action is ActionType.NoOp:
+                    continue
+
+                # CONFLICT if box position is
+
+
+                # CONFLICT if agent 1 and agent 2 is at same position
+                if a1s[step].agent_row == a2s[step].agent_row and a1s[step].agent_col == a2s[step].agent_col:
+                    return Conflict(
+                        agents=[str(a1), str(a2)],
+                        position=[a1s[step].agent_row, a1s[step].agent_col],
+                        step=step, states={
+                            str(a1): node.solutions[a1][step],
+                            str(a2): node.solutions[a2][step]
+                        }
+                    )
+
+                # is moving same box
+                # if box_rows[a1] == box_rows[a2] and box_cols[a1] == box_cols[a2]:
+                #     return Conflict([a1, a2], node.solution_nodes[a1][step].g)
+
+    return None
+
+
+def sic(path_dict):
+    count = 0
+    for agent_path in path_dict.values():
+        count += len(agent_path)
+    return count
+
+
+def get_low_level_plan(initial_state: State, constraints=[]):
+    frontier = FrontierBestFirst()
+    explored = set()
+
+    frontier.add(initial_state)
+    while True:
+        if frontier.is_empty():
+            break
+
+        state = frontier.pop()
+
+        if state.is_goal_state():
+            return state.get_solution()
+
+        explored.add(state)
+
+        for state in state.expand_state(constraints):
+            is_not_frontier = not frontier.contains(state)
+            is_explored = state not in explored
+            if is_not_frontier and is_explored:
+                frontier.add(state)
+
+
+def log(s):
+    print(s, flush=True, file=sys.stderr)
+
 
 if __name__ == '__main__':
     server_out = get_server_out()
@@ -17,11 +113,40 @@ if __name__ == '__main__':
     # Parse level lines
     level = parse_level(lines)
 
-    # Create agent map
-    agent_state = get_agent_state("0", level)
+    # Find low level plan for all agents
+    solutions: Dict[int, List[State]] = {}
+    for a in range(level.agents_n):
+        initial_state = level.get_agent_state(str(a))
+        solutions[a] = get_low_level_plan(initial_state)
 
-    x = expand_state(agent_state)
-    print(x, flush=True, file=sys.stderr)
+    ## Naive solution merge
+    # send_plan(server_out, merge_paths(plans))
 
+    # Conflict based search
+    open = PriorityQueue()
+    open.put(CTNode(
+        constraints=[],
+        solutions=solutions,
+        cost=sic(solutions)
+    ))
 
-    print(agent_state, flush=True, file=sys.stderr)
+    while not open.empty():
+        node: CTNode = open.get()
+        conflict = get_conflict(node)
+
+        if conflict is None:
+            send_plan(server_out, merge_solutions(node.solutions))
+            break
+
+        for a in conflict.agents:
+            next_node = node.copy()
+
+            next_node.constraints.append(Constraint(a, conflict.states[a], conflict.step))
+            solution = get_low_level_plan(level.get_agent_state(a), constraints=next_node.constraints)
+            next_node.solutions[int(a)] = solution
+            next_node.cost = sic(next_node.solutions)
+            open.put(next_node)
+
+            # log(node.solutions)
+            # send_plan(server_out, merge_paths(node.solutions))
+            # exit()
