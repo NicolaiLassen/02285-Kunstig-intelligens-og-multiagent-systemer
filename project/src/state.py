@@ -1,4 +1,3 @@
-import sys
 from copy import deepcopy
 from typing import List
 
@@ -32,7 +31,7 @@ class State:
     map: List[List[str]]
     agent: str
     agent_pos: Position
-    goal_state_positions: dict
+    goals: dict  # {char: [row,col]}
 
     action: Action = None
     parent: 'State'
@@ -48,20 +47,6 @@ class State:
         self.g = 0
         self.h = 0
         self.f = self.g + self.h
-
-    def box_row(self):
-        # if self.action.type is ActionType.Push:
-        #     return self.agent_row + self.action.box_row_delta
-        # if self.action.type is ActionType.Pull:
-        #     return self.agent_row - self.action.box_row_delta
-        return -1
-
-    def box_col(self):
-        # if self.action.type is ActionType.Push:
-        #     return self.agent_col + self.action.box_col_delta
-        # if self.action.type is ActionType.Pull:
-        #     return self.agent_col - self.action.box_col_delta
-        return -1
 
     def get_solution(self) -> '[AState, ...]':
         plan = [None for _ in range(self.g)]
@@ -91,7 +76,13 @@ class State:
         return filtered_states
 
     def is_goal_state(self) -> bool:
-        return len(self.goal_state_positions) == self.__count_goals()
+        return self.get_heuristic() == 0
+
+        # goal_pos_len = len(self.goal_state_positions)
+        # goal_count = self.__count_goals()
+        # print("goal_pos_len: {}".format(goal_pos_len), file=sys.stderr)
+        # print("goal_count: {}".format(goal_count), file=sys.stderr)
+        # return goal_pos_len == goal_count
 
     def act(self, action: Action) -> 'State':
         next_state = deepcopy(self)
@@ -141,7 +132,31 @@ class State:
         return next_state
 
     def get_heuristic(self):
-        return len(self.goal_state_positions) - self.__count_goals()
+
+        # Goal count
+        # return self.get_goal_count()
+
+        # Max manhatten distance to goal
+        return self.get_max_manhatten_dist()
+
+    def get_goal_count(self):
+        goal_count = len(self.goals)
+        for key in self.goals.keys():
+            r, c = self.goals[key]
+            if self.map[r][c] == key:
+                goal_count -= 1
+        return goal_count
+
+    def get_max_manhatten_dist(self):
+        max_dist = 0
+        for r, row in enumerate(self.map):
+            for c, char in enumerate(row):
+                if char not in self.goals:
+                    continue
+                g_row, g_col = self.goals[char]
+                dist = abs(r - g_row) + abs(c - g_col)
+                max_dist = max(max_dist, dist)
+        return max_dist
 
     def is_applicable(self, action: Action) -> bool:
         agent_row = self.agent_row
@@ -186,16 +201,11 @@ class State:
     def is_free(self, row, col) -> bool:
         return self.map[row][col] == " "
 
-    def __count_goals(self):
-        goal_count = 0
-        for row in range(len(self.map)):
-            for col in range(len(self.map[row])):
-                key = str([row, col])
-                if key not in self.goal_state_positions:
-                    continue
-                val = self.map[row][col]
-                goal_count += 1 if self.goal_state_positions[key] == val else 0
-        return goal_count
+    def box_row(self):
+        return -1
+
+    def box_col(self):
+        return -1
 
     def __repr__(self):
         map_s = "\n".join(["".join(row) for row in self.map])

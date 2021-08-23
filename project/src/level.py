@@ -32,22 +32,21 @@ class Level:
         return self.initial_state.__str__()
 
     def get_agent_state(self, agent: str):
-        agent_goal_state = self.__get_state(self.goal_state, agent)
-        goals = self.__get_goals(agent_goal_state.map)
-        agent_initial_state = self.__get_state(self.initial_state, agent)
-        agent_initial_state.goal_state_positions = goals
-        return agent_initial_state
+        initial_state = self.__get_state(self.initial_state, agent)
 
-    def __get_goals(self, map: List[List[str]]):
+        # Find and update initial state goal information
+        goal_state = self.__get_state(self.goal_state, agent)
         goals = {}
-        for row in range(len(map)):
-            for col in range(len(map[0])):
-                char = map[row][col]
+        for r, row in enumerate(goal_state.map):
+            for c, char in enumerate(row):
                 if '0' <= char <= '9':
-                    goals[str([row, col])] = char
+                    goals[char] = [r, c]
                 if 'A' <= char <= 'Z':
-                    goals[str([row, col])] = char
-        return goals
+                    goals[char] = [r, c]
+
+        initial_state.goals = goals
+
+        return initial_state
 
     def __get_state(self, map: List[List[str]], agent: str) -> State:
         agent_map = copy.deepcopy(map)
@@ -63,7 +62,7 @@ class Level:
                     agent_col = ci
                     continue
                 if '0' <= char <= '9':
-                    agent_map[ri][ci] = " "
+                    agent_map[ri][ci] = "+"
                 if 'A' <= char <= 'Z':
                     if not self.color_dict[char] == agent_color:
                         agent_map[ri][ci] = " "

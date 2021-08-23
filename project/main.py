@@ -100,6 +100,7 @@ def get_low_level_plan(initial_state: State, constraints=[]):
             break
 
         state = frontier.pop()
+        log(state)
 
         if state.is_goal_state():
             return state.get_solution()
@@ -138,6 +139,7 @@ if __name__ == '__main__':
     ## Naive solution merge
     # send_plan(server_out, merge_paths(plans))
 
+
     # Conflict based search
     open = PriorityQueue()
     open.put(CTNode(
@@ -150,6 +152,7 @@ if __name__ == '__main__':
         node: CTNode = open.get()
         conflict = get_conflict(node)
 
+        log(conflict)
         if conflict is None:
             send_plan(server_out, merge_solutions(node.solutions))
             break

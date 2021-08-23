@@ -52,6 +52,9 @@ def get_max_path_len(path_dict):
 def get_path(solution: List[Action]):
     solution_len = len(solution)
     plan = [Action.NoOp for _ in range(solution_len)]
+    if solution_len == 0:
+        return plan
+
     state = solution[solution_len - 1]
     while state.action is not None:
         plan[state.g - 1] = state.action
