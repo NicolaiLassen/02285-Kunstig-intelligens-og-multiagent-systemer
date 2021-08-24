@@ -38,35 +38,28 @@ class State:
 
     def expand_state(self, constraints: List[Constraint]):
 
-        ## TODO THIS WORKS BUT MAKE IT BETTER!
-        ## DOES NOT WORK IN ALL CASES PLZ
-
         applicable_actions = [action for action in Action if self.is_applicable(action)]
         expanded_states = [self.act(action) for action in applicable_actions]
 
         remove_index = []
-        if len(constraints) != 0:
-            for constraint in constraints:
-                c_row = constraint.position[0]
-                c_col = constraint.position[1]
-                if constraint.step == self.g:
-                    print(constraint, file=sys.stderr)
+        for constraint in constraints:
+            c_row, c_col = constraint.position
+            if constraint.step == self.g:
+                print(constraint, file=sys.stderr)
 
-                    for i, state in enumerate(expanded_states):
-                        print(state, file=sys.stderr)
-                        char = state.map[c_row][c_col]
-                        if char == " ":
-                            remove_index.append(i)
+                for i, state in enumerate(expanded_states):
+                    print(state, file=sys.stderr)
+                    char = state.map[c_row][c_col]
+                    if char == " ":
+                        remove_index.append(i)
         filtered_states = [s for i, s in enumerate(expanded_states) if i not in remove_index]
 
-        # remove_index = []
-        # for i, s in enumerate(expanded_states):
-        #     for constraint in constraints:
-        #         if constraint.step != self.g:
-        #             continue
-        #         if s == constraint.conflict.states[self.agent]:
-        #             remove_index.append(i)
-        # filtered_states = [s for i, s in enumerate(expanded_states) if i not in remove_index]
+        if len(constraints) == 2:
+            print(constraints, file=sys.stderr)
+            for s in filtered_states:
+                print(s, file=sys.stderr)
+
+            exit()
 
         return filtered_states
 

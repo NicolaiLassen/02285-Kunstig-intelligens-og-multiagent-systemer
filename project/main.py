@@ -68,8 +68,8 @@ def get_conflict(node: CTNode) -> Conflict:
                 if a1s[step].agent_row == a2s[step - 1].agent_row and a1s[step].agent_col == a2s[step - 1].agent_col:
                     return Conflict(
                         type='follow',
-                        agent_a=str(a1),
-                        agent_b=str(a2),
+                        agent_a=str(a1),  # actor/follower
+                        agent_b=str(a2),  # passive/leader
                         position=[a1s[step].agent_row, a1s[step].agent_col],
                         step=step,
                         states={
@@ -79,18 +79,18 @@ def get_conflict(node: CTNode) -> Conflict:
                     )
 
                 # CONFLICT if agent 2 follows agent 1
-                if a1s[step - 1].agent_row == a2s[step].agent_row and a1s[step - 1].agent_col == a2s[step].agent_col:
-                    return Conflict(
-                        type='follow',
-                        agent_a=str(a2),
-                        agent_b=str(a1),
-                        position=[a2s[step].agent_row, a2s[step].agent_col],
-                        step=step,
-                        states={
-                            str(a1): node.solutions[a1][step - 1],
-                            str(a2): node.solutions[a2][step]
-                        }
-                    )
+                # if a1s[step - 1].agent_row == a2s[step].agent_row and a1s[step - 1].agent_col == a2s[step].agent_col:
+                #     return Conflict(
+                #         type='follow',
+                #         agent_a=str(a2),
+                #         agent_b=str(a1),
+                #         position=[a2s[step].agent_row, a2s[step].agent_col],
+                #         step=step,
+                #         states={
+                #             str(a1): node.solutions[a1][step - 1],
+                #             str(a2): node.solutions[a2][step]
+                #         }
+                #     )
 
                 # is moving same box
                 # if box_rows[a1] == box_rows[a2] and box_cols[a1] == box_cols[a2]:
