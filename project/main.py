@@ -2,7 +2,6 @@ from queue import PriorityQueue
 from typing import Dict, List
 
 from src.frontier import FrontierBestFirst
-from src.models.action import ActionType
 from src.models.conflict import Conflict
 from src.models.constraint import Constraint
 from src.models.ct_node import CTNode
@@ -17,7 +16,7 @@ def get_conflict(node: CTNode) -> Conflict:
     max_solution_len = get_max_path_len(node.solutions)
 
     # For every step: for every agent and every other agent
-    for step in range(0, max_solution_len):
+    for step in range(1, max_solution_len):
         for a0 in range(agents_n):
             a0s = node.solutions[a0]
 
@@ -25,23 +24,11 @@ def get_conflict(node: CTNode) -> Conflict:
             if step >= len(a0s):
                 continue
 
-            # Skip if action is NoOp
-            if a0s[step].action is ActionType.NoOp:
-                continue
-
             for a1 in range(a0 + 1, agents_n):
                 a1s = node.solutions[a1]
 
-                # Skip if agent 1 is the same as agent 2
-                if a0 == a1:
-                    continue
-
                 # Skip if step is past agent solution length
                 if step >= len(a1s):
-                    continue
-
-                # Skip if action is NoOp
-                if a1s[step].action is ActionType.NoOp:
                     continue
 
                 # CONFLICT if agent 1 and agent 2 is at same position
@@ -55,20 +42,23 @@ def get_conflict(node: CTNode) -> Conflict:
                     )
 
                 # CONFLICT if agent 1 follows agent 2
-                agent_1_pos = [a0s[step].agent_row, a0s[step].agent_col]
-                agent_2_last_pos = [a1s[step - 1].agent_row, a1s[step - 1].agent_col]
-                if agent_1_pos == agent_2_last_pos:
-                    log("agent_1_pos: {}".format(agent_1_pos))
-                    log("step: {}".format(step))
-                    log("a1s[step]: {}".format(a0s[step]))
-                    log("a2s[step -1]: {}".format(a1s[step - 1]))
+                agent_0_pos = [a0s[step].agent_row, a0s[step].agent_col]
+                agent_1_pos_prev = [a1s[step - 1].agent_row, a1s[step - 1].agent_col]
+                if agent_0_pos == agent_1_pos_prev:
+                    log('agent_0_pos: {}'.format(agent_0_pos))
+                    log('agent_1_pos_prev: {}'.format(agent_1_pos_prev))
                     exit()
+
+                    # log("agent_1_pos: {}".format(agent_1_pos))
+                    # log("step: {}".format(step))
+                    # log("a1s[step]: {}".format(a0s[step]))
+                    # log("a2s[step -1]: {}".format(a1s[step - 1]))
+                    # exit()
                     return Conflict(
                         type='follow',
                         agent_a=str(a0),  # actor/follower
                         agent_b=str(a1),  # passive/leader
-                        # TODO WHY?
-                        position=[a0s[step - 1].agent_row, a0s[step - 1].agent_col],
+                        position=agent_0_pos,
                         step=step,
                     )
 

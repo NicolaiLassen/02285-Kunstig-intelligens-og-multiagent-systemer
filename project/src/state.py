@@ -23,12 +23,13 @@ class State:
         self.f = self.g + self.h
 
     def get_solution(self) -> '[State, ...]':
+        # TODO BETTER
         plan = [None for _ in range(self.g)]
         state = self
         while state.action is not None:
             plan[state.g - 1] = state
             state = state.parent
-        return plan
+        return [state] + plan
 
     def expand_state(self, constraints: List[Constraint]):
 
@@ -65,7 +66,6 @@ class State:
         #             for s in filtered_states:
         #                 log(s)
         #             # exit()
-
 
         return filtered_states
 
