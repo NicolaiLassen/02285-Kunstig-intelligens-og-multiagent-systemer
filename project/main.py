@@ -10,6 +10,10 @@ from src.server import get_server_out, get_server_lines, send_plan, merge_soluti
 from src.state import State, Constraint, Conflict
 
 
+def log(s):
+    print(s, flush=True, file=sys.stderr)
+
+
 ## TODO ######!!!!!!!!!!!!!!!
 ## Fix hvis agenten ikke kan finde en vej til at starte med pga blok
 
@@ -86,6 +90,10 @@ def get_conflict(node: CTNode) -> Conflict:
 def sic(path_dict):
     count = 0
     for agent_path in path_dict.values():
+        # TODO WHAT THEN?
+        if agent_path is None:
+            continue
+
         count += len(agent_path)
     return count
 
@@ -100,7 +108,7 @@ def get_low_level_plan(initial_state: State, constraints=[]):
             break
 
         state = frontier.pop()
-        log(state)
+        # log(state)
 
         if state.is_goal_state():
             return state.get_solution()
@@ -114,15 +122,11 @@ def get_low_level_plan(initial_state: State, constraints=[]):
                 frontier.add(state)
 
 
-def log(s):
-    print(s, flush=True, file=sys.stderr)
-
-
 if __name__ == '__main__':
     server_out = get_server_out()
 
     # Send client name to server.
-    print('SearchClient', flush=True)
+    # print('SearchClient', flush=True)
 
     # Read level lines from server
     lines = get_server_lines(server_out)
@@ -139,7 +143,6 @@ if __name__ == '__main__':
     ## Naive solution merge
     # send_plan(server_out, merge_paths(plans))
 
-
     # Conflict based search
     open = PriorityQueue()
     open.put(CTNode(
@@ -152,7 +155,6 @@ if __name__ == '__main__':
         node: CTNode = open.get()
         conflict = get_conflict(node)
 
-        log(conflict)
         if conflict is None:
             send_plan(server_out, merge_solutions(node.solutions))
             break

@@ -36,13 +36,11 @@ class Level:
 
         # Find and update initial state goal information
         goal_state = self.__get_state(self.goal_state, agent)
-        goals = {}
+        goals = []
         for r, row in enumerate(goal_state.map):
             for c, char in enumerate(row):
-                if '0' <= char <= '9':
-                    goals[char] = [r, c]
-                if 'A' <= char <= 'Z':
-                    goals[char] = [r, c]
+                if '0' <= char <= '9' or 'A' <= char <= 'Z':
+                    goals.append([char, r, c])
 
         initial_state.goals = goals
 
@@ -62,7 +60,7 @@ class Level:
                     agent_col = ci
                     continue
                 if '0' <= char <= '9':
-                    agent_map[ri][ci] = "+"
+                    agent_map[ri][ci] = " "
                 if 'A' <= char <= 'Z':
                     if not self.color_dict[char] == agent_color:
                         agent_map[ri][ci] = " "
