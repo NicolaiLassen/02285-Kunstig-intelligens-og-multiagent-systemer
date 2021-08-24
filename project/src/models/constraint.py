@@ -1,13 +1,10 @@
-from src.models.conflict import Conflict
-from src.models.position import Position
-
 
 class Constraint:
-    def __init__(self, agent: int, position: Position, step: int, conflict: Conflict):
-        self.agent: int = agent
-        self.position: Position = position
+    def __init__(self, agent: str, position: [int, ...], step: int, conflict):
+        self.agent: str = agent
+        self.position: [int, ...] = position
         self.step: int = step
-        self.conflict: Conflict = conflict
+        self.conflict = conflict
 
     def __repr__(self):
         return "CONSTRAINT: agent: {}, position: {}, step: {}\n" \
