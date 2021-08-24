@@ -2,6 +2,7 @@ import sys
 from typing import List
 
 from src.models.action import Action
+from src.utils.log import log
 
 client_name = "46"
 
@@ -60,6 +61,7 @@ def get_path(solution: List[Action]):
 
     state = solution[solution_len - 1]
     while state.action is not None:
+        # log(state)
         plan[state.g - 1] = state.action
         state = state.parent
     return plan

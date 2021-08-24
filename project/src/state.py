@@ -44,33 +44,30 @@ class State:
         remove_index = []
         for constraint in constraints:
             c_row, c_col = constraint.position
-            if constraint.step == (self.g + 1):
-                # print(constraint, file=sys.stderr)
-
-                for i, state in enumerate(expanded_states):
-                    # print(state, file=sys.stderr)
-                    char = state.map[c_row][c_col]
-                    if char == " ":
+            for i, state in enumerate(expanded_states):
+                if constraint.step + 1 == state.g:
+                    if state.map[c_row][c_col] != " ":
                         remove_index.append(i)
+
         filtered_states = [s for i, s in enumerate(expanded_states) if i not in remove_index]
 
-        if len(constraints) == 2:
-            for constraint in constraints:
-                if constraint.step == self.g:
-                    log("!!!!!!!!!!!")
-                    log(self)
-                    log(constraint)
-
-                    log("expandend")
-                    for s in expanded_states:
-                        log(s)
-
-                    log("remove_index")
-                    log(remove_index)
-                    log("filtered")
-                    for s in filtered_states:
-                        log(s)
-                    exit()
+        # if len(constraints) == 1:
+        #     for constraint in constraints:
+        #         if constraint.step == self.g:
+        #             log("!!!!!!!!!!!")
+        #             log(self)
+        #             log(constraint)
+        #
+        #             log("expandend")
+        #             for s in expanded_states:
+        #                 log(s)
+        #
+        #             log("remove_index")
+        #             log(remove_index)
+        #             log("filtered")
+        #             for s in filtered_states:
+        #                 log(s)
+        #             # exit()
 
         return filtered_states
 

@@ -59,18 +59,18 @@ def get_conflict(node: CTNode) -> Conflict:
                     )
 
                 # CONFLICT if agent 1 follows agent 2
-                if a1s[step].agent_row == a2s[step - 1].agent_row and a1s[step].agent_col == a2s[step - 1].agent_col:
-                    return Conflict(
-                        type='follow',
-                        agent_a=str(a1),  # actor/follower
-                        agent_b=str(a2),  # passive/leader
-                        position=[a1s[step].agent_row, a1s[step].agent_col],
-                        step=step,
-                        states={
-                            str(a1): node.solutions[a1][step],
-                            str(a2): node.solutions[a2][step - 1]
-                        }
-                    )
+                # if a1s[step].agent_row == a2s[step - 1].agent_row and a1s[step].agent_col == a2s[step - 1].agent_col:
+                #     return Conflict(
+                #         type='follow',
+                #         agent_a=str(a1),  # actor/follower
+                #         agent_b=str(a2),  # passive/leader
+                #         position=[a1s[step].agent_row, a1s[step].agent_col],
+                #         step=step,
+                #         states={
+                #             str(a1): node.solutions[a1][step],
+                #             str(a2): node.solutions[a2][step - 1]
+                #         }
+                #     )
 
                 # CONFLICT if agent 2 follows agent 1
                 # if a1s[step - 1].agent_row == a2s[step].agent_row and a1s[step - 1].agent_col == a2s[step].agent_col:
@@ -127,9 +127,9 @@ def get_low_level_plan(initial_state: State, constraints=[]):
             if is_not_frontier and is_explored:
                 frontier.add(state)
 
-    log(initial_state)
-    log(constraints)
-    log("!!!!!!!!!! NO PLAN")
+    # log(initial_state)
+    # log(constraints)
+    # log("!!!!!!!!!! NO PLAN")
     # exit("!!!!!!!!!!!!! NO PLAN")
 
 
@@ -173,16 +173,9 @@ if __name__ == '__main__':
 
         for a in [conflict.agent_a, conflict.agent_b]:
             next_node = node.copy()
-            other = conflict.agent_b if a == conflict.agent_a else conflict.agent_a
+            # other = conflict.agent_b if a == conflict.agent_a else conflict.agent_a
 
-            conflict_step = conflict.step if conflict.type == 'position' \
-                else conflict.step if conflict.agent_a == a \
-                else conflict.step - 1
-
-            if conflict_step < 0:
-                continue
-
-            constraint = Constraint(a, conflict.position, conflict_step, conflict)
+            constraint = Constraint(a, conflict.position, conflict.step, conflict)
             next_node.constraints.append(constraint)
 
             # TODO use state from conflict
