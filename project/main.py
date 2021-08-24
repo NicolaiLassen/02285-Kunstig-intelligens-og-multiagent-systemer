@@ -45,15 +45,8 @@ def get_conflict(node: CTNode) -> Conflict:
                 agent_0_pos = [a0s[step].agent_row, a0s[step].agent_col]
                 agent_1_pos_prev = [a1s[step - 1].agent_row, a1s[step - 1].agent_col]
                 if agent_0_pos == agent_1_pos_prev:
-                    log('agent_0_pos: {}'.format(agent_0_pos))
-                    log('agent_1_pos_prev: {}'.format(agent_1_pos_prev))
-                    exit()
-
-                    # log("agent_1_pos: {}".format(agent_1_pos))
-                    # log("step: {}".format(step))
-                    # log("a1s[step]: {}".format(a0s[step]))
-                    # log("a2s[step -1]: {}".format(a1s[step - 1]))
-                    # exit()
+                    # log('agent_0_pos: {}'.format(agent_0_pos))
+                    # log('agent_1_pos_prev: {}'.format(agent_1_pos_prev))
                     return Conflict(
                         type='follow',
                         agent_a=str(a0),  # actor/follower
@@ -146,14 +139,23 @@ if __name__ == '__main__':
 
     # Conflict based search
     open = PriorityQueue()
+    explored = set()
+
     open.put(CTNode(
         constraints=[],
         solutions=solutions,
         cost=sic(solutions)
     ))
 
+    counter = 0
     while not open.empty():
+
         node: CTNode = open.get()
+        counter += 1
+
+        if counter > 1:
+            log(node.solutions)
+
         conflict = get_conflict(node)
 
         # log(conflict)
@@ -165,7 +167,12 @@ if __name__ == '__main__':
             next_node = node.copy()
             # other = conflict.agent_b if a == conflict.agent_a else conflict.agent_a
 
-            step = conflict.step if conflict.type == 'position' else conflict.step if conflict.agent_a == a else conflict.step - 1
+            if conflict.type == 'follow' and a != conflict.agent_a:
+                continue
+
+            step = conflict.step if conflict.type == 'position' \
+                else conflict.step if conflict.agent_a == a \
+                else conflict.step - 1
 
             constraint = Constraint(a, conflict.position, step, conflict)
             next_node.constraints.append(constraint)

@@ -38,14 +38,14 @@ class State:
 
         remove_index = []
         for constraint in constraints:
-            log(constraint)
+            # log(constraint)
             c_row, c_col = constraint.position
             for i, state in enumerate(expanded_states):
-                log(state)
+                # log(state)
                 if constraint.step == state.g:
                     if state.map[c_row][c_col] != " ":
                         remove_index.append(i)
-            log(remove_index)
+            # log(remove_index)
             # exit()
         filtered_states = [s for i, s in enumerate(expanded_states) if i not in remove_index]
 
@@ -217,6 +217,9 @@ class State:
         return self.f < other.f
 
     def __eq__(self, other: 'State'):
+        if self.g != other.g:
+            return False
+
         for i, row in enumerate(self.map):
             for j, char in enumerate(row):
                 if not char == other.map[i][j]:
