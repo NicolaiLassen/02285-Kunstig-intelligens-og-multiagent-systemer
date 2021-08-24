@@ -1,28 +1,34 @@
+import sys
 from copy import deepcopy
 from typing import List
 
 from src.action import ActionType, Action
-from src.position import Position
 
 
 class Constraint:
-    def __init__(self, agent, state, other_state, t):
+    def __init__(self, agent, position, step, conflict):
         self.agent: int = agent
-        self.state: State = state
-        self.other_state: State = other_state
-        self.t = t
+        self.position = position
+        self.step = step
+        self.conflict = conflict
+
+    def __repr__(self):
+        return "CONSTRAINT: agent: {}, position: {}, step: {}\n" \
+            .format(self.agent, self.position, self.step)
 
 
 class Conflict:
-    def __init__(self, agents, states, position, step):
-        self.agents: [int] = agents
+    def __init__(self, type, agent_a, agent_b, states, position, step):
+        self.type = type
+        self.agent_a = agent_a
+        self.agent_b = agent_b
         self.states = states
         self.position = position
         self.step = step
 
     def __repr__(self):
-        return 'Conflict!\nAgent: {} v {}\nPosition: {},{} step: {}\n' \
-            .format(self.agents[0], self.agents[1], self.position[0], self.position[1], self.step)
+        return 'CONFLICT: agent: {} v {}, position: {},  step: {}\n' \
+            .format(self.agent_a, self.agent_b, self.position, self.step)
 
 
 class State:
@@ -30,7 +36,6 @@ class State:
 
     map: List[List[str]]
     agent: str
-    agent_pos: Position
     goals: List  # [[char,row,col], [char,row,col]]
 
     action: Action = None
@@ -65,13 +70,28 @@ class State:
         expanded_states = [self.act(action) for action in applicable_actions]
 
         remove_index = []
-        for i, s in enumerate(expanded_states):
+        if len(constraints) != 0:
             for constraint in constraints:
-                if constraint.t != self.g:
-                    continue
-                if s == constraint.state:
-                    remove_index.append(i)
+                c_row = constraint.position[0]
+                c_col = constraint.position[1]
+                if constraint.step == self.g:
+                    print(constraint, file=sys.stderr)
+
+                    for i, state in enumerate(expanded_states):
+                        print(state, file=sys.stderr)
+                        char = state.map[c_row][c_col]
+                        if char == " ":
+                            remove_index.append(i)
         filtered_states = [s for i, s in enumerate(expanded_states) if i not in remove_index]
+
+        # remove_index = []
+        # for i, s in enumerate(expanded_states):
+        #     for constraint in constraints:
+        #         if constraint.step != self.g:
+        #             continue
+        #         if s == constraint.conflict.states[self.agent]:
+        #             remove_index.append(i)
+        # filtered_states = [s for i, s in enumerate(expanded_states) if i not in remove_index]
 
         return filtered_states
 
@@ -134,12 +154,8 @@ class State:
 
     def get_heuristic(self):
 
-        # return 0
-        # Goal count
-        return self.get_missing_goal_count()
-
-        # Max manhatten distance to goal
-        # return self.get_max_manhatten_dist()
+        # return self.get_missing_goal_count()
+        return self.get_max_manhatten_dist()
 
     def get_missing_goal_count(self):
         counter = 0
@@ -148,17 +164,16 @@ class State:
                 counter += 1
         return len(self.goals) - counter
 
-        # def get_max_manhatten_dist(self):
-
-    #     max_dist = 0
-    #     for r, row in enumerate(self.map):
-    #         for c, char in enumerate(row):
-    #             if char not in self.goals:
-    #                 continue
-    #             g_row, g_col = self.goals[char]
-    #             dist = abs(r - g_row) + abs(c - g_col)
-    #             max_dist = max(max_dist, dist)
-    #     return max_dist
+    def get_max_manhatten_dist(self):
+        max_dist = 0
+        for r, row in enumerate(self.map):
+            for c, char in enumerate(row):
+                for g_char, g_r, g_c in self.goals:
+                    if char != g_char:
+                        continue
+                    dist = abs(r - g_r) + abs(c - g_c)
+                    max_dist = max(max_dist, dist)
+        return max_dist
 
     def is_applicable(self, action: Action) -> bool:
         agent_row = self.agent_row

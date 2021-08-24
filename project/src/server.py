@@ -44,7 +44,10 @@ def send_plan(server_out, plan: List[List[Action]]):
 def get_max_path_len(path_dict):
     max_path_len = 0
     for agent in path_dict.keys():
-        path_len = len(path_dict[agent])
+        agent_path = path_dict[agent]
+        if agent_path is None:
+            continue
+        path_len = len(agent_path)
         max_path_len = path_len if path_len >= max_path_len else max_path_len
     return max_path_len
 

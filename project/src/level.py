@@ -11,6 +11,7 @@ class Level:
     color_dict: dict
     initial_state: List[List[str]]
     goal_state: List[List[str]]
+    wall_count: int
 
     def __init__(
             self,
@@ -20,6 +21,7 @@ class Level:
             color_dict: Dict[str, str],
             initial_state: List[List[str]],
             goal_state: List[List[str]],
+            wall_count: int
     ) -> None:
         self.rows_n = rows_n
         self.cols_n = cols_n
@@ -27,6 +29,7 @@ class Level:
         self.color_dict = color_dict
         self.initial_state = initial_state
         self.goal_state = goal_state
+        self.wall_count = wall_count
 
     def __repr__(self):
         return self.initial_state.__str__()

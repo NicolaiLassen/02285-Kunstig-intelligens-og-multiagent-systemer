@@ -29,6 +29,12 @@ def parse_level(file_lines: List[str]):
     rows_n = len(initial_lines)
     cols_n = len(initial_lines[0])
 
+    wall_count = 0
+    for r, row in enumerate(initial_state):
+        for c, char in enumerate(row):
+            if char == "+":
+                wall_count += 1
+
     return Level(
         rows_n=rows_n,
         cols_n=cols_n,
@@ -36,6 +42,7 @@ def parse_level(file_lines: List[str]):
         color_dict=color_dict,
         initial_state=initial_state,
         goal_state=goal_state,
+        wall_count=wall_count
     )
 
 

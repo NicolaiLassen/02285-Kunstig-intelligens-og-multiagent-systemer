@@ -50,16 +50,12 @@ def get_conflict(node: CTNode) -> Conflict:
                 if a2s[step].action is ActionType.NoOp:
                     continue
 
-                if a1s[step].action.type is ActionType.Push:
-                    log("STEP {} ------------".format(step))
-                    log(a1s[step])
-                    log(a2s[step])
-                    log("")
-
-                # CONFLICT if box position is the same
-                if a1s[step].box_row() == a2s[step].agent_row and a1s[step].box_col() == a2s[step].agent_col:
+                # CONFLICT if agent 1 and agent 2 is at same position
+                if a1s[step].agent_row == a2s[step].agent_row and a1s[step].agent_col == a2s[step].agent_col:
                     return Conflict(
-                        agents=[str(a1), str(a2)],
+                        type='position',
+                        agent_a=str(a1),
+                        agent_b=str(a2),
                         position=[a1s[step].agent_row, a1s[step].agent_col],
                         step=step,
                         states={
@@ -68,14 +64,30 @@ def get_conflict(node: CTNode) -> Conflict:
                         }
                     )
 
-                # CONFLICT if agent 1 and agent 2 is at same position
-                if a1s[step].agent_row == a2s[step].agent_row and a1s[step].agent_col == a2s[step].agent_col:
+                # CONFLICT if agent 1 follows agent 2
+                if a1s[step].agent_row == a2s[step - 1].agent_row and a1s[step].agent_col == a2s[step - 1].agent_col:
                     return Conflict(
-                        agents=[str(a1), str(a2)],
+                        type='follow',
+                        agent_a=str(a1),
+                        agent_b=str(a2),
                         position=[a1s[step].agent_row, a1s[step].agent_col],
                         step=step,
                         states={
                             str(a1): node.solutions[a1][step],
+                            str(a2): node.solutions[a2][step - 1]
+                        }
+                    )
+
+                # CONFLICT if agent 2 follows agent 1
+                if a1s[step - 1].agent_row == a2s[step].agent_row and a1s[step - 1].agent_col == a2s[step].agent_col:
+                    return Conflict(
+                        type='follow',
+                        agent_a=str(a2),
+                        agent_b=str(a1),
+                        position=[a2s[step].agent_row, a2s[step].agent_col],
+                        step=step,
+                        states={
+                            str(a1): node.solutions[a1][step - 1],
                             str(a2): node.solutions[a2][step]
                         }
                     )
@@ -121,6 +133,11 @@ def get_low_level_plan(initial_state: State, constraints=[]):
             if is_not_frontier and is_explored:
                 frontier.add(state)
 
+    log(initial_state)
+    log(constraints)
+    log("!!!!!!!!!! NO PLAN")
+    # exit("!!!!!!!!!!!!! NO PLAN")
+
 
 if __name__ == '__main__':
     server_out = get_server_out()
@@ -155,18 +172,32 @@ if __name__ == '__main__':
         node: CTNode = open.get()
         conflict = get_conflict(node)
 
+        log(conflict)
         if conflict is None:
             send_plan(server_out, merge_solutions(node.solutions))
             break
 
-        for a in conflict.agents:
+        for a in [conflict.agent_a, conflict.agent_b]:
             next_node = node.copy()
-            other = [e for e in conflict.agents if e != a][0]
-            next_node.constraints.append(Constraint(a, conflict.states[a], conflict.states[other], conflict.step))
+            other = conflict.agent_b if a == conflict.agent_a else conflict.agent_a
+
+            conflict_step = conflict.step if conflict.type == 'position' \
+                else conflict.step if conflict.agent_a == a \
+                else conflict.step - 1
+
+            if conflict_step < 0:
+                continue
+
+            constraint = Constraint(a, conflict.position, conflict_step, conflict)
+            next_node.constraints.append(constraint)
+
+            # TODO use state from conflict
             solution = get_low_level_plan(level.get_agent_state(a), constraints=next_node.constraints)
-            next_node.solutions[int(a)] = solution
-            next_node.cost = sic(next_node.solutions)
-            open.put(next_node)
+
+            if solution is not None:
+                next_node.solutions[int(a)] = solution
+                next_node.cost = sic(next_node.solutions)
+                open.put(next_node)
 
             # log(node.solutions)
             # send_plan(server_out, merge_paths(node.solutions))
