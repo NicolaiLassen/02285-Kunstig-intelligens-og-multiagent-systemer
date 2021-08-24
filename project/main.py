@@ -45,8 +45,6 @@ def get_conflict(node: CTNode) -> Conflict:
                 agent_0_pos = [a0s[step].agent_row, a0s[step].agent_col]
                 agent_1_pos_prev = [a1s[step - 1].agent_row, a1s[step - 1].agent_col]
                 if agent_0_pos == agent_1_pos_prev:
-                    # log('agent_0_pos: {}'.format(agent_0_pos))
-                    # log('agent_1_pos_prev: {}'.format(agent_1_pos_prev))
                     return Conflict(
                         type='follow',
                         agent_a=str(a0),  # actor/follower
@@ -56,22 +54,16 @@ def get_conflict(node: CTNode) -> Conflict:
                     )
 
                 # CONFLICT if agent 2 follows agent 1
-                # if a1s[step - 1].agent_row == a2s[step].agent_row and a1s[step - 1].agent_col == a2s[step].agent_col:
-                #     return Conflict(
-                #         type='follow',
-                #         agent_a=str(a2),
-                #         agent_b=str(a1),
-                #         position=[a2s[step].agent_row, a2s[step].agent_col],
-                #         step=step,
-                #         states={
-                #             str(a1): node.solutions[a1][step - 1],
-                #             str(a2): node.solutions[a2][step]
-                #         }
-                #     )
-
-                # is moving same box
-                # if box_rows[a1] == box_rows[a2] and box_cols[a1] == box_cols[a2]:
-                #     return Conflict([a1, a2], node.solution_nodes[a1][step].g)
+                agent_1_pos = [a1s[step].agent_row, a1s[step].agent_col]
+                agent_0_pos_prev = [a0s[step - 1].agent_row, a0s[step - 1].agent_col]
+                if agent_1_pos == agent_0_pos_prev:
+                    return Conflict(
+                        type='follow',
+                        agent_a=str(a1),  # actor/follower
+                        agent_b=str(a0),  # passive/leader
+                        position=agent_1_pos,
+                        step=step,
+                    )
 
     return None
 
