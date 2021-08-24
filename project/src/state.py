@@ -2,33 +2,8 @@ import sys
 from copy import deepcopy
 from typing import List
 
-from src.action import ActionType, Action
-
-
-class Constraint:
-    def __init__(self, agent, position, step, conflict):
-        self.agent: int = agent
-        self.position = position
-        self.step = step
-        self.conflict = conflict
-
-    def __repr__(self):
-        return "CONSTRAINT: agent: {}, position: {}, step: {}\n" \
-            .format(self.agent, self.position, self.step)
-
-
-class Conflict:
-    def __init__(self, type, agent_a, agent_b, states, position, step):
-        self.type = type
-        self.agent_a = agent_a
-        self.agent_b = agent_b
-        self.states = states
-        self.position = position
-        self.step = step
-
-    def __repr__(self):
-        return 'CONFLICT: agent: {} v {}, position: {},  step: {}\n' \
-            .format(self.agent_a, self.agent_b, self.position, self.step)
+from src.models.action import Action, ActionType
+from src.models.constraint import Constraint
 
 
 class State:

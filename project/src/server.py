@@ -1,7 +1,7 @@
 import sys
 from typing import List
 
-from src.action import Action
+from src.models.action import Action
 
 client_name = "46"
 
