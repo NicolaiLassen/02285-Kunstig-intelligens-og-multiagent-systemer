@@ -1,22 +1,15 @@
-import sys
 from queue import PriorityQueue
 from typing import Dict, List
 
+from src.frontier import FrontierBestFirst
 from src.models.action import ActionType
+from src.models.conflict import Conflict
+from src.models.constraint import Constraint
+from src.models.ct_node import CTNode
 from src.parse_level import parse_level
 from src.server import get_server_out, get_server_lines, send_plan, merge_solutions, get_max_path_len
 from src.state import State
-from src.frontier import FrontierBestFirst
-from src.models.constraint import Constraint
-from src.models.ct_node import CTNode
-from src.models.conflict import Conflict
-
-def log(s):
-    print(s, flush=True, file=sys.stderr)
-
-
-## TODO ######!!!!!!!!!!!!!!!
-## Fix hvis agenten ikke kan finde en vej til at starte med pga blok
+from src.utils.log import log
 
 
 def get_conflict(node: CTNode) -> Conflict:
