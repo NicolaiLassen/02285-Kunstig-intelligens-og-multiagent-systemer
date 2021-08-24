@@ -14,5 +14,5 @@ class Conflict:
         self.step: int = step
 
     def __repr__(self):
-        return 'CONFLICT: agent: {} v {}, position: {},  step: {}\n' \
-            .format(self.agent_a, self.agent_b, self.position, self.step)
+        return 'CONFLICT: type: {}, agent: {} v {}, position: {},  step: {}\n' \
+            .format(self.type, self.agent_a, self.agent_b, self.position, self.step)

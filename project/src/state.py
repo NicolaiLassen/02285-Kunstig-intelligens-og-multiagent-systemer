@@ -1,9 +1,9 @@
-import sys
 from copy import deepcopy
 from typing import List
 
 from src.models.action import Action, ActionType
 from src.models.constraint import Constraint
+from src.utils.log import log
 
 
 class State:
@@ -44,22 +44,33 @@ class State:
         remove_index = []
         for constraint in constraints:
             c_row, c_col = constraint.position
-            if constraint.step == self.g:
-                print(constraint, file=sys.stderr)
+            if constraint.step == (self.g + 1):
+                # print(constraint, file=sys.stderr)
 
                 for i, state in enumerate(expanded_states):
-                    print(state, file=sys.stderr)
+                    # print(state, file=sys.stderr)
                     char = state.map[c_row][c_col]
                     if char == " ":
                         remove_index.append(i)
         filtered_states = [s for i, s in enumerate(expanded_states) if i not in remove_index]
 
         if len(constraints) == 2:
-            print(constraints, file=sys.stderr)
-            for s in filtered_states:
-                print(s, file=sys.stderr)
+            for constraint in constraints:
+                if constraint.step == self.g:
+                    log("!!!!!!!!!!!")
+                    log(self)
+                    log(constraint)
 
-            exit()
+                    log("expandend")
+                    for s in expanded_states:
+                        log(s)
+
+                    log("remove_index")
+                    log(remove_index)
+                    log("filtered")
+                    for s in filtered_states:
+                        log(s)
+                    exit()
 
         return filtered_states
 
@@ -84,9 +95,9 @@ class State:
         next_state.agent_col = next_agent_col
 
         # Update level matrices and agent pos
-        if action.type is ActionType.NoOp:
-            return next_state
-        elif action.type is ActionType.Move:
+        # if action.type is ActionType.NoOp:
+        #     return next_state
+        if action.type is ActionType.Move:
             next_state.map[next_agent_row][next_agent_col] = agent_value
             next_state.map[prev_agent_row][prev_agent_col] = " "
 

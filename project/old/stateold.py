@@ -48,9 +48,9 @@ class StateOld:
         next_state.agents[index] = np.asarray([next_agent_row, next_agent_col])
 
         # Update level matrices and agent pos
-        if action.type is ActionType.NoOp:
-            return next_state
-        elif action.type is ActionType.Move:
+        # if action.type is ActionType.NoOp:
+        #     2+2
+        if action.type is ActionType.Move:
             next_state.map[next_agent_row][next_agent_col] = agent_value
             next_state.map[prev_agent_row][prev_agent_col] = self.free_value
 
