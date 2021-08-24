@@ -5,14 +5,6 @@ from src.state import State
 
 
 class Level:
-    rows_n: int
-    cols_n: int
-    agents_n: int
-    color_dict: dict
-    initial_state: List[List[str]]
-    goal_state: List[List[str]]
-    wall_count: int
-
     def __init__(
             self,
             rows_n: int,
@@ -23,13 +15,13 @@ class Level:
             goal_state: List[List[str]],
             wall_count: int
     ) -> None:
-        self.rows_n = rows_n
-        self.cols_n = cols_n
-        self.agents_n = agents_n
-        self.color_dict = color_dict
-        self.initial_state = initial_state
-        self.goal_state = goal_state
-        self.wall_count = wall_count
+        self.rows_n: int = rows_n
+        self.cols_n: int = cols_n
+        self.agents_n: int = agents_n
+        self.color_dict: Dict[str, str] = color_dict
+        self.initial_state: List[List[str]] = initial_state
+        self.goal_state: List[List[str]] = goal_state
+        self.wall_count: int = wall_count
 
     def __repr__(self):
         return self.initial_state.__str__()
