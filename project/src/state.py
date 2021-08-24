@@ -37,12 +37,15 @@ class State:
 
         remove_index = []
         for constraint in constraints:
+            log(constraint)
             c_row, c_col = constraint.position
             for i, state in enumerate(expanded_states):
-                if constraint.step + 1 == state.g:
+                log(state)
+                if constraint.step == state.g:
                     if state.map[c_row][c_col] != " ":
                         remove_index.append(i)
-
+            log(remove_index)
+            # exit()
         filtered_states = [s for i, s in enumerate(expanded_states) if i not in remove_index]
 
         # if len(constraints) == 1:
