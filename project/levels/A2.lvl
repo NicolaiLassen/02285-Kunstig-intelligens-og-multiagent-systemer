@@ -4,12 +4,12 @@ hospital
 A2
 #colors
 blue: 0, A
-red: 1, B
+red: 1, 2, B
 #initial
 ++++
 +0 +
 +  +
-+  +
++2 +
 +  +
 +  +
 +  +
@@ -22,7 +22,7 @@ red: 1, B
 +  +
 +  +
 +  +
-+  +
++2 +
 +0 +
 ++++
 #end

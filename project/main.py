@@ -51,11 +51,7 @@ def get_conflict(node: CTNode) -> Conflict:
                         agent_a=str(a1),
                         agent_b=str(a2),
                         position=[a1s[step].agent_row, a1s[step].agent_col],
-                        step=step,
-                        states={
-                            str(a1): node.solutions[a1][step],
-                            str(a2): node.solutions[a2][step]
-                        }
+                        step=step
                     )
 
                 # CONFLICT if agent 1 follows agent 2
