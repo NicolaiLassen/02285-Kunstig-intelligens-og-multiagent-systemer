@@ -9,17 +9,11 @@ from src.utils.log import log
 class State:
     _hash: int = None
 
-    map: List[List[str]]
-    agent: str
     goals: List  # [[char,row,col], [char,row,col]]
-
     action: Action = None
     parent: 'State'
-    g: int
-    h: int
-    f: int
 
-    def __init__(self, map, agent, agent_row, agent_col):
+    def __init__(self, map: List[List[str]], agent: str, agent_row: int, agent_col: int):
         self.map = map
         self.agent = agent
         self.agent_row = agent_row
@@ -28,7 +22,7 @@ class State:
         self.h = 0
         self.f = self.g + self.h
 
-    def get_solution(self) -> '[AState, ...]':
+    def get_solution(self) -> '[State, ...]':
         plan = [None for _ in range(self.g)]
         state = self
         while state.action is not None:
@@ -70,7 +64,7 @@ class State:
                     log("filtered")
                     for s in filtered_states:
                         log(s)
-                    exit()
+                    # exit()
 
         return filtered_states
 
@@ -213,6 +207,7 @@ class State:
         if self._hash is None:
             prime = 31
             _hash = 1
+            _hash = _hash * prime + self.agent_row * 23 + self.agent_col * 29 * (int(self.agent))
             _hash = _hash * prime + hash(tuple(tuple(row) for row in self.map))
             self._hash = _hash
         return self._hash
