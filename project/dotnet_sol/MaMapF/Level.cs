@@ -33,6 +33,7 @@ namespace MaMapF
                     if (c == agent)
                     {
                         agentPosition = new Position(row, col);
+                        continue;
                     }
 
                     if (char.IsDigit(c))
