@@ -43,6 +43,31 @@ namespace MaMapF
             return false;
         }
 
+
+        public static List<SingleAgentState> ExpandSingleAgentState(SingleAgentState state)
+        {
+            var states = new List<SingleAgentState>();
+            foreach (var action in Action.AllActions)
+            {
+                if ()
+            }
+        }
+
+        public static bool IsActionValid(SingleAgentState state, Action action)
+        {
+            if (action.Type == ActionType.NoOp)
+            {
+                return true;
+            }
+
+            if (action.Type == ActionType.Move)
+            {
+                var nextAgentPosition = state.AgentPosition.Next(action.AgentRowDelta, action.AgentColumnDelta);
+                return state.IsFree(nextAgentPosition);
+            }
+        }
+
+
         public static List<SingleAgentState> GetSingleAgentSolutionFromState(SingleAgentState goal)
         {
             var solution = new List<SingleAgentState>();
@@ -57,33 +82,5 @@ namespace MaMapF
             solution.Insert(0, state);
             return solution;
         }
-
-        public static List<SingleAgentState> ExpandSingleAgentState(SingleAgentState state)
-        {
-            return new List<SingleAgentState>();
-        }
     }
 }
-
-
-// def get_low_level_plan(initial_state: State, constraints=[]):
-// frontier = FrontierBestFirst()
-// explored = set()
-//
-// frontier.add(initial_state)
-// while True:
-// if frontier.is_empty():
-// break
-//
-// state = frontier.pop()
-//
-// if state.is_goal_state():
-// return state.get_solution()
-//
-// explored.add(state)
-//
-// for state in state.expand_state(constraints):
-// is_not_frontier = not frontier.contains(state)
-// is_explored = state not in explored
-// if is_not_frontier and is_explored:
-// frontier.add(state)
