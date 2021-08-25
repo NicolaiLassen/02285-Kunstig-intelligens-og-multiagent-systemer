@@ -12,10 +12,7 @@ namespace MaMapF
         public CBSHandler(Level level)
         {
             Level = level;
-            LowLevelSearch = new LowLevelSearch
-            {
-                Level = level
-            };
+            LowLevelSearch = new LowLevelSearch(level);
         }
 
 
@@ -59,7 +56,7 @@ namespace MaMapF
 
                     c.Constraints.Add(constraint);
                     // var solution = search
-                    
+
                     var solution = LowLevelSearch.GetSingleAgentPlan(agent, new List<Constraint>());
                     // TODO
                     // if (solution == null || solution == c.Solutions)

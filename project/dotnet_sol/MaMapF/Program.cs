@@ -17,9 +17,8 @@ namespace MaMapF
         static void SingleAgent()
         {
             var level = ServerHandler.GetServerLevel();
-            var lowLevel = new LowLevelSearch {Level = level};
-            var initialState = level.GetInitialState('0');
-            var plan = lowLevel.GetSingleAgentPlan(initialState, new List<Constraint>());
+            var lowLevel = new LowLevelSearch(level);
+            var plan = lowLevel.GetSingleAgentPlan('0', new List<Constraint>());
             ServerHandler.SendServerPlan(plan);
         }
     }
