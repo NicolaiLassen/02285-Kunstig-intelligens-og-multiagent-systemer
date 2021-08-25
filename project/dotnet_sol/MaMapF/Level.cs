@@ -69,9 +69,44 @@ namespace MaMapF
 
         public float GetHeuristic(SingleAgentState state)
         {
+            var f = state.G;
+            var boxGoals = Goals[state.Agent].Where(goal => goal.Item != state.Agent);
+
+
+            // Add max box distance
+
+            var maxBoxDistance = 0;
+            for (var row = 0; row < state.Map.Count; row++)
+            {
+                for (var col = 0; col < state.Map[row].Count; col++)
+                {
+                    var c = state.Map[row][col];
+                    foreach (var boxGoal in boxGoals)
+                    {
+                        if (c == boxGoal.Item)
+                        {
+                            var dist = Math.Abs(row - boxGoal.Row) + Math.Abs(col - boxGoal.Column);
+                            maxBoxDistance = Math.Max(maxBoxDistance, dist);
+                        }
+                    }
+                }
+            }
+
+
+            // Add manhatten distance to agent goal
+            var agentGoal = Goals[state.Agent].FirstOrDefault(goal => goal.Item == state.Agent);
+            if (agentGoal != null)
+            {
+                var dist = Math.Abs(agentGoal.Row - state.AgentPosition.Row) +
+                           Math.Abs(agentGoal.Column - state.AgentPosition.Column);
+                f += dist;
+            }
+
+            return f;
+
             // var h = GetHeuristicGoalCount(state);
-            var h = GetHeuristicMaxManhattenDist(state);
-            return h + state.G;
+            // var h = GetHeuristicMaxManhattenDist(state);
+            // return h + state.G;
         }
 
         public int GetHeuristicGoalCount(SingleAgentState state)
