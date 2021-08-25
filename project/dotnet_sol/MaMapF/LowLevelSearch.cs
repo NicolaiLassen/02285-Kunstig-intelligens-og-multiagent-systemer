@@ -10,7 +10,7 @@ namespace MaMapF
     public class LowLevelSearch
     {
         public Level Level { get; set; }
-        
+
         public List<SingleAgentState> GetSingleAgentPlan(
             SingleAgentState initialState,
             List<Constraint> constraints
@@ -23,10 +23,9 @@ namespace MaMapF
 
             while (frontier.Count != 0)
             {
-                
                 var state = frontier.Dequeue();
                 explored.Add(state);
-                
+
                 Console.Error.WriteLine(frontier.Count);
 
                 if (Level.IsAgentGoalState(state))
@@ -114,7 +113,7 @@ namespace MaMapF
 
             // CALC LATER hmmmm
             nextState.H = 0;
-            
+
             // Console.Error.WriteLine(nextState);
 
             return nextState;
@@ -164,7 +163,7 @@ namespace MaMapF
 
             return false;
         }
-        
+
         public static List<SingleAgentState> GetSingleAgentSolutionFromState(SingleAgentState goal)
         {
             var solution = new List<SingleAgentState>();

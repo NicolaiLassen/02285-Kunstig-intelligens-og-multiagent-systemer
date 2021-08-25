@@ -6,7 +6,7 @@ using MaMapF.Models;
 
 namespace MaMapF
 {
-    public class ParserHandler
+    public class ServerHandler
     {
         private const string CLIENT_NAME = "client46";
 
