@@ -89,7 +89,6 @@ def get_low_level_plan(initial_state: State, constraints=[]):
             break
 
         state = frontier.pop()
-        # log(state)
 
         if state.is_goal_state():
             return state.get_solution()
