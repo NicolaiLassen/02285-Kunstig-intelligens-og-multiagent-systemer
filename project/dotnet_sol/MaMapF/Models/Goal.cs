@@ -1,6 +1,6 @@
 ﻿namespace MaMapF.Models
 {
-    public class Goal : IPosition
+    public class Goal
     {
         public char Item { get; set; }
         public int Row { get; set; }

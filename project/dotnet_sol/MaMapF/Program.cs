@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using MaMapF.Models;
 
 namespace MaMapF
@@ -11,11 +10,9 @@ namespace MaMapF
             var level = ParserHandler.GetServerLevel();
 
             var initialState = level.GetAgentInitialState('0');
-            var plan = LowLevelSearch.GetSingleAgentPlan(initialState, new List<Constraint>());
-            
+            var plan = LowLevelSearch.GetSingleAgentPlan(level, initialState, new List<Constraint>());
+
             ParserHandler.SendServerPlan(plan);
-
-
         }
     }
 }

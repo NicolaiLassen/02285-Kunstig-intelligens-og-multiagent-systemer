@@ -53,6 +53,7 @@ namespace MaMapF
             {
                 G = 0,
                 Map = map,
+                Agent = agent,
                 AgentPosition = agentPosition
             };
         }

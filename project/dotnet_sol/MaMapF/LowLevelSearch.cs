@@ -10,6 +10,7 @@ namespace MaMapF
     public class LowLevelSearch
     {
         public static List<SingleAgentState> GetSingleAgentPlan(
+            Level level,
             SingleAgentState initialState,
             List<Constraint> constraints
         )
@@ -26,7 +27,7 @@ namespace MaMapF
                 
                 Console.Error.WriteLine(state);
 
-                if (IsGoalState(state))
+                if (level.IsAgentGoalState(state))
                 {
                     return GetSingleAgentSolutionFromState(state);
                 }
@@ -34,7 +35,9 @@ namespace MaMapF
                 var expandedStates = ExpandSingleAgentState(state, constraints);
                 foreach (var s in expandedStates)
                 {
-                    if (!explored.Contains(s) && !frontier.Contains(s))
+                    var isNotFrontier = !frontier.Contains(s);
+                    var isNotExplored = !explored.Contains(s);
+                    if (isNotFrontier && isNotExplored)
                     {
                         frontier.Enqueue(s, s.F);
                     }
@@ -44,13 +47,6 @@ namespace MaMapF
 
             return null;
         }
-
-
-        public static bool IsGoalState(SingleAgentState state)
-        {
-            return false;
-        }
-
 
         public static List<SingleAgentState> ExpandSingleAgentState(SingleAgentState state,
             List<Constraint> constraints)
@@ -111,11 +107,10 @@ namespace MaMapF
                 nextState.Map[boxPosition.Row][boxPosition.Column] = ' ';
             }
 
-
             nextState.G = state.G + 1;
             nextState.H = 0;
 
-            return state;
+            return nextState;
         }
 
         public static bool BreaksConstraint(SingleAgentState state, List<Constraint> constraints)

@@ -76,8 +76,9 @@ namespace MaMapF
         {
             foreach (var state in plan)
             {
-                Console.WriteLine($"[{state.Action}]");
+                Console.WriteLine($"{state.Action}");
             }
+            // Console.WriteLine();
         }
         
         private static List<string> GetServerOut()
