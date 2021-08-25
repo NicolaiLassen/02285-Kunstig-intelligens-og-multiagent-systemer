@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MaMapF.Models
+﻿namespace MaMapF.Models
 {
     public class Position
     {
@@ -31,8 +29,15 @@ namespace MaMapF.Models
             return $"{Row},{Column}";
         }
 
-        public override int GetHashCode() => HashCode.Combine(Row, Column);
+        public override int GetHashCode() => 31 * Row + 29 * Column;
 
+
+        public bool Equals(Position other)
+        {
+            return Row == other.Row && Column == other.Column;
+        }
+
+        
         public override bool Equals(object obj)
         {
             if (obj == null) return false;

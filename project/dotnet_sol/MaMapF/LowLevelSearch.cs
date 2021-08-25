@@ -22,6 +22,7 @@ namespace MaMapF
 
             while (frontier.Count != 0)
             {
+                
                 var state = frontier.Dequeue();
                 explored.Add(state);
 

@@ -43,7 +43,7 @@ namespace MaMapF.Models
         {
             if (obj == null) return false;
             if (!(obj is SingleAgentState other)) return false;
-            if (AgentPosition != other.AgentPosition) return false;
+            // if (AgentPosition.Row != other.AgentPosition.Row && AgentPosition.Column != other.AgentPosition.Column) return false;
 
             for (var row = 0; row < Map.Count; row++)
             {
