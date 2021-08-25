@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using MaMapF.Models;
 using Priority_Queue;
+using Action = MaMapF.Models.Action;
 
 namespace MaMapF
 {
@@ -22,8 +24,6 @@ namespace MaMapF
             {
                 var state = frontier.Dequeue();
                 explored.Add(state);
-
-                // Console.Error.WriteLine(state);
 
                 if (level.IsAgentGoalState(state))
                 {
@@ -108,6 +108,8 @@ namespace MaMapF
 
             nextState.G = state.G + 1;
             nextState.H = 0;
+            
+            // Console.Error.WriteLine(nextState);
 
             return nextState;
         }
@@ -156,8 +158,7 @@ namespace MaMapF
 
             return false;
         }
-
-
+        
         public static List<SingleAgentState> GetSingleAgentSolutionFromState(SingleAgentState goal)
         {
             var solution = new List<SingleAgentState>();

@@ -17,8 +17,6 @@ namespace MaMapF.Models
         public int F => G + H;
 
 
-
-        
         public override string ToString()
         {
             var info = $"Agent: {Agent} | Position {AgentPosition} | Step: {G} \n{Action}";
@@ -29,16 +27,15 @@ namespace MaMapF.Models
         public bool IsFree(Position position) => Map[position.Row][position.Column] == ' ';
         public bool IsBox(Position position) => char.IsLetter(Map[position.Row][position.Column]);
 
-        
+
         public override int GetHashCode()
         {
             if (Hash != -1) return Hash;
 
             var prime = 31;
             var hash = prime + (AgentPosition.Row + 1) * 23 + (AgentPosition.Column + 1) * 29;
-            hash = hash * prime + Map.Sum(row => row.GetHashCode());
+            hash = hash * prime + Map.Sum(row => row.Sum(c => c.GetHashCode()));
             Hash = hash;
-
             return Hash;
         }
 
@@ -46,7 +43,6 @@ namespace MaMapF.Models
         {
             if (obj == null) return false;
             if (!(obj is SingleAgentState other)) return false;
-            if (G != other.G) return false;
             if (AgentPosition != other.AgentPosition) return false;
 
             for (var row = 0; row < Map.Count; row++)
@@ -62,6 +58,5 @@ namespace MaMapF.Models
 
             return true;
         }
-
     }
 }
