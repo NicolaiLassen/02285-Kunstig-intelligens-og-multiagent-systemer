@@ -66,22 +66,22 @@ namespace MaMapF
                 {
                     var c = p.Copy();
                     var constraint = GetConstraint(agent, conflict);
-                    if (constraint == null)
-                    {
-                        Console.Error.WriteLine("Constraint == null");
-                        Environment.Exit(0);
-                    }
+                    // if (constraint == null)
+                    // {
+                    //     Console.Error.WriteLine("Constraint == null");
+                    //     Environment.Exit(0);
+                    // }
 
                     // TODO - check shit
 
                     c.Constraints.Add(constraint);
 
                     var solution = LowLevelSearch.GetSingleAgentPlan(agent, p.Constraints);
-                    if (solution == null)
-                    {
-                        Console.Error.WriteLine("456645645645645645");
-                        Environment.Exit(0);
-                    }
+                    // if (solution == null)
+                    // {
+                    //     Console.Error.WriteLine("456645645645645645");
+                    //     Environment.Exit(0);
+                    // }
 
                     if (solution == null || solution == c.Solutions[agent])
                     {
