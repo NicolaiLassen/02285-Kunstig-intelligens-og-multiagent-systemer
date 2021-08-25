@@ -10,22 +10,43 @@ namespace MaMapF
         public Dictionary<char, string> Colors { get; set; }
         public List<char> Agents { get; set; }
 
-        public List<List<char>> InitialMatrix { get; set; }
-        public List<List<char>> GoalMatrix { get; set; }
-
+        public List<List<char>> InitialMap { get; set; }
+        public List<List<char>> GoalMap { get; set; }
         public Dictionary<char, List<Goal>> Goals { get; set; }
 
-        public SingleAgentState GetAgentInitialState(char agent)
+        public Dictionary<char, SingleAgentState> AgentInitialStates { get; set; }
+
+        public Level(
+            Dictionary<char, string> colors,
+            List<char> agents,
+            List<List<char>> initialMap,
+            List<List<char>> goalMap,
+            Dictionary<char, List<Goal>> goals
+        )
         {
-            var map = new List<List<char>>(InitialMatrix);
+            Colors = colors;
+            Agents = agents;
+            InitialMap = initialMap;
+            GoalMap = goalMap;
+            Goals = goals;
+
+            foreach (var agent in agents)
+            {
+                AgentInitialStates[agent] = CreateAgentInitialState(agent);
+            }
+        }
+
+        private SingleAgentState CreateAgentInitialState(char agent)
+        {
+            var map = new List<List<char>>(InitialMap);
             var agentColor = Colors[agent];
             var agentPosition = new Position();
 
-            for (var row = 0; row < InitialMatrix.Count; row++)
+            for (var row = 0; row < InitialMap.Count; row++)
             {
-                for (var col = 0; col < InitialMatrix[row].Count; col++)
+                for (var col = 0; col < InitialMap[row].Count; col++)
                 {
-                    var c = InitialMatrix[row][col];
+                    var c = InitialMap[row][col];
                     if (c == '+' || c == ' ')
                     {
                         continue;
@@ -59,6 +80,8 @@ namespace MaMapF
                 AgentPosition = agentPosition
             };
         }
+        
+        public SingleAgentState GetInitialState(char agent) => AgentInitialStates[agent];
 
         public bool IsAgentGoalState(SingleAgentState state)
         {

@@ -62,14 +62,7 @@ namespace MaMapF
                 }
             }
 
-            return new Level
-            {
-                Colors = colors,
-                Agents = agents,
-                InitialMatrix = initialLines,
-                GoalMatrix = goalLines,
-                Goals = goals
-            };
+            return new Level(colors, agents, initialLines, goalLines, goals);
         }
 
         public static void SendServerPlan(List<SingleAgentState> plan)
@@ -78,9 +71,10 @@ namespace MaMapF
             {
                 Console.WriteLine($"{state.Action}");
             }
+
             // Console.WriteLine();
         }
-        
+
         private static List<string> GetServerOut()
         {
             // Set OpenStandardInput
@@ -103,8 +97,5 @@ namespace MaMapF
 
         private static List<List<char>> LinesToCharMatrix(IEnumerable<string> lines) =>
             lines.Select(line => line.ToCharArray().ToList()).ToList();
-        
-        
-        
     }
 }
