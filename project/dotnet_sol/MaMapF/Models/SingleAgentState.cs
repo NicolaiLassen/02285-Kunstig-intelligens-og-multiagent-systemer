@@ -50,6 +50,13 @@ namespace MaMapF.Models
             return true;
         }
 
+        public override string ToString()
+        {
+            var info = $"Agent: {Agent} | Position {AgentPosition} | Step: {G}";
+            var map = string.Join("\n", Map.Select(row => string.Join("", row)));
+            return $"{info}\n{map}\n";
+        }
+
         public bool IsFree(Position position) => Map[position.Row][position.Column] == ' ';
         public bool IsBox(Position position) => char.IsLetter(Map[position.Row][position.Column]);
     }

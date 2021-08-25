@@ -2,13 +2,7 @@
 
 namespace MaMapF.Models
 {
-    public interface IPosition
-    {
-        int Row { get; set; }
-        int Column { get; set; }
-    }
-
-    public class Position : IPosition
+    public class Position
     {
         public int Row { get; set; }
         public int Column { get; set; }
@@ -29,6 +23,12 @@ namespace MaMapF.Models
                 Row + rowDelta,
                 Column + colDelta
             );
+        }
+
+
+        public override string ToString()
+        {
+            return $"{Row},{Column}";
         }
 
         public override int GetHashCode() => HashCode.Combine(Row, Column);

@@ -24,6 +24,8 @@ namespace MaMapF
             {
                 var state = frontier.Dequeue();
                 explored.Add(state);
+                
+                Console.Error.WriteLine(state);
 
                 if (level.IsAgentGoalState(state))
                 {
