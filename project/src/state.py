@@ -77,7 +77,7 @@ class State:
         return counter == len(self.goals)
 
     def act(self, action: Action) -> 'State':
-        next_state = deepcopy(self)
+        next_state = self.copy()
 
         # Update agent location
         prev_agent_row = self.agent_row
@@ -225,3 +225,17 @@ class State:
                 if not char == other.map[i][j]:
                     return False
         return True
+
+    def copy(self):
+        map = [row.copy() for row in self.map]
+        state = State(map, self.agent, self.agent_row, self.agent_col)
+        state.goals = self.goals
+        state.h = self.h
+        state.g = self.g
+        state.f = self.g
+        return state
+
+
+
+
+

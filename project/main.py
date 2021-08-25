@@ -2,34 +2,33 @@ from queue import PriorityQueue
 from typing import Dict, List
 
 from src.frontier import FrontierBestFirst
+from src.models.action import Action
 from src.models.conflict import Conflict
 from src.models.constraint import Constraint
 from src.models.ct_node import CTNode
 from src.parse_level import parse_level
 from src.server import get_server_out, get_server_lines, send_plan, merge_solutions, get_max_path_len
 from src.state import State
-from src.utils.log import log
 
 
 def get_conflict(node: CTNode) -> Conflict:
     agents_n = len(node.solutions)
     max_solution_len = get_max_path_len(node.solutions)
 
+    # Ensure all solution lengths are the same
+    for s in node.solutions.values():
+        s_len = len(s)
+        s_len_diff = max_solution_len - s_len
+        for i in range(s_len_diff):
+            s.append(s[-1].act(Action.NoOp))
+
     # For every step: for every agent and every other agent
     for step in range(1, max_solution_len):
         for a0 in range(agents_n):
-            a0s = node.solutions[a0]
-
-            # Skip if step is past agent solution length
-            if step >= len(a0s):
-                continue
-
             for a1 in range(a0 + 1, agents_n):
-                a1s = node.solutions[a1]
 
-                # Skip if step is past agent solution length
-                if step >= len(a1s):
-                    continue
+                a0s = node.solutions[a0]
+                a1s = node.solutions[a1]
 
                 # CONFLICT if agent 1 and agent 2 is at same position
                 if a0s[step].agent_row == a1s[step].agent_row and a0s[step].agent_col == a1s[step].agent_col:
@@ -108,6 +107,21 @@ def get_low_level_plan(initial_state: State, constraints=[]):
     # exit("!!!!!!!!!!!!! NO PLAN")
 
 
+def get_constraint(agent, conflict):
+    if conflict.type == 'position':
+        return Constraint(a, conflict.position, conflict.step, conflict)
+
+    # agent is follower
+    if conflict.type == 'follow' and agent == conflict.agent_a:
+        return Constraint(a, conflict.position, conflict.step, conflict)
+
+    # agent is leader
+    if conflict.type == 'follow' and agent == conflict.agent_b:
+        return Constraint(a, conflict.position, conflict.step - 1, conflict)
+
+    return None
+
+
 if __name__ == '__main__':
     server_out = get_server_out()
 
@@ -143,10 +157,6 @@ if __name__ == '__main__':
     while not open.empty():
 
         node: CTNode = open.get()
-        counter += 1
-
-        if counter > 1:
-            log(node.solutions)
 
         conflict = get_conflict(node)
 
@@ -159,18 +169,18 @@ if __name__ == '__main__':
             next_node = node.copy()
             # other = conflict.agent_b if a == conflict.agent_a else conflict.agent_a
 
-            if conflict.type == 'follow' and a != conflict.agent_a:
-                continue
+            constraint = get_constraint(a, conflict)
+            if constraint is None:
+                exit("NULL constraint")
 
-            step = conflict.step if conflict.type == 'position' \
-                else conflict.step if conflict.agent_a == a \
-                else conflict.step - 1
-
-            constraint = Constraint(a, conflict.position, step, conflict)
             next_node.constraints.append(constraint)
 
             # TODO use state from conflict
             solution = get_low_level_plan(level.get_agent_state(a), constraints=next_node.constraints)
+
+            # skip node if solution is None or the same
+            if solution is None or solution == node.solutions[int(a)]:
+                continue
 
             if solution is not None:
                 next_node.solutions[int(a)] = solution
