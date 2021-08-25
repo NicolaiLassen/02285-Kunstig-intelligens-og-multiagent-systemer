@@ -1,6 +1,4 @@
-﻿﻿using System.Collections.Generic;
-
-namespace MaMapF.Models
+﻿namespace MaMapF.Models
 {
     public class Constraint
     {

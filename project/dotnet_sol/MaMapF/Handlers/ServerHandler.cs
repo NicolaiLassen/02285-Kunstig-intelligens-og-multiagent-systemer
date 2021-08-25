@@ -65,14 +65,14 @@ namespace MaMapF
             return new Level(colors, agents, initialLines, goalLines, goals);
         }
 
-        public static void SendServerPlan(List<SingleAgentState> plan)
+        public static void SendServerPlan(Dictionary<char, List<SingleAgentState>> plan)
         {
-            foreach (var state in plan)
+            var firstKey = plan.First().Key;
+            for (var step = 0; step < plan[firstKey].Count; step++)
             {
-                Console.WriteLine($"{state.Action}");
+                var jointActions = plan.Keys.Select(agent => $"{plan[agent][step].Action}").ToList();
+                Console.WriteLine(String.Join("|", jointActions));
             }
-
-            // Console.WriteLine();
         }
 
         private static List<string> GetServerOut()

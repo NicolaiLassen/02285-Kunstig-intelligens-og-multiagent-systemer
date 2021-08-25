@@ -3,15 +3,15 @@ hospital
 #levelname
 A2
 #colors
-blue: 0, A
-red: 1, 2, 3, B
+blue: 0
+red: 1
 #initial
 +++++
 +0  +
 +   +
-+2  +
 +   +
-+3  +
++   +
++   +
 +   +
 +1  +
 +++++
@@ -23,6 +23,6 @@ red: 1, 2, 3, B
 +   +
 +   +
 +   +
-+023+
++0  +
 +++++
 #end
