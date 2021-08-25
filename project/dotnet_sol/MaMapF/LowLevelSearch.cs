@@ -9,13 +9,19 @@ namespace MaMapF
 {
     public class LowLevelSearch
     {
-        public Level Level { get; set; }
+        public readonly Level Level;
 
-        public List<SingleAgentState> GetSingleAgentPlan(
-            char agent,
-            List<Constraint> constraints
-        )
+        public LowLevelSearch(Level level)
         {
+            this.Level = level;
+        }
+
+        public List<SingleAgentState> GetSingleAgentPlan(char agent, List<Constraint> constraints)
+        {
+            var goals = Level.Goals[agent];
+            var heuristic = new LowLevelHeuristic(goals);
+
+
             var frontier = new SimplePriorityQueue<SingleAgentState>();
             var explored = new HashSet<SingleAgentState>();
 
@@ -29,10 +35,7 @@ namespace MaMapF
 
                 // Console.Error.WriteLine(frontier.Count);
                 Console.Error.WriteLine(state);
-                // if (state.G > 10)
-                // {
-                //     Environment.Exit(0);
-                // }
+                // if (state.G > 10) Environment.Exit(0);
 
                 if (Level.IsAgentGoalState(state))
                 {
@@ -46,7 +49,7 @@ namespace MaMapF
                     var isNotExplored = !explored.Contains(s);
                     if (isNotFrontier && isNotExplored)
                     {
-                        s.H = Level.GetHeuristic(s);
+                        s.H = heuristic.GetHeuristic(s);
                         frontier.Enqueue(s, s.H);
                     }
                 }
