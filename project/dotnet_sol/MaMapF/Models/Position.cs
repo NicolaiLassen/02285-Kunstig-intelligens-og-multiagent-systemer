@@ -29,20 +29,13 @@
             return $"{Row},{Column}";
         }
 
-        public override int GetHashCode() => 31 * Row + 29 * Column;
-
-
-        public bool Equals(Position other)
-        {
-            return Row == other.Row && Column == other.Column;
-        }
-
-        
-        public override bool Equals(object obj)
-        {
-            if (obj == null) return false;
-            if (!(obj is Position other)) return false;
-            return Row == other.Row && Column == other.Column;
-        }
+        // TODO?
+        // public override int GetHashCode() => HashCode.Combine(Row, Column);
+        //
+        // public override bool Equals(object obj)
+        // {
+        //     if (!(obj is Position other)) return false;
+        //     return Row == other.Row && Column == other.Column;
+        // }
     }
 }
