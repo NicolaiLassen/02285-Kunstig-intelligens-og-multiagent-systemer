@@ -1,14 +1,21 @@
 ﻿namespace MaMapF.Models
 {
-    public class Position
+
+    public interface IPosition
+    {
+        int Row { get; set; }
+        int Column { get; set; }
+    }
+    
+    public class Position: IPosition
     {
         public int Row { get; set; }
         public int Column { get; set; }
 
         public Position(int row, int column)
         {
-            this.Row = row;
-            this.Column = column;
+            Row = row;
+            Column = column;
         }
 
         public Position Next(int rowDelta, int colDelta)

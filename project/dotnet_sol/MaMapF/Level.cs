@@ -17,8 +17,8 @@ namespace MaMapF
         public SingleAgentState GetAgentInitialState(char agent)
         {
             var map = new List<List<char>>(InitialMatrix);
-            var agentPosition = new Position();
             var agentColor = Colors[agent];
+            Position agentPosition;
 
             for (var row = 0; row < InitialMatrix.Count; row++)
             {
@@ -32,8 +32,7 @@ namespace MaMapF
 
                     if (c == agent)
                     {
-                        agentPosition.Row = row;
-                        agentPosition.Column = row;
+                        agentPosition = new Position(row, col);
                     }
 
                     if (char.IsDigit(c))
