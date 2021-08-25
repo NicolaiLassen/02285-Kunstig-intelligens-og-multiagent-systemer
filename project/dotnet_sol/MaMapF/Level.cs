@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
+using MaMapF.Models;
 
-namespace MaMapF.Models
+namespace MaMapF
 {
     public class Level
     {
@@ -9,5 +10,11 @@ namespace MaMapF.Models
 
         public List<List<char>> InitialMatrix { get; set; }
         public List<List<char>> GoalMatrix { get; set; }
+
+        public State GetClientInitialState(char agent)
+        {
+            
+            return new State();
+        }
     }
 }

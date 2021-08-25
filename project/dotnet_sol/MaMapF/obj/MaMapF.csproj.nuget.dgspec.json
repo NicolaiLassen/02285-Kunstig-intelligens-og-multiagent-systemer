@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\nicol\\OneDrive\\Desktop\\ai\\MaMapF\\MaMapF.csproj": {}
+    "C:\\Users\\nicol\\OneDrive\\Dokumenter\\DTU\\02285 Kunstig intelligens og multiagent-systemer\\project\\dotnet_sol\\MaMapF\\MaMapF.csproj": {}
   },
   "projects": {
-    "C:\\Users\\nicol\\OneDrive\\Desktop\\ai\\MaMapF\\MaMapF.csproj": {
+    "C:\\Users\\nicol\\OneDrive\\Dokumenter\\DTU\\02285 Kunstig intelligens og multiagent-systemer\\project\\dotnet_sol\\MaMapF\\MaMapF.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\nicol\\OneDrive\\Desktop\\ai\\MaMapF\\MaMapF.csproj",
+        "projectUniqueName": "C:\\Users\\nicol\\OneDrive\\Dokumenter\\DTU\\02285 Kunstig intelligens og multiagent-systemer\\project\\dotnet_sol\\MaMapF\\MaMapF.csproj",
         "projectName": "MaMapF",
-        "projectPath": "C:\\Users\\nicol\\OneDrive\\Desktop\\ai\\MaMapF\\MaMapF.csproj",
+        "projectPath": "C:\\Users\\nicol\\OneDrive\\Dokumenter\\DTU\\02285 Kunstig intelligens og multiagent-systemer\\project\\dotnet_sol\\MaMapF\\MaMapF.csproj",
         "packagesPath": "C:\\Users\\nicol\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\nicol\\OneDrive\\Desktop\\ai\\MaMapF\\obj\\",
+        "outputPath": "C:\\Users\\nicol\\OneDrive\\Dokumenter\\DTU\\02285 Kunstig intelligens og multiagent-systemer\\project\\dotnet_sol\\MaMapF\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\nicol\\AppData\\Roaming\\NuGet\\NuGet.Config",
