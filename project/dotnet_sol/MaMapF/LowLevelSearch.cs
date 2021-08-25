@@ -27,7 +27,12 @@ namespace MaMapF
                 var state = frontier.Dequeue();
                 explored.Add(state);
 
-                Console.Error.WriteLine(frontier.Count);
+                // Console.Error.WriteLine(frontier.Count);
+                Console.Error.WriteLine(state);
+                // if (state.G > 10)
+                // {
+                //     Environment.Exit(0);
+                // }
 
                 if (Level.IsAgentGoalState(state))
                 {
@@ -41,8 +46,8 @@ namespace MaMapF
                     var isNotExplored = !explored.Contains(s);
                     if (isNotFrontier && isNotExplored)
                     {
-                        var f = Level.GetHeuristic(s);
-                        frontier.Enqueue(s, f);
+                        s.H = Level.GetHeuristic(s);
+                        frontier.Enqueue(s, s.H);
                     }
                 }
             }

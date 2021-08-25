@@ -62,10 +62,12 @@ namespace MaMapF
                     // var solution = search
 
                     var solution = LowLevelSearch.GetSingleAgentPlan(agent, new List<Constraint>());
+
                     if (solution == null || solution == c.Solutions[agent])
                     {
                         continue;
                     }
+
 
                     c.Solutions[agent] = solution;
                     open.Enqueue(c, c.Cost);

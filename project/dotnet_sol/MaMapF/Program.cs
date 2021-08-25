@@ -1,8 +1,20 @@
-﻿namespace MaMapF
+﻿using System.Collections.Generic;
+using MaMapF.Models;
+
+namespace MaMapF
 {
     class Program
     {
         static void Main(string[] args)
+        {
+            SingleAgent();
+            // var level = ServerHandler.GetServerLevel();
+            // var cbs = new CBSHandler(level);
+            // var plan = cbs.Search();
+            // // ServerHandler.SendServerPlan(plan);
+        }
+
+        static void SingleAgent()
         {
             var level = ServerHandler.GetServerLevel();
             var cbs = new CBSHandler(level);
