@@ -24,3 +24,20 @@ C:\Users\nicol\OneDrive\Dokumenter\DTU\02285 Kunstig intelligens og multiagent-s
 C:\Users\nicol\OneDrive\Dokumenter\DTU\02285 Kunstig intelligens og multiagent-systemer\project\dotnet_sol\MaMapF\obj\Debug\netcoreapp3.1\MaMapF.dll
 C:\Users\nicol\OneDrive\Dokumenter\DTU\02285 Kunstig intelligens og multiagent-systemer\project\dotnet_sol\MaMapF\obj\Debug\netcoreapp3.1\MaMapF.pdb
 C:\Users\nicol\OneDrive\Dokumenter\DTU\02285 Kunstig intelligens og multiagent-systemer\project\dotnet_sol\MaMapF\obj\Debug\netcoreapp3.1\MaMapF.genruntimeconfig.cache
+C:\Users\mgivs\dev\multiagent\project\dotnet_sol\MaMapF\obj\Debug\netcoreapp3.1\MaMapF.dll
+C:\Users\mgivs\dev\multiagent\project\dotnet_sol\MaMapF\obj\Debug\netcoreapp3.1\MaMapF.pdb
+C:\Users\mgivs\dev\multiagent\project\dotnet_sol\MaMapF\bin\Debug\netcoreapp3.1\MaMapF.exe
+C:\Users\mgivs\dev\multiagent\project\dotnet_sol\MaMapF\bin\Debug\netcoreapp3.1\MaMapF.deps.json
+C:\Users\mgivs\dev\multiagent\project\dotnet_sol\MaMapF\bin\Debug\netcoreapp3.1\MaMapF.runtimeconfig.json
+C:\Users\mgivs\dev\multiagent\project\dotnet_sol\MaMapF\bin\Debug\netcoreapp3.1\MaMapF.runtimeconfig.dev.json
+C:\Users\mgivs\dev\multiagent\project\dotnet_sol\MaMapF\bin\Debug\netcoreapp3.1\MaMapF.dll
+C:\Users\mgivs\dev\multiagent\project\dotnet_sol\MaMapF\bin\Debug\netcoreapp3.1\MaMapF.pdb
+C:\Users\mgivs\dev\multiagent\project\dotnet_sol\MaMapF\bin\Debug\netcoreapp3.1\PriorityQueue.dll
+C:\Users\mgivs\dev\multiagent\project\dotnet_sol\MaMapF\obj\Debug\netcoreapp3.1\MaMapF.csprojAssemblyReference.cache
+C:\Users\mgivs\dev\multiagent\project\dotnet_sol\MaMapF\obj\Debug\netcoreapp3.1\MaMapF.AssemblyInfoInputs.cache
+C:\Users\mgivs\dev\multiagent\project\dotnet_sol\MaMapF\obj\Debug\netcoreapp3.1\MaMapF.AssemblyInfo.cs
+C:\Users\mgivs\dev\multiagent\project\dotnet_sol\MaMapF\obj\Debug\netcoreapp3.1\MaMapF.csproj.CoreCompileInputs.cache
+C:\Users\mgivs\dev\multiagent\project\dotnet_sol\MaMapF\obj\Debug\netcoreapp3.1\MaMapF.csproj.CopyComplete
+C:\Users\mgivs\dev\multiagent\project\dotnet_sol\MaMapF\obj\Debug\netcoreapp3.1\MaMapF.genruntimeconfig.cache
+C:\Users\nicol\OneDrive\Dokumenter\DTU\02285 Kunstig intelligens og multiagent-systemer\project\dotnet_sol\MaMapF\bin\Debug\netcoreapp3.1\PriorityQueue.dll
+C:\Users\nicol\OneDrive\Dokumenter\DTU\02285 Kunstig intelligens og multiagent-systemer\project\dotnet_sol\MaMapF\obj\Debug\netcoreapp3.1\MaMapF.csproj.CopyComplete

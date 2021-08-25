@@ -72,6 +72,15 @@ namespace MaMapF
             };
         }
 
+        public static void SendServerPlan(List<SingleAgentState> plan)
+        {
+            foreach (var state in plan)
+            {
+                Console.WriteLine($"{state.Action}");
+            }
+            // Console.WriteLine();
+        }
+        
         private static List<string> GetServerOut()
         {
             // Set OpenStandardInput
@@ -94,5 +103,8 @@ namespace MaMapF
 
         private static List<List<char>> LinesToCharMatrix(IEnumerable<string> lines) =>
             lines.Select(line => line.ToCharArray().ToList()).ToList();
+        
+        
+        
     }
 }

@@ -16,13 +16,13 @@ namespace MaMapF.Models
         public int H { get; set; } // HEURISTIC
         public int F => G + H;
 
+
         public override int GetHashCode()
         {
             if (Hash != -1) return Hash;
 
             var prime = 31;
-            var hash = prime + AgentPosition.Row * 23 + AgentPosition.Column * 29 +
-                       (int) char.GetNumericValue(Agent);
+            var hash = prime + (AgentPosition.Row + 1) * 23 + (AgentPosition.Column + 1) * 29;
             hash = hash * prime + Map.Sum(row => row.GetHashCode());
             Hash = hash;
 
@@ -49,5 +49,8 @@ namespace MaMapF.Models
 
             return true;
         }
+
+        public bool IsFree(Position position) => Map[position.Row][position.Column] == ' ';
+        public bool IsBox(Position position) => char.IsLetter(Map[position.Row][position.Column]);
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace MaMapF.Models
+﻿using System;
+
+namespace MaMapF.Models
 {
     public interface IPosition
     {
@@ -28,6 +30,8 @@
                 Column + colDelta
             );
         }
+
+        public override int GetHashCode() => HashCode.Combine(Row, Column);
 
         public override bool Equals(object obj)
         {
