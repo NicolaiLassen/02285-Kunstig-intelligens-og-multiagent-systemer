@@ -28,5 +28,10 @@
                 Column + colDelta
             );
         }
+
+        public override string ToString()
+        {
+            return $"{Row},{Column}";
+        }
     }
 }

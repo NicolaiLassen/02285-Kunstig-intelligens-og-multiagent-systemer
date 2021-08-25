@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace MaMapF.Models
 {
@@ -23,6 +24,13 @@ namespace MaMapF.Models
         {
             var c = Map[position.Row][position.Column];
             return "ABCDEFGHIJKLMNOPQRSTUVWXYZ".Contains(c);
+        }
+
+        public override string ToString()
+        {
+            var info = $"Agent: {Agent} | Position {AgentPosition} | Step: {G}";
+            var map = string.Join("\n",Map.Select(row => string.Join("", row)));
+            return $"{info}\n{map}\n";
         }
     }
 }

@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using MaMapF.Models;
 using Priority_Queue;
+using Action = MaMapF.Models.Action;
 
 namespace MaMapF
 {
@@ -21,6 +23,8 @@ namespace MaMapF
             {
                 var state = frontier.Dequeue();
                 explored.Add(state);
+                
+                Console.Error.WriteLine(state);
 
                 if (IsGoalState(state))
                 {
