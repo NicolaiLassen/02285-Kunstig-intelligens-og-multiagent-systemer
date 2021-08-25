@@ -25,6 +25,8 @@ namespace MaMapF
                 
                 var state = frontier.Dequeue();
                 explored.Add(state);
+                
+                Console.Error.WriteLine(frontier.Count);
 
                 if (level.IsAgentGoalState(state))
                 {
@@ -43,7 +45,6 @@ namespace MaMapF
                     }
                 }
             }
-
 
             return null;
         }

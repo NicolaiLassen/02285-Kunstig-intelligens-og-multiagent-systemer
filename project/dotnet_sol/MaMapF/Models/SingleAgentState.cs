@@ -41,7 +41,6 @@ namespace MaMapF.Models
 
         public override bool Equals(object obj)
         {
-            if (obj == null) return false;
             if (!(obj is SingleAgentState other)) return false;
             // if (AgentPosition.Row != other.AgentPosition.Row && AgentPosition.Column != other.AgentPosition.Column) return false;
 

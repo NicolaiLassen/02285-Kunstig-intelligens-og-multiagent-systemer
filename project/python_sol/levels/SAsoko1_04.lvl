@@ -1,15 +1,15 @@
 #domain
 hospital
 #levelname
-SAD1
+SAsoko1_04
 #colors
 blue: 0, A
 #initial
-+++++++++
-+0A     +
-+++++++++
+++++++
++0A  +
+++++++
 #goal
-+++++++++
-+0     A+
-+++++++++
+++++++
++   A+
+++++++
 #end

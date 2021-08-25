@@ -1,15 +1,16 @@
 #domain
 hospital
 #levelname
-SAD1
+A2
 #colors
 blue: 0, A
+red: 1, B
 #initial
-+++++++++
-+0A     +
-+++++++++
++++++++
++10   +
++++++++
 #goal
-+++++++++
-+0     A+
-+++++++++
++++++++
++   10+
++++++++
 #end
