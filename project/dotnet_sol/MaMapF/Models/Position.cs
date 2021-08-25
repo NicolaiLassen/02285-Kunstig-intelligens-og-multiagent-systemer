@@ -24,8 +24,8 @@
         public Position Next(int rowDelta, int colDelta)
         {
             return new Position(
-                this.Row + rowDelta,
-                this.Column + colDelta
+                Row + rowDelta,
+                Column + colDelta
             );
         }
     }
