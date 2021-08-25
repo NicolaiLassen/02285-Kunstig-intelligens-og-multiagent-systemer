@@ -102,7 +102,7 @@ namespace MaMapF
                         var agent1S = node.Solutions[agent1];
 
                         // CONFLICT if agent 1 and agent 2 is at same position
-                        if (agent0S[step].AgentPosition == agent1S[step].AgentPosition)
+                        if (agent0S[step].AgentPosition.Equals(agent1S[step].AgentPosition))
                         {
                             return new Conflict
                             {
