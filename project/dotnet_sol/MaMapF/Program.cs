@@ -4,11 +4,9 @@
     {
         static void Main(string[] args)
         {
-            var parser = new ParserHandler();
-            var level = parser.GetServerLevel();
+            var level = ParserHandler.GetServerLevel();
             
-            
-            
+
         }
     }
 }

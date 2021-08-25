@@ -1,5 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using MaMapF.Models;
+using Action = System.Action;
 
 namespace MaMapF
 {
@@ -11,16 +12,14 @@ namespace MaMapF
 
         public Action Action { get; set; }
         public char Agent { get; set; }
-        public int AgentRow { get; set; }
-        public int AgentCol { get; set; }
+        public Position AgentPosition { get; set; }
         public int g { get; set; }
-
 
         public List<State> GetSolution()
         {
             var solution = new List<State>();
             var state = this;
-            
+
             while (state.Action != null)
             {
                 solution.Insert(0, state);

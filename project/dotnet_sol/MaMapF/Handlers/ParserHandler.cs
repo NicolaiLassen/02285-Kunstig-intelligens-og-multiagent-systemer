@@ -10,7 +10,7 @@ namespace MaMapF
     {
         private const string CLIENT_NAME = "client46";
 
-        public Level GetServerLevel()
+        public static Level GetServerLevel()
         {
             var serverLines = GetServerOut();
             var colorsIndex = serverLines.IndexOf("#colors");
@@ -18,12 +18,12 @@ namespace MaMapF
             var goalIndex = serverLines.IndexOf("#goal");
             var endIndex = serverLines.IndexOf("#end");
 
-            var colors = new Dictionary<char, char>();
+            var colors = new Dictionary<char, string>();
             var colorRangeCount = (initialIndex - colorsIndex) - 1;
             foreach (var line in serverLines.GetRange(colorsIndex + 1, colorRangeCount))
             {
                 var lineSplit = line.Split(":");
-                var color = Convert.ToChar(lineSplit[0].Trim().ToLower());
+                var color = lineSplit[0].Trim().ToLower();
                 var items = lineSplit[1].Split(",").Select(s => s.Trim());
                 foreach (var item in items)
                 {
@@ -31,7 +31,7 @@ namespace MaMapF
                 }
             }
 
-            var agentCount = colors.Keys.Count(char.IsDigit);
+            var agents = colors.Keys.Where(char.IsDigit).Select(agent => char.Parse($"{agent}")).ToList();
 
             var initialRangeCount = (goalIndex - initialIndex) - 1;
             var initialLines = LinesToCharMatrix(serverLines.GetRange(initialIndex + 1, initialRangeCount));
@@ -39,16 +39,40 @@ namespace MaMapF
             var goalRangeCount = (endIndex - goalIndex) - 1;
             var goalLines = LinesToCharMatrix(serverLines.GetRange(goalIndex + 1, goalRangeCount));
 
+            var goals = new Dictionary<char, List<Goal>>();
+
+            foreach (var agent in agents)
+            {
+                goals.Add(agent, new List<Goal>());
+                for (var row = 0; row < goalLines.Count; row++)
+                {
+                    for (var col = 0; col < goalLines[row].Count; col++)
+                    {
+                        var c = goalLines[row][col];
+                        if (!char.IsLetter(c) && c != agent) continue;
+                        goals[agent].Add(
+                            new Goal
+                            {
+                                Item = c,
+                                Row = row,
+                                Column = col
+                            }
+                        );
+                    }
+                }
+            }
+
             return new Level
             {
                 Colors = colors,
-                AgentCount = agentCount,
+                Agents = agents,
                 InitialMatrix = initialLines,
-                GoalMatrix = goalLines
+                GoalMatrix = goalLines,
+                Goals = goals
             };
         }
 
-        private List<string> GetServerOut()
+        private static List<string> GetServerOut()
         {
             // Set OpenStandardInput
             Console.SetIn(new StreamReader(Console.OpenStandardInput()));
