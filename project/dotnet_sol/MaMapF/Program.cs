@@ -8,10 +8,15 @@ namespace MaMapF
         static void Main(string[] args)
         {
             var level = ParserHandler.GetServerLevel();
-
+            
             var initialState = level.GetAgentInitialState('0');
-            var plan = LowLevelSearch.GetSingleAgentPlan(level, initialState, new List<Constraint>());
+            var lowLevelSearch = new LowLevelSearch
+            {
+                Level = level
+            };
 
+            var plan = lowLevelSearch.GetSingleAgentPlan(initialState, new List<Constraint>());
+            
             ParserHandler.SendServerPlan(plan);
         }
     }

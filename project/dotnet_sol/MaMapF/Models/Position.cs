@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MaMapF.Models
+﻿namespace MaMapF.Models
 {
     public class Position
     {
