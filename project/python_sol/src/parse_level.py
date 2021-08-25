@@ -48,7 +48,10 @@ def parse_level(file_lines: List[str]):
 
 def parse_level_lines(level_lines: List[str]) -> List[List[str]]:
     num_rows = len(level_lines)
-    num_cols = len(level_lines[0])
+
+    num_cols = 0
+    for l in level_lines:
+        num_cols = max(len(l), num_cols)
     level_matrix = [["" for _ in range(num_cols)] for _ in range(num_rows)]
     for row, line in enumerate(level_lines):
         for col, char in enumerate(line):

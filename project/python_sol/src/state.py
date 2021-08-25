@@ -1,4 +1,3 @@
-from copy import deepcopy
 from typing import List
 
 from src.models.action import Action, ActionType
@@ -49,6 +48,17 @@ class State:
             # exit()
         filtered_states = [s for i, s in enumerate(expanded_states) if i not in remove_index]
 
+        # if self.agent == '0':
+        #     if len(constraints) == 12 and self.g == 0:
+        #         log(">>>>>>>>>>>>>")
+        #         log("constraints")
+        #         log(constraints)
+        #         log("expanded_states")
+        #         log(expanded_states)
+        #         log("remove_index")
+        #         log(remove_index)
+        #         exit()
+
         # if len(constraints) == 1:
         #     for constraint in constraints:
         #         if constraint.step == self.g:
@@ -65,7 +75,7 @@ class State:
         #             log("filtered")
         #             for s in filtered_states:
         #                 log(s)
-        #             # exit()
+        #             exit()
 
         return filtered_states
 
@@ -119,15 +129,17 @@ class State:
 
         next_state.g = self.g + 1
         next_state.h = next_state.get_heuristic()
-        # greedy
-        next_state.f = next_state.h
-        # astar
-        # next_state.f = next_state.g + next_state.h
+
+        # greedy (best for open levels)
+        # next_state.f = next_state.h
+
+        # astar (best labyrinths)
+        next_state.f = next_state.g + next_state.h
 
         return next_state
 
     def get_heuristic(self):
-
+        # return 0
         # return self.get_missing_goal_count()
         return self.get_max_manhatten_dist()
 
@@ -234,8 +246,3 @@ class State:
         state.g = self.g
         state.f = self.g
         return state
-
-
-
-
-

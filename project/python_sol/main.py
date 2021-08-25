@@ -9,6 +9,7 @@ from src.models.ct_node import CTNode
 from src.parse_level import parse_level
 from src.server import get_server_out, get_server_lines, send_plan, merge_solutions, get_max_path_len
 from src.state import State
+from src.utils.log import log
 
 
 def get_conflict(node: CTNode) -> Conflict:
@@ -108,15 +109,15 @@ def get_low_level_plan(initial_state: State, constraints=[]):
 
 def get_constraint(agent, conflict):
     if conflict.type == 'position':
-        return Constraint(a, conflict.position, conflict.step, conflict)
+        return Constraint(agent, conflict.position, conflict.step, conflict)
 
     # agent is follower
     if conflict.type == 'follow' and agent == conflict.agent_a:
-        return Constraint(a, conflict.position, conflict.step, conflict)
+        return Constraint(agent, conflict.position, conflict.step, conflict)
 
     # agent is leader
     if conflict.type == 'follow' and agent == conflict.agent_b:
-        return Constraint(a, conflict.position, conflict.step - 1, conflict)
+        return Constraint(agent, conflict.position, conflict.step - 1, conflict)
 
     return None
 
@@ -140,20 +141,23 @@ if __name__ == '__main__':
         solutions[a] = get_low_level_plan(initial_state)
 
     ## Naive solution merge
-    # send_plan(server_out, merge_paths(plans))
+    # send_plan(server_out, merge_solutions(solutions))
+    # exit()
 
     # Conflict based search
     open = PriorityQueue()
     explored = set()
 
-    open.put(CTNode(
+    root = CTNode(
         constraints=[],
         solutions=solutions,
         cost=sic(solutions)
-    ))
+    )
 
-    counter = 0
+    open.put(root)
+
     while not open.empty():
+        log('open.qsize(): {}'.format(open.qsize()))
 
         node: CTNode = open.get()
 
@@ -169,22 +173,43 @@ if __name__ == '__main__':
             # other = conflict.agent_b if a == conflict.agent_a else conflict.agent_a
 
             constraint = get_constraint(a, conflict)
+            # log('constraint: {}'.format(constraint))
+
             if constraint is None:
                 exit("NULL constraint")
 
+            # skip already explored constraints
+            if constraint in next_node.constraints:
+                continue
+
             next_node.constraints.append(constraint)
 
+            # handle corridor
+            # if len(node.constraints) != 0:
+            #     last_constraint = node.constraints[-1]
+            #     if constraint.position == last_constraint.position:
+            #         if constraint.step - 1 == last_constraint.step:
+            #             corridor_step = constraint.step - 1
+            #             corridor_state: State = node.solutions[int(a)][corridor_step]
+            #             position = [corridor_state.agent_row, corridor_state.agent_col]
+            #             no_op_constraint = Constraint(a, position, corridor_step, None)
+            #             next_node.constraints.append(no_op_constraint)
+
             # TODO use state from conflict
-            solution = get_low_level_plan(level.get_agent_state(a), constraints=next_node.constraints)
+            # log("AAAAAAAAAAAAAAAA")
+            # log(level.get_agent_state(a))
+
+            agent_constraints = [c for c in next_node.constraints if c.agent == a]
+            solution = get_low_level_plan(level.get_agent_state(a), constraints=agent_constraints)
+            # log('solution: {}'.format(solution))
 
             # skip node if solution is None or the same
             if solution is None or solution == node.solutions[int(a)]:
                 continue
 
-            if solution is not None:
-                next_node.solutions[int(a)] = solution
-                next_node.cost = sic(next_node.solutions)
-                open.put(next_node)
+            next_node.solutions[int(a)] = solution
+            next_node.cost = sic(next_node.solutions)
+            open.put(next_node)
 
             # log(node.solutions)
             # send_plan(server_out, merge_paths(node.solutions))
