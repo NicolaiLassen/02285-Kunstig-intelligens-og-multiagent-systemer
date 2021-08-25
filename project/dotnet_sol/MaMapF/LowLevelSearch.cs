@@ -12,13 +12,14 @@ namespace MaMapF
         public Level Level { get; set; }
 
         public List<SingleAgentState> GetSingleAgentPlan(
-            SingleAgentState initialState,
+            char agent,
             List<Constraint> constraints
         )
         {
             var frontier = new SimplePriorityQueue<SingleAgentState>();
             var explored = new HashSet<SingleAgentState>();
 
+            var initialState = Level.GetInitialState(agent);
             frontier.Enqueue(initialState, 0);
 
             while (frontier.Count != 0)

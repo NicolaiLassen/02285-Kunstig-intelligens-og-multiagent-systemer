@@ -24,8 +24,7 @@ namespace MaMapF
             var solutions = new Dictionary<char, List<SingleAgentState>>();
             foreach (var agent in Level.Agents)
             {
-                var initialState = Level.GetInitialState(agent);
-                solutions[agent] = LowLevelSearch.GetSingleAgentPlan(initialState, new List<Constraint>());
+                solutions[agent] = LowLevelSearch.GetSingleAgentPlan(agent, new List<Constraint>());
             }
 
             var initialNode = new Node
@@ -59,6 +58,7 @@ namespace MaMapF
 
                     c.Constraints.Add(constraint);
                     // var solution = search
+                    
                     var solution = LowLevelSearch.GetSingleAgentPlan(agent, new List<Constraint>());
                     if (solution == null || solution == c.Solutions)
                     {
