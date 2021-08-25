@@ -39,7 +39,7 @@ namespace MaMapF.Models
 
         public override string ToString() => Name;
 
-        public static readonly List<Action> AllActions = new List<Action>()
+        public static readonly List<Action> AllActions = new List<Action>
         {
             //NoOp
             new Action("NoOp", ActionType.NoOp, 0, 0, 0, 0),
