@@ -4,18 +4,6 @@ using Priority_Queue;
 
 namespace MaMapF
 {
-    public class SingleAgentState
-    {
-        public SingleAgentState Parent { get; set; }
-        public Action Action { get; set; }
-
-
-        public int G { get; set; } // COST
-        public int H { get; set; } // HEURISTIC
-        public int F => G + H;
-    }
-
-
     public class LowLevelSearch
     {
         public static List<SingleAgentState> GetSingleAgentPlan(SingleAgentState initialState)
@@ -32,7 +20,7 @@ namespace MaMapF
 
                 if (IsGoalState(state))
                 {
-                    return GetSingleAgentPlanFromState(state);
+                    return GetSingleAgentSolutionFromState(state);
                 }
 
                 var expandedStates = ExpandSingleAgentState(state);
@@ -55,9 +43,19 @@ namespace MaMapF
             return false;
         }
 
-        public static List<SingleAgentState> GetSingleAgentPlanFromState(SingleAgentState state)
+        public static List<SingleAgentState> GetSingleAgentSolutionFromState(SingleAgentState goal)
         {
-            return new List<SingleAgentState>();
+            var solution = new List<SingleAgentState>();
+            var state = goal;
+
+            while (state.Action != null)
+            {
+                solution.Insert(0, state);
+                state = state.Parent;
+            }
+
+            solution.Insert(0, state);
+            return solution;
         }
 
         public static List<SingleAgentState> ExpandSingleAgentState(SingleAgentState state)

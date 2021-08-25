@@ -13,9 +13,9 @@ namespace MaMapF
 
         public Dictionary<char, List<Goal>> Goals { get; set; }
 
-        public State GetClientInitialState(char agent)
+        public SingleAgentState GetClientInitialState(char agent)
         {
-            return new State();
+            return new SingleAgentState();
         }
     }
 }
