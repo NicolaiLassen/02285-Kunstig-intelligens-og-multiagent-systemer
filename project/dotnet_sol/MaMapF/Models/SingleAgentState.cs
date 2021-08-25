@@ -19,5 +19,11 @@ namespace MaMapF.Models
         {
             return Map[position.Row][position.Column] == ' ';
         }
+
+        public bool IsBox(Position position)
+        {
+            var c = Map[position.Row][position.Column];
+            return "ABCDEFGHIJKLMNOPQRSTUVWXYZ".Contains(c);
+        }
     }
 }
