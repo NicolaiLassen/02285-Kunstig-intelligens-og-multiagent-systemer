@@ -1,10 +1,10 @@
 ﻿{
   "version": "1.0.0",
   "restore": {
-    "projectUniqueName": "C:\\Users\\mgivs\\dev\\multiagent\\project\\dotnet_sol\\MaMapF\\MaMapF.csproj",
+    "projectUniqueName": "C:\\Users\\nicol\\OneDrive\\Dokumenter\\DTU\\02285 Kunstig intelligens og multiagent-systemer\\project\\dotnet_sol\\MaMapF\\MaMapF.csproj",
     "projectName": "MaMapF",
-    "projectPath": "C:\\Users\\mgivs\\dev\\multiagent\\project\\dotnet_sol\\MaMapF\\MaMapF.csproj",
-    "outputPath": "C:\\Users\\mgivs\\dev\\multiagent\\project\\dotnet_sol\\MaMapF\\obj\\",
+    "projectPath": "C:\\Users\\nicol\\OneDrive\\Dokumenter\\DTU\\02285 Kunstig intelligens og multiagent-systemer\\project\\dotnet_sol\\MaMapF\\MaMapF.csproj",
+    "outputPath": "C:\\Users\\nicol\\OneDrive\\Dokumenter\\DTU\\02285 Kunstig intelligens og multiagent-systemer\\project\\dotnet_sol\\MaMapF\\obj\\",
     "projectStyle": "PackageReference",
     "originalTargetFrameworks": [
       "netcoreapp3.1"
@@ -47,7 +47,7 @@
           "privateAssets": "all"
         }
       },
-      "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.101\\RuntimeIdentifierGraph.json"
+      "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.1.201\\RuntimeIdentifierGraph.json"
     }
   }
 }

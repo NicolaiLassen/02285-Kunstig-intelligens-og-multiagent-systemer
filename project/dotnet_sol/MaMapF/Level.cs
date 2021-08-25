@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using MaMapF.Models;
 
 namespace MaMapF
@@ -13,9 +14,55 @@ namespace MaMapF
 
         public Dictionary<char, List<Goal>> Goals { get; set; }
 
-        public SingleAgentState GetClientInitialState(char agent)
+        public SingleAgentState GetAgentInitialState(char agent)
         {
-            return new SingleAgentState();
+            var map = new List<List<char>>(InitialMatrix);
+            var agentPosition = new Position();
+            var agentColor = Colors[agent];
+
+            for (var row = 0; row < InitialMatrix.Count; row++)
+            {
+                for (var col = 0; col < InitialMatrix[row].Count; col++)
+                {
+                    var c = InitialMatrix[row][col];
+                    if (c == '+' || c == ' ')
+                    {
+                        continue;
+                    }
+
+                    if (c == agent)
+                    {
+                        agentPosition.Row = row;
+                        agentPosition.Column = row;
+                    }
+
+                    if (char.IsDigit(c))
+                    {
+                        map[row][col] = ' ';
+                    }
+
+                    if (!char.IsLetter(c)) continue;
+
+                    if (Colors[c] != agentColor)
+                    {
+                        map[row][col] = ' ';
+                    }
+                }
+            }
+
+            return new SingleAgentState
+            {
+                G = 0,
+                Map = map,
+                AgentPosition = agentPosition
+            };
+        }
+
+        public bool IsAgentGoalState(SingleAgentState state)
+        {
+            var agentGoals = Goals[state.Agent];
+            var counter = agentGoals.Count(agentGoal => state.Map[agentGoal.Row][agentGoal.Column] == agentGoal.Item);
+            return counter == Goals[state.Agent].Count;
         }
     }
 }
