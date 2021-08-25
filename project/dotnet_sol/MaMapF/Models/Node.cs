@@ -1,4 +1,4 @@
-﻿﻿using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace MaMapF.Models
@@ -6,8 +6,18 @@ namespace MaMapF.Models
     public class Node
     {
         public List<Constraint> Constraints { get; set; }
-        public Dictionary<string, SingleAgentState> Solutions { get; set; }
+        public Dictionary<char, List<SingleAgentState>> Solutions { get; set; }
         public int Cost => Sic();
-        private int Sic() => Solutions.Count(solution => solution.Value != null);
+
+        private int Sic() => Solutions.Sum(solution => solution.Value.Count);
+
+        public Node Copy()
+        {
+            return new Node
+            {
+                Constraints = Constraints,
+                Solutions = Solutions,
+            };
+        }
     }
 }
