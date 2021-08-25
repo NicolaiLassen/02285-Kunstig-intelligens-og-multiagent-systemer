@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using MaMapF.Models;
 
@@ -64,6 +65,44 @@ namespace MaMapF
             var agentGoals = Goals[state.Agent];
             var counter = agentGoals.Count(agentGoal => state.Map[agentGoal.Row][agentGoal.Column] == agentGoal.Item);
             return counter == Goals[state.Agent].Count;
+        }
+
+        public float GetHeuristic(SingleAgentState state)
+        {
+            // var h = GetHeuristicGoalCount(state);
+            var h = GetHeuristicMaxManhattenDist(state);
+            return h + state.G;
+        }
+
+        public int GetHeuristicGoalCount(SingleAgentState state)
+        {
+            var agentGoals = Goals[state.Agent];
+            var counter = agentGoals.Count(goal => state.Map[goal.Row][goal.Column] == goal.Item);
+            return agentGoals.Count - counter;
+        }
+
+        public int GetHeuristicMaxManhattenDist(SingleAgentState state)
+        {
+            var agentGoals = Goals[state.Agent];
+            var maxDist = 0;
+            for (var r = 0; r < state.Map.Count; r++)
+            {
+                var row = state.Map[r];
+                for (var c = 0; c < row.Count; c++)
+                {
+                    var item = row[c];
+                    foreach (var goal in agentGoals)
+                    {
+                        if (goal.Item == item)
+                        {
+                            var dist = Math.Abs(r - goal.Row) + Math.Abs(c - goal.Column);
+                            maxDist = Math.Max(maxDist, dist);
+                        }
+                    }
+                }
+            }
+
+            return maxDist;
         }
     }
 }
