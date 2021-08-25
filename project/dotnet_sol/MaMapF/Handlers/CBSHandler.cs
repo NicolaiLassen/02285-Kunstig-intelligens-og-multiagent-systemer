@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using MaMapF.Models;
 using Priority_Queue;
 
@@ -7,7 +8,7 @@ namespace MaMapF
     public class CBSHandler
     {
         public Level Level;
-        public LowLevelSearch LowLevelSearch;
+        public LowLevelSearch LowLevelSearch { get; }
 
         public CBSHandler(Level level)
         {
@@ -18,7 +19,7 @@ namespace MaMapF
             };
         }
 
-        public Node Search()
+        public Dictionary<char, List<SingleAgentState>> Search()
         {
             var open = new SimplePriorityQueue<Node>();
             var solutions = new Dictionary<char, List<SingleAgentState>>();
@@ -37,10 +38,11 @@ namespace MaMapF
             while (open.Count != 0)
             {
                 var p = open.Dequeue();
+                return p.Solutions;
                 var conflict = GetConflict(p);
                 if (conflict == null)
                 {
-                    return p;
+                    return p.Solutions;
                 }
 
                 var agents = new List<char>
@@ -58,9 +60,9 @@ namespace MaMapF
 
                     c.Constraints.Add(constraint);
                     // var solution = search
-                    
+
                     var solution = LowLevelSearch.GetSingleAgentPlan(agent, new List<Constraint>());
-                    if (solution == null || solution == c.Solutions)
+                    if (solution == null || solution == c.Solutions[agent])
                     {
                         continue;
                     }
@@ -75,6 +77,22 @@ namespace MaMapF
 
         private static Conflict GetConflict(Node node)
         {
+            var maxLength = node.Solutions.Max(solution => solution.Value.Count);
+            var solutions = new Dictionary<char, List<SingleAgentState>>();
+            foreach (var solutionsKey in node.Solutions.Keys)
+            {
+                var solutionsCount = node.Solutions[solutionsKey].Count;
+                var solutionsCountDifference = maxLength - solutionsCount;
+                solutions.Add(solutionsKey, node.Solutions[solutionsKey]);
+
+                for (int i = 0; i < solutionsCountDifference; i++)
+                {
+                    var noOp =
+                        LowLevelSearch.CreateNextState(solutions[solutionsKey][solutionsCount], Action.AllActions[0]);
+                    solutions[solutionsKey].Add(noOp);
+                }
+            }
+
             return new Conflict();
         }
 

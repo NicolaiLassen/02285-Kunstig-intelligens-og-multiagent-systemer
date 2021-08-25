@@ -29,10 +29,11 @@ namespace MaMapF
             InitialMap = initialMap;
             GoalMap = goalMap;
             Goals = goals;
+            AgentInitialStates = new Dictionary<char, SingleAgentState>();
 
             foreach (var agent in agents)
             {
-                AgentInitialStates[agent] = CreateAgentInitialState(agent);
+                AgentInitialStates.Add(agent, CreateAgentInitialState(agent));
             }
         }
 

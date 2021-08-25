@@ -7,7 +7,7 @@
             var level = ServerHandler.GetServerLevel();
             var cbs = new CBSHandler(level);
             var plan = cbs.Search();
-            // ServerHandler.SendServerPlan(plan);
+            ServerHandler.SendServerPlan(plan);
         }
     }
 }
