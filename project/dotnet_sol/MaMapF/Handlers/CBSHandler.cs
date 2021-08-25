@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using MaMapF.Models;
 using Priority_Queue;
+using Action = MaMapF.Models.Action;
 
 namespace MaMapF
 {
@@ -39,8 +41,20 @@ namespace MaMapF
                 var conflict = GetConflict(p);
                 if (conflict == null)
                 {
+                    foreach (var singleAgentStates in p.Solutions.Values)
+                    {
+                        foreach (var singleAgentState in singleAgentStates)
+                        {
+                            Console.Error.WriteLine(singleAgentState);
+                        }
+                    }
+
                     return p.Solutions;
                 }
+
+                // Console.Error.WriteLine("Conflict");
+                // Console.Error.WriteLine(conflict);
+                // Environment.Exit(0);
 
                 var agents = new List<char>
                 {
@@ -52,12 +66,22 @@ namespace MaMapF
                 {
                     var c = p.Copy();
                     var constraint = GetConstraint(agent, conflict);
+                    if (constraint == null)
+                    {
+                        Console.Error.WriteLine("Constraint == null");
+                        Environment.Exit(0);
+                    }
 
                     // TODO - check shit
 
                     c.Constraints.Add(constraint);
 
                     var solution = LowLevelSearch.GetSingleAgentPlan(agent, p.Constraints);
+                    if (solution == null)
+                    {
+                        Console.Error.WriteLine("456645645645645645");
+                        Environment.Exit(0);
+                    }
 
                     if (solution == null || solution == c.Solutions[agent])
                     {
@@ -92,14 +116,15 @@ namespace MaMapF
 
             for (var step = 1; step < maxLength; step++)
             {
-                foreach (var agent0 in Level.Agents)
+                for (var a0i = 0; a0i < Level.Agents.Count; a0i++)
                 {
-                    foreach (var agent1 in Level.Agents)
+                    for (var a1i = a0i + 1; a1i < Level.Agents.Count; a1i++)
                     {
-                        if (agent0 == agent1) continue;
+                        var a0 = Level.Agents[a0i];
+                        var a1 = Level.Agents[a1i];
 
-                        var agent0S = node.Solutions[agent0];
-                        var agent1S = node.Solutions[agent1];
+                        var agent0S = node.Solutions[a0];
+                        var agent1S = node.Solutions[a1];
 
                         // CONFLICT if agent 1 and agent 2 is at same position
                         if (agent0S[step].AgentPosition.Equals(agent1S[step].AgentPosition))
@@ -107,9 +132,10 @@ namespace MaMapF
                             return new Conflict
                             {
                                 Type = "position",
-                                AgentA = agent0,
-                                AgentB = agent1,
-                                Position = agent0S[step].AgentPosition
+                                AgentA = a0,
+                                AgentB = a1,
+                                Position = agent0S[step].AgentPosition,
+                                Step = step
                             };
                         }
                     }

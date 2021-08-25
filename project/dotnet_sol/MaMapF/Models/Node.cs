@@ -5,8 +5,11 @@ namespace MaMapF.Models
 {
     public class Node
     {
-        public List<Constraint> Constraints { get; set; }
-        public Dictionary<char, List<SingleAgentState>> Solutions { get; set; }
+        public List<Constraint> Constraints { get; set; } = new List<Constraint>();
+
+        public Dictionary<char, List<SingleAgentState>> Solutions { get; set; } =
+            new Dictionary<char, List<SingleAgentState>>();
+
         public int Cost => Sic();
 
         private int Sic() => Solutions.Sum(solution => solution.Value.Count);

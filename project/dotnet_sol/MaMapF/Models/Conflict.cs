@@ -1,6 +1,4 @@
-﻿﻿using System.Collections.Generic;
-
-namespace MaMapF.Models
+﻿namespace MaMapF.Models
 {
     public class Conflict
     {
@@ -9,5 +7,10 @@ namespace MaMapF.Models
         public char AgentB { get; set; }
         public Position Position { get; set; }
         public int Step { get; set; }
+
+        public override string ToString()
+        {
+            return $"CONFLICT: Type: {Type}, Agent: {AgentA} v {AgentB}, position: {Position}, step: {Step}\n";
+        }
     }
 }
