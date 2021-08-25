@@ -14,7 +14,8 @@ namespace MaMapF
         public List<List<char>> GoalMap { get; set; }
         public Dictionary<char, List<Goal>> Goals { get; set; }
 
-        public Dictionary<char, SingleAgentState> AgentInitialStates { get; set; }
+        public Dictionary<char, SingleAgentState> AgentInitialStates { get; set; } =
+            new Dictionary<char, SingleAgentState>();
 
         public Level(
             Dictionary<char, string> colors,
@@ -80,7 +81,7 @@ namespace MaMapF
                 AgentPosition = agentPosition
             };
         }
-        
+
         public SingleAgentState GetInitialState(char agent) => AgentInitialStates[agent];
 
         public bool IsAgentGoalState(SingleAgentState state)
@@ -90,15 +91,15 @@ namespace MaMapF
             return counter == Goals[state.Agent].Count;
         }
 
-        public float GetHeuristic(SingleAgentState state)
+        public int GetHeuristic(SingleAgentState state)
         {
-            var f = state.G;
+            var h = 0;
             var boxGoals = Goals[state.Agent].Where(goal => goal.Item != state.Agent);
 
 
-            // Add max box distance
-
-            var maxBoxDistance = 0;
+            // Find box closest to goal position not already taken
+            var minBoxPosition = new Position();
+            var minBoxDistance = Int32.MaxValue;
             for (var row = 0; row < state.Map.Count; row++)
             {
                 for (var col = 0; col < state.Map[row].Count; col++)
@@ -106,26 +107,50 @@ namespace MaMapF
                     var c = state.Map[row][col];
                     foreach (var boxGoal in boxGoals)
                     {
+                        // skip taken goals
+                        if (state.Map[boxGoal.Row][boxGoal.Column] == boxGoal.Item)
+                        {
+                            continue;
+                        }
+
                         if (c == boxGoal.Item)
                         {
                             var dist = Math.Abs(row - boxGoal.Row) + Math.Abs(col - boxGoal.Column);
-                            maxBoxDistance = Math.Max(maxBoxDistance, dist);
+                            if (dist < minBoxDistance)
+                            {
+                                minBoxPosition = new Position(row, col);
+                                minBoxDistance = dist;
+                            }
                         }
                     }
                 }
             }
 
+            // Add distance from closest box to non-taken goal
+            h += minBoxDistance;
+
+            // Add distance from agent to minBox
+            var agentDistanceToMinBox = Math.Abs(state.AgentPosition.Row - minBoxPosition.Row) +
+                                        Math.Abs(state.AgentPosition.Column - minBoxPosition.Column);
+            h += agentDistanceToMinBox;
+
 
             // Add manhatten distance to agent goal
-            var agentGoal = Goals[state.Agent].FirstOrDefault(goal => goal.Item == state.Agent);
-            if (agentGoal != null)
+            if (minBoxDistance == Int32.MaxValue)
             {
-                var dist = Math.Abs(agentGoal.Row - state.AgentPosition.Row) +
-                           Math.Abs(agentGoal.Column - state.AgentPosition.Column);
-                f += dist;
-            }
 
-            return f;
+                var agentGoal = Goals[state.Agent].FirstOrDefault(goal => goal.Item == state.Agent);
+                if (agentGoal != null)
+                {
+                    var dist = Math.Abs(agentGoal.Row - state.AgentPosition.Row) +
+                               Math.Abs(agentGoal.Column - state.AgentPosition.Column);
+                    h += dist;
+                }
+
+            }
+            
+
+            return h;
 
             // var h = GetHeuristicGoalCount(state);
             // var h = GetHeuristicMaxManhattenDist(state);
