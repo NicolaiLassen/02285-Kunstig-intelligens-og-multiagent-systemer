@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "79nJpZjBoGKBe/n0voGVucU6M5hGgDLZibm04BGDZdL3QBBZ4/jV2MAbyLTA+MBz+2+CU1u9kXAuM4Z4XS8XrQ==",
+  "dgSpecHash": "xxzsFp+xqAuDqD45Qqvth8pIie3jdl85ljJ9+1dxWf0mWdKaTwnBXUU4wjtBqfg2SMDBdXAXe10vsCKwU1DiPA==",
   "success": true,
-  "projectFilePath": "C:\\Users\\nicol\\OneDrive\\Desktop\\ai\\MaMapF\\MaMapF.csproj",
-  "expectedPackageFiles": [],
+  "projectFilePath": "C:\\Users\\mgivs\\dev\\multiagent\\project\\dotnet_sol\\MaMapF\\MaMapF.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\mgivs\\.nuget\\packages\\optimizedpriorityqueue\\5.1.0\\optimizedpriorityqueue.5.1.0.nupkg.sha512"
+  ],
   "logs": []
 }
