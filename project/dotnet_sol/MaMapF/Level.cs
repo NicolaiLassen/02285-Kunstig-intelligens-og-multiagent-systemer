@@ -18,7 +18,7 @@ namespace MaMapF
         {
             var map = new List<List<char>>(InitialMatrix);
             var agentColor = Colors[agent];
-            Position agentPosition;
+            var agentPosition = new Position();
 
             for (var row = 0; row < InitialMatrix.Count; row++)
             {
