@@ -37,7 +37,8 @@ namespace MaMapF
                     var isNotExplored = !explored.Contains(s);
                     if (isNotFrontier && isNotExplored)
                     {
-                        frontier.Enqueue(s, s.F);
+                        var f = level.GetHeuristic(s);
+                        frontier.Enqueue(s, f);
                     }
                 }
             }
@@ -107,6 +108,8 @@ namespace MaMapF
             }
 
             nextState.G = state.G + 1;
+
+            // CALC LATER hmmmm
             nextState.H = 0;
 
             return nextState;
