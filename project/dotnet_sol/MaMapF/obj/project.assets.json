@@ -50,19 +50,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\nicol\\.nuget\\packages\\": {}
+    "C:\\Users\\mgivs\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\nicol\\OneDrive\\Dokumenter\\DTU\\02285 Kunstig intelligens og multiagent-systemer\\project\\dotnet_sol\\MaMapF\\MaMapF.csproj",
+      "projectUniqueName": "C:\\Users\\mgivs\\dev\\multiagent\\project\\dotnet_sol\\MaMapF\\MaMapF.csproj",
       "projectName": "MaMapF",
-      "projectPath": "C:\\Users\\nicol\\OneDrive\\Dokumenter\\DTU\\02285 Kunstig intelligens og multiagent-systemer\\project\\dotnet_sol\\MaMapF\\MaMapF.csproj",
-      "packagesPath": "C:\\Users\\nicol\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\nicol\\OneDrive\\Dokumenter\\DTU\\02285 Kunstig intelligens og multiagent-systemer\\project\\dotnet_sol\\MaMapF\\obj\\",
+      "projectPath": "C:\\Users\\mgivs\\dev\\multiagent\\project\\dotnet_sol\\MaMapF\\MaMapF.csproj",
+      "packagesPath": "C:\\Users\\mgivs\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\mgivs\\dev\\multiagent\\project\\dotnet_sol\\MaMapF\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\nicol\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\mgivs\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -74,6 +74,7 @@
       },
       "frameworks": {
         "netcoreapp3.1": {
+          "targetAlias": "netcoreapp3.1",
           "projectReferences": {}
         }
       },
@@ -85,6 +86,7 @@
     },
     "frameworks": {
       "netcoreapp3.1": {
+        "targetAlias": "netcoreapp3.1",
         "dependencies": {
           "OptimizedPriorityQueue": {
             "target": "Package",
@@ -106,7 +108,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.1.201\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.101\\RuntimeIdentifierGraph.json"
       }
     }
   }

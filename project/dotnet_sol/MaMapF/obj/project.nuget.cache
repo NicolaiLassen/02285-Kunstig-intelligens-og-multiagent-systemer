@@ -1,10 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "UpjTNiAhago42JJ4P+MLEREPx+hC2T7w/koL2t7vXu+mDr2SjWER+71w770dlOIuC2vScs/rYwdQwEEz2EacFQ==",
+  "dgSpecHash": "xxzsFp+xqAuDqD45Qqvth8pIie3jdl85ljJ9+1dxWf0mWdKaTwnBXUU4wjtBqfg2SMDBdXAXe10vsCKwU1DiPA==",
   "success": true,
-  "projectFilePath": "C:\\Users\\nicol\\OneDrive\\Dokumenter\\DTU\\02285 Kunstig intelligens og multiagent-systemer\\project\\dotnet_sol\\MaMapF\\MaMapF.csproj",
+  "projectFilePath": "C:\\Users\\mgivs\\dev\\multiagent\\project\\dotnet_sol\\MaMapF\\MaMapF.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\nicol\\.nuget\\packages\\optimizedpriorityqueue\\5.1.0\\optimizedpriorityqueue.5.1.0.nupkg.sha512"
+    "C:\\Users\\mgivs\\.nuget\\packages\\optimizedpriorityqueue\\5.1.0\\optimizedpriorityqueue.5.1.0.nupkg.sha512"
   ],
   "logs": []
 }
