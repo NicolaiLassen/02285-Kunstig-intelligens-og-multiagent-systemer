@@ -16,7 +16,7 @@ namespace MaMapF
 
     public class LowLevelSearch
     {
-        public static readonly SearchType SearchType = SearchType.ASTAR;
+        public static readonly SearchType SearchType = SearchType.GREEDY;
         public static readonly int MaxActionRepeat = -1;
 
         public static List<SingleAgentState> GetSingleAgentPlan(
@@ -100,6 +100,7 @@ namespace MaMapF
                     var nextState = CreateNextState(state, action);
                     if (!BreaksConstraint(nextState, constraints))
                     {
+                        nextState.Counter = constraints.Count;
                         states.Add(nextState);
                     }
                 }
