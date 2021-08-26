@@ -3,6 +3,9 @@ using System.Linq;
 
 namespace MaMapF.Models
 {
+
+
+
     public class SingleAgentState
     {
         private int Hash = -1;
@@ -11,6 +14,9 @@ namespace MaMapF.Models
 
         public char Agent { get; set; }
         public Position AgentPosition { get; set; }
+        public List<MapItem> Boxes { get; set; }
+
+
         public Action Action { get; set; }
         public int G { get; set; } // COST
         public int H { get; set; } // HEURISTIC
@@ -24,8 +30,24 @@ namespace MaMapF.Models
             return $"{info}\n{map}\n";
         }
 
-        public bool IsFree(Position position) => Map[position.Row][position.Column] == ' ';
-        public bool IsBox(Position position) => char.IsLetter(Map[position.Row][position.Column]);
+        public bool IsFree(Position position)
+        {
+            if (AgentPosition.Equals(position)) return false;
+            if (IsBox(position)) return false;
+            if (IsWall(position)) return false;
+            return true;
+        }
+
+        public bool IsWall(Position position)
+        {
+            return Map[position.Row][position.Column] == '+';
+        }
+
+        public bool IsBox(Position position)
+        {
+            // return Boxes.Any(b => b.Position.Equals(position));
+            return char.IsLetter(Map[position.Row][position.Column]);
+        }
 
 
         public override int GetHashCode()

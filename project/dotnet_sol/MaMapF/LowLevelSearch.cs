@@ -30,12 +30,11 @@ namespace MaMapF
 
             while (frontier.Count != 0)
             {
-                Console.Error.WriteLine(frontier.Count);
                 var state = frontier.Dequeue();
                 explored.Add(state);
 
                 // Console.Error.WriteLine(frontier.Count);
-                // Console.Error.WriteLine(state);
+                Console.Error.WriteLine(state);
                 // if (state.G > 10) Environment.Exit(0);
 
                 if (Level.IsAgentGoalState(state))
@@ -51,7 +50,7 @@ namespace MaMapF
                     if (isNotFrontier && isNotExplored)
                     {
                         s.H = heuristic.GetHeuristic(s);
-                        
+
                         // greedy
                         frontier.Enqueue(s, s.H);
 
@@ -105,6 +104,7 @@ namespace MaMapF
 
             nextState.Agent = state.Agent;
             nextState.AgentPosition = state.AgentPosition;
+            nextState.Boxes = state.Boxes.Select(b => b).ToList();
             nextState.Map = state.Map.Select(item => item.Select(e => e).ToList()).ToList();
 
 
@@ -112,6 +112,8 @@ namespace MaMapF
             if (action.Type == ActionType.Move)
             {
                 nextState.AgentPosition = state.AgentPosition.Next(action.AgentRowDelta, action.AgentColumnDelta);
+
+                // Update map
                 nextState.Map[nextState.AgentPosition.Row][nextState.AgentPosition.Column] = state.Agent;
                 nextState.Map[state.AgentPosition.Row][state.AgentPosition.Column] = ' ';
             }
@@ -119,9 +121,13 @@ namespace MaMapF
             if (action.Type == ActionType.Push)
             {
                 nextState.AgentPosition = state.AgentPosition.Next(action.AgentRowDelta, action.AgentColumnDelta);
-                var boxValue = state.Map[nextState.AgentPosition.Row][nextState.AgentPosition.Column];
                 var nextBoxPosition = nextState.AgentPosition.Next(action.BoxRowDelta, action.BoxColumnDelta);
+                nextState.Boxes = state.Boxes.Select(b =>
+                    b.Position.Equals(nextState.AgentPosition) ? new MapItem(b.Value, nextBoxPosition) : b).ToList();
 
+
+                // update map
+                var boxValue = state.Map[nextState.AgentPosition.Row][nextState.AgentPosition.Column];
                 nextState.Map[nextBoxPosition.Row][nextBoxPosition.Column] = boxValue;
                 nextState.Map[nextState.AgentPosition.Row][nextState.AgentPosition.Column] = state.Agent;
                 nextState.Map[state.AgentPosition.Row][state.AgentPosition.Column] = ' ';
@@ -129,10 +135,14 @@ namespace MaMapF
 
             if (action.Type == ActionType.Pull)
             {
-                nextState.AgentPosition = state.AgentPosition.Next(action.AgentRowDelta, action.AgentColumnDelta);
                 var boxPosition = state.AgentPosition.Next(action.BoxRowDelta * -1, action.BoxColumnDelta * -1);
-                var boxValue = state.Map[boxPosition.Row][boxPosition.Column];
+                var nextBoxPosition = state.AgentPosition.Next(0, 0);
+                nextState.AgentPosition = state.AgentPosition.Next(action.AgentRowDelta, action.AgentColumnDelta);
+                nextState.Boxes = state.Boxes
+                    .Select(b => b.Position.Equals(boxPosition) ? new MapItem(b.Value, nextBoxPosition) : b).ToList();
 
+                // update map
+                var boxValue = state.Map[boxPosition.Row][boxPosition.Column];
                 nextState.Map[nextState.AgentPosition.Row][nextState.AgentPosition.Column] = state.Agent;
                 nextState.Map[state.AgentPosition.Row][state.AgentPosition.Column] = boxValue;
                 nextState.Map[boxPosition.Row][boxPosition.Column] = ' ';

@@ -27,45 +27,50 @@ namespace MaMapF
             var h = 0;
 
 
-            var emptyBoxGoals = BoxGoals.Where(g => state.IsBox(new Position(g.Row, g.Column)));
+            var emptyBoxGoals = BoxGoals.Where(g =>
+                !state.Boxes.Any(b => b.Value == g.Item && b.Position.Equals(new Position(g.Row, g.Column)))).ToList();
 
-
-            // Find box closest to goal position not already taken
-            // var minBoxPosition = new Position();
-            // var minBoxDistance = Int32.MaxValue;
-            // for (var row = 0; row < state.Map.Count; row++)
+            // Console.WriteLine($"emptyBoxGoals: {emptyBoxGoals.Count}");
+            // if (!emptyBoxGoals.Any())
             // {
-            //     for (var col = 0; col < state.Map[row].Count; col++)
-            //     {
-            //         var c = state.Map[row][col];
-            //         foreach (var boxGoal in BoxGoals)
-            //         {
-            //             // skip taken goals
-            //             if (state.Map[boxGoal.Row][boxGoal.Column] == boxGoal.Item)
-            //             {
-            //                 continue;
-            //             }
-            //
-            //             if (c == boxGoal.Item)
-            //             {
-            //                 var dist = Math.Abs(row - boxGoal.Row) + Math.Abs(col - boxGoal.Column);
-            //                 if (dist < minBoxDistance)
-            //                 {
-            //                     minBoxPosition = new Position(row, col);
-            //                     minBoxDistance = dist;
-            //                 }
-            //             }
-            //         }
-            //     }
+            //     Environment.Exit(0);
             // }
-            //
-            // // Add distance from closest box to non-taken goal
-            // h += minBoxDistance;
-            //
-            // // Add distance from agent to minBox
-            // var agentDistanceToMinBox = Math.Abs(state.AgentPosition.Row - minBoxPosition.Row) +
-            //                             Math.Abs(state.AgentPosition.Column - minBoxPosition.Column);
-            // h += agentDistanceToMinBox;
+
+            if (emptyBoxGoals.Any())
+            {
+                // find box with shortest distance to goal
+                var minBoxDistance = Int32.MaxValue;
+                MapItem minBox = null;
+                foreach (var boxGoal in emptyBoxGoals)
+                {
+                    foreach (var box in state.Boxes)
+                    {
+                        var distance = Math.Abs(boxGoal.Row - box.Position.Row) +
+                                       Math.Abs(boxGoal.Column - box.Position.Column);
+                        if (distance < minBoxDistance)
+                        {
+                            minBoxDistance = distance;
+                            minBox = box;
+                        }
+                    }
+                }
+
+                // dont know
+                if (minBox == null || minBoxDistance == Int32.MaxValue)
+                {
+                    Console.Error.WriteLine("LowLevelHeuristic MIN BOX WAS NULL???");
+                    Environment.Exit(0);
+                }
+
+
+                // Add distance from closest box to non-taken goal
+                h += minBoxDistance;
+
+                // Add distance from agent to minBox
+                var agentDistanceToMinBox = Math.Abs(state.AgentPosition.Row - minBox.Position.Row) +
+                                            Math.Abs(state.AgentPosition.Column - minBox.Position.Column);
+                h += agentDistanceToMinBox;
+            }
 
 
             // Add manhatten distance to agent goal

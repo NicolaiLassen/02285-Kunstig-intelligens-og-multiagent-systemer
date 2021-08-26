@@ -41,6 +41,7 @@ namespace MaMapF
             var map = InitialMap.Select(r => r.Select(c => c).ToList()).ToList();
             var agentColor = Colors[agent];
             var agentPosition = new Position();
+            var boxes = new List<MapItem>();
 
             for (var row = 0; row < InitialMap.Count; row++)
             {
@@ -59,6 +60,7 @@ namespace MaMapF
                         continue;
                     }
 
+                    // Remove other agents
                     if (char.IsDigit(c))
                     {
                         map[row][col] = ' ';
@@ -66,9 +68,15 @@ namespace MaMapF
 
                     if (!char.IsLetter(c)) continue;
 
+                    // Remove other agent boxes
                     if (Colors[c] != agentColor)
                     {
                         map[row][col] = ' ';
+                    }
+
+                    if (Colors[c] == agentColor)
+                    {
+                        boxes.Add(new MapItem(c, new Position(row, col)));
                     }
                 }
             }
@@ -78,7 +86,8 @@ namespace MaMapF
                 G = 0,
                 Map = map,
                 Agent = agent,
-                AgentPosition = agentPosition
+                AgentPosition = agentPosition,
+                Boxes = boxes,
             };
         }
 
