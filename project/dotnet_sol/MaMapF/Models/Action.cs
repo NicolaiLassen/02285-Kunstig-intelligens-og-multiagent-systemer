@@ -43,16 +43,16 @@ namespace MaMapF.Models
 
         public static readonly List<Action> AllActions = new List<Action>
         {
-            //NoOp
+            // NoOp
             NoOp,
 
-            //Move
+            // Move
             new Action("Move(N)", ActionType.Move, -1, 0, 0, 0),
             new Action("Move(S)", ActionType.Move, 1, 0, 0, 0),
             new Action("Move(E)", ActionType.Move, 0, 1, 0, 0),
             new Action("Move(W)", ActionType.Move, 0, -1, 0, 0),
 
-            //Push
+            // Push
             new Action("Push(N,N)", ActionType.Push, -1, 0, -1, 0),
             new Action("Push(N,W)", ActionType.Push, -1, 0, 0, -1),
             new Action("Push(N,E)", ActionType.Push, -1, 0, 0, 1),
@@ -69,7 +69,7 @@ namespace MaMapF.Models
             new Action("Push(W,N)", ActionType.Push, 0, -1, -1, 0),
             new Action("Push(W,S)", ActionType.Push, 0, -1, 1, 0),
 
-            //Pull
+            // Pull
             new Action("Pull(N,N)", ActionType.Pull, -1, 0, -1, 0),
             new Action("Pull(N,W)", ActionType.Pull, -1, 0, 0, -1),
             new Action("Pull(N,E)", ActionType.Pull, -1, 0, 0, 1),

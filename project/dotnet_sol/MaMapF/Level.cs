@@ -11,7 +11,7 @@ namespace MaMapF
 
         public List<List<char>> InitialMap { get; set; }
         public List<List<char>> GoalMap { get; set; }
-        public Dictionary<char, List<Goal>> Goals { get; set; }
+        public Dictionary<char, List<MapItem>> Goals { get; set; }
 
         public Dictionary<char, SingleAgentState> AgentInitialStates { get; set; }
 
@@ -20,7 +20,7 @@ namespace MaMapF
             List<char> agents,
             List<List<char>> initialMap,
             List<List<char>> goalMap,
-            Dictionary<char, List<Goal>> goals
+            Dictionary<char, List<MapItem>> goals
         )
         {
             Colors = colors;
@@ -96,7 +96,8 @@ namespace MaMapF
         public bool IsAgentGoalState(SingleAgentState state)
         {
             var agentGoals = Goals[state.Agent];
-            var counter = agentGoals.Count(agentGoal => state.Map[agentGoal.Row][agentGoal.Column] == agentGoal.Item);
+            var counter = agentGoals.Count(agentGoal =>
+                state.Map[agentGoal.Position.Row][agentGoal.Position.Column] == agentGoal.Value);
             return counter == Goals[state.Agent].Count;
         }
     }
