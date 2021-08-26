@@ -16,8 +16,8 @@ namespace MaMapF
 
     public class LowLevelSearch
     {
-        public static readonly SearchType SearchType = SearchType.GREEDY;
-        public static readonly int MaxNoOp = 100;
+        public static readonly SearchType SearchType = SearchType.ASTAR;
+        public static readonly int MaxActionRepeat = -1;
 
         public static List<SingleAgentState> GetSingleAgentPlan(
             SingleAgentState initialState,
@@ -66,9 +66,9 @@ namespace MaMapF
 
         private static bool IsNotExploredMaxNoOp(HashSet<SingleAgentState> explored, SingleAgentState state)
         {
-            if (MaxNoOp == -1) return true;
+            if (MaxActionRepeat == -1) return true;
             var s = CreateNextState(state, Action.NoOp);
-            s.G -= 10;
+            s.G -= MaxActionRepeat;
             var isNotExplored = !explored.Contains(s);
             return isNotExplored;
         }

@@ -18,6 +18,7 @@ namespace MaMapF.Models
         public int G { get; set; } // COST
         public int H { get; set; } // HEURISTIC
         public int F => G + H;
+        
 
 
         public List<MapItem> AllMapItems => Boxes.Concat(new[] {new MapItem(Agent, AgentPosition),}).ToList();
