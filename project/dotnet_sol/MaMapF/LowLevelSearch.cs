@@ -20,7 +20,7 @@ namespace MaMapF
         {
             var goals = Level.Goals[agent];
             var heuristic = new LowLevelHeuristic(goals);
-            
+
             var frontier = new SimplePriorityQueue<SingleAgentState>();
             var explored = new HashSet<SingleAgentState>();
 
@@ -34,7 +34,13 @@ namespace MaMapF
 
                 // Console.Error.WriteLine(frontier.Count);
                 Console.Error.WriteLine(state);
-                // if (state.G > 10) Environment.Exit(0);
+                // if (agent == '1'&& state.G != 0 && state.H == 0)
+                // {
+                //
+                //     Level.Goals[agent].ForEach(g => Console.Error.WriteLine(g));
+                //     Console.Error.WriteLine(Level.IsAgentGoalState(state));
+                //     Environment.Exit(0);
+                // }
 
                 if (Level.IsAgentGoalState(state))
                 {

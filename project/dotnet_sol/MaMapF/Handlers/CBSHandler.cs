@@ -42,7 +42,6 @@ namespace MaMapF.Handlers
                 // Console.Error.WriteLine("");
 
                 var conflict = GetConflict(p);
-                // Console.Error.WriteLine(conflict);
                 if (conflict == null)
                 {
                     return p.Solutions;
