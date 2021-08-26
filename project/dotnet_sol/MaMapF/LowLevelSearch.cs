@@ -33,7 +33,7 @@ namespace MaMapF
                 explored.Add(state);
 
                 // Console.Error.WriteLine(frontier.Count);
-                Console.Error.WriteLine(state);
+                // Console.Error.WriteLine(state);
                 // if (state.G > 10) Environment.Exit(0);
 
                 if (Level.IsAgentGoalState(state))
@@ -51,10 +51,10 @@ namespace MaMapF
                         s.H = heuristic.GetHeuristic(s, constraints);
 
                         // greedy
-                        frontier.Enqueue(s, s.H);
+                        // frontier.Enqueue(s, s.H);
 
                         // astar
-                        // frontier.Enqueue(s, s.F);
+                        frontier.Enqueue(s, s.F);
                     }
                 }
             }
