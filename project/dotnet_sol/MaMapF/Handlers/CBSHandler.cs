@@ -3,7 +3,7 @@ using System.Linq;
 using MaMapF.Models;
 using Priority_Queue;
 
-namespace MaMapF
+namespace MaMapF.Handlers
 {
     public class CBSHandler
     {
@@ -60,7 +60,7 @@ namespace MaMapF
 
 
                     nextNode.Constraints.Add(constraint);
-                    
+
                     var agentConstraints = nextNode.Constraints.Where(c => c.Agent == agent).ToList();
                     var solution = LowLevelSearch.GetSingleAgentPlan(agent, agentConstraints);
                     if (solution == null || solution == nextNode.Solutions[agent])
