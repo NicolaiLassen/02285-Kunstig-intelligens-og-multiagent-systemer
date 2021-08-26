@@ -1,0 +1,23 @@
+#domain
+hospital
+#levelname
+MA_Corridor_Simple
+#colors
+blue: 0, 1
+#initial
++++++++
++++1+++
++++ +++
++++  ++
++++ +++
++++0+++
++++++++
+#goal
++++++++
++++0+++
++++ +++
++++  ++
++++ +++
++++1+++
++++++++
+#end
