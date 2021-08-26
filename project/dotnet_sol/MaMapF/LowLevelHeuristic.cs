@@ -29,6 +29,7 @@ namespace MaMapF
 
             var emptyBoxGoals = BoxGoals.Where(g =>
                 !state.Boxes.Any(b => b.Value == g.Value && b.Position.Equals(g.Position))).ToList();
+            var hasBoxGoals = emptyBoxGoals.Any();
 
             // Console.WriteLine($"emptyBoxGoals: {emptyBoxGoals.Count}");
             // if (!emptyBoxGoals.Any())
@@ -36,7 +37,9 @@ namespace MaMapF
             //     Environment.Exit(0);
             // }
 
-            if (emptyBoxGoals.Any())
+
+            
+            if (hasBoxGoals)
             {
                 // find box with shortest distance to goal
                 var minBoxDistance = Int32.MaxValue;
@@ -47,44 +50,35 @@ namespace MaMapF
                     {
                         var distance = Math.Abs(boxGoal.Position.Row - box.Position.Row) +
                                        Math.Abs(boxGoal.Position.Column - box.Position.Column);
-                        if (distance < minBoxDistance)
-                        {
-                            minBoxDistance = distance;
-                            minBox = box;
-                        }
+
+                        Console.Error.WriteLine($"distance: {distance}");
+                        if (distance >= minBoxDistance) continue;
+                        minBoxDistance = distance;
+                        minBox = box;
                     }
                 }
 
-                // dont know
-                if (minBox != null && minBoxDistance != Int32.MaxValue)
+                if (minBox == null)
                 {
-                    // Add distance from closest box to non-taken goal
-                    h += minBoxDistance;
-
-                    // Add distance from agent to minBox
-                    var agentDistanceToMinBox = Math.Abs(state.AgentPosition.Row - minBox.Position.Row) +
-                                                Math.Abs(state.AgentPosition.Column - minBox.Position.Column);
-                    h += agentDistanceToMinBox;
-
+                    Console.Error.WriteLine("HOW");
                 }
 
+                // Add distance from closest box to non-taken goal
+                h += minBoxDistance;
 
+                // Add distance from agent to minBox
+                var agentDistanceToMinBox = Math.Abs(state.AgentPosition.Row - minBox.Position.Row) +
+                                            Math.Abs(state.AgentPosition.Column - minBox.Position.Column);
+                h += agentDistanceToMinBox;
             }
 
-
-            // Add manhatten distance to agent goal
-            // if (minBoxDistance == Int32.MaxValue)
-            // {
-            if (AgentGoalPosition != null)
-            {
-                var dist = Math.Abs(AgentGoalPosition.Row - state.AgentPosition.Row) +
-                           Math.Abs(AgentGoalPosition.Column - state.AgentPosition.Column);
-                h += dist;
-            }
-            // }
-
-
-            return h;
+            if (hasBoxGoals) return h;
+            if (AgentGoalPosition == null) return h;
+            
+            var dist = Math.Abs(AgentGoalPosition.Row - state.AgentPosition.Row) +
+                       Math.Abs(AgentGoalPosition.Column - state.AgentPosition.Column);
+            
+            return h + dist;
         }
     }
 }
