@@ -34,6 +34,7 @@ namespace MaMapF.Models
 
             var prime = 31;
             var hash = prime + (AgentPosition.Row + 1) * 23 + (AgentPosition.Column + 1) * 29;
+            hash = hash * prime + G * 13;
             hash = hash * prime + Map.Sum(row => row.Sum(c => c.GetHashCode()));
             Hash = hash;
             return Hash;
@@ -41,9 +42,10 @@ namespace MaMapF.Models
 
         public override bool Equals(object obj)
         {
+            if (obj == null) return false;
             if (!(obj is SingleAgentState other)) return false;
+            if (G != other.G) return false;
             // if (AgentPosition.Row != other.AgentPosition.Row && AgentPosition.Column != other.AgentPosition.Column) return false;
-
             for (var row = 0; row < Map.Count; row++)
             {
                 for (var col = 0; col < Map[row].Count; col++)

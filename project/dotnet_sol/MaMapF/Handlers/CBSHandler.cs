@@ -36,7 +36,7 @@ namespace MaMapF
 
             while (open.Count != 0)
             {
-                Console.Error.WriteLine($"OPEN: {open.Count}");
+                // Console.Error.WriteLine($"OPEN: {open.Count}");
 
                 var p = open.Dequeue();
                 // Console.Error.WriteLine($"p.Constraints.Count: {p.Constraints.Count}");
@@ -55,33 +55,13 @@ namespace MaMapF
                     var nextNode = p.Copy();
 
                     var constraint = GetConstraint(agent, conflict);
-                    // Console.Error.WriteLine("-------------------------------");
-                    // Console.Error.WriteLine(constraint);
-                    // Console.Error.WriteLine("");
-                    // Console.Error.WriteLine(nextNode.Constraints.Contains(constraint));
-                    //
                     if (nextNode.Constraints.Contains(constraint))
                     {
-                        // Console.Error.WriteLine("!!!!!!!!!!!!!!!!!!");
-                        // Console.Error.WriteLine(constraint);
-                        // Console.Error.WriteLine("IS IN THIS LIST");
-                        // Console.Error.WriteLine("IS IN THIS LIST");
-                        // Console.Error.WriteLine("IS IN THIS LIST");
-                        // nextNode.Constraints.ForEach(c => Console.Error.WriteLine(c));
-
-
-                        
-                        // Environment.Exit(0);
                         continue;
                     }
-                    
-                    
+
+
                     nextNode.Constraints.Add(constraint);
-                    
-                    // if (p.Constraints.Contains(constraint))
-                    // {
-                    //     continue;
-                    // }
 
 
                     var agentConstraints = nextNode.Constraints.Where(c => c.Agent == agent).ToList();

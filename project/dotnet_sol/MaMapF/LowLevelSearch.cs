@@ -30,6 +30,7 @@ namespace MaMapF
 
             while (frontier.Count != 0)
             {
+                Console.Error.WriteLine(frontier.Count);
                 var state = frontier.Dequeue();
                 explored.Add(state);
 
@@ -50,7 +51,12 @@ namespace MaMapF
                     if (isNotFrontier && isNotExplored)
                     {
                         s.H = heuristic.GetHeuristic(s);
+                        
+                        // greedy
                         frontier.Enqueue(s, s.H);
+
+                        // astar
+                        // frontier.Enqueue(s, s.F);
                     }
                 }
             }
@@ -71,10 +77,9 @@ namespace MaMapF
                     {
                         states.Add(nextState);
                     }
-
                 }
             }
-            
+
             // if (constraints.Any())
             // {
             //     Console.Error.WriteLine("QQQQQQQQQQQQQQQQQQQQQQQQQQQ");
