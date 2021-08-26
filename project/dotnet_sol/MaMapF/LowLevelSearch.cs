@@ -49,7 +49,7 @@ namespace MaMapF
                     var isNotExplored = !explored.Contains(s);
                     if (isNotFrontier && isNotExplored)
                     {
-                        s.H = heuristic.GetHeuristic(s);
+                        s.H = heuristic.GetHeuristic(s, constraints);
 
                         // greedy
                         frontier.Enqueue(s, s.H);
