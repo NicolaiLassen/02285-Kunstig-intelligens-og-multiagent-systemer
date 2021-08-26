@@ -1,0 +1,25 @@
+#domain
+hospital
+#levelname
+MASsacre
+#colors
+red: 0, A
+green: 1, E
+blue: 2, F
+#initial
+++++++++
++ F 0E2+
++  ++ ++
++ ++  ++
++A     +
++++++1++
+++++++++
+#goal
+++++++++
++      +
++  ++ ++
++ ++  ++
++    1A+
++++++0++
+++++++++
+#end

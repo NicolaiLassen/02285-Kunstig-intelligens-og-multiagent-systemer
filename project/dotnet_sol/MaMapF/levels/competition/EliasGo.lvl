@@ -1,0 +1,30 @@
+#domain
+hospital
+#levelname
+EliasGo
+#colors
+red: 0, A, C, E
+green: 1, B, D, H
+cyan: 2, F, G, I
+blue: 3, J, K
+#initial
+++++++++++++
++0  B  +E  +
++1  A   I G+
++      C  D+
+ + F  + +2 +
++  +   H   +
++   +3 + J +
++  K       +
+++++++++++++
+#goal
+++++++++++++
++  F   +  A+
++  I C    B+
++ D  J  E  +
+ +   G+ +  +
++  +     H +
++K  +  +   +
++          +
+++++++++++++
+#end

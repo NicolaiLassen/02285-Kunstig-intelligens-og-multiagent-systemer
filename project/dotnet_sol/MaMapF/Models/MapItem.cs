@@ -10,5 +10,10 @@
             this.Value = value;
             this.Position = position;
         }
+
+        public override string ToString()
+        {
+            return $"MAPITEM\n Value: {Value}, Position: {Position}";
+        }
     }
 }

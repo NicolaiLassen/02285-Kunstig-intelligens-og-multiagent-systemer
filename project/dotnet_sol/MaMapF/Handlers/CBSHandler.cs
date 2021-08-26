@@ -7,22 +7,19 @@ namespace MaMapF.Handlers
 {
     public class CBSHandler
     {
-        public Level Level { get; }
-        public LowLevelSearch LowLevelSearch { get; }
-
-        public CBSHandler(Level level)
-        {
-            Level = level;
-            LowLevelSearch = new LowLevelSearch(level);
-        }
-
-        public Dictionary<char, List<SingleAgentState>> Search()
+        public static Dictionary<char, List<SingleAgentState>> Search(
+            List<char> agents,
+            Dictionary<char, List<MapItem>> goals,
+            Dictionary<char, SingleAgentState> initialStates
+        )
         {
             var open = new SimplePriorityQueue<Node>();
             var solutions = new Dictionary<char, List<SingleAgentState>>();
-            foreach (var agent in Level.Agents)
+            foreach (var agent in agents)
             {
-                solutions[agent] = LowLevelSearch.GetSingleAgentPlan(agent, new List<Constraint>());
+                var initialState = initialStates[agent];
+                var agentGoals = goals[agent];
+                solutions[agent] = LowLevelSearch.GetSingleAgentPlan(initialState, agentGoals, new List<Constraint>());
             }
 
             var initialNode = new Node
@@ -41,8 +38,7 @@ namespace MaMapF.Handlers
                 // p.Constraints.ForEach(c => Console.Error.WriteLine(c));
                 // Console.Error.WriteLine("");
 
-                var conflict = GetConflict(p);
-                // Console.Error.WriteLine(conflict);
+                var conflict = GetConflict(agents, p);
                 if (conflict == null)
                 {
                     return p.Solutions;
@@ -62,7 +58,10 @@ namespace MaMapF.Handlers
                     nextNode.Constraints.Add(constraint);
 
                     var agentConstraints = nextNode.Constraints.Where(c => c.Agent == agent).ToList();
-                    var solution = LowLevelSearch.GetSingleAgentPlan(agent, agentConstraints);
+
+                    var initialState = initialStates[agent];
+                    var agentGoals = goals[agent];
+                    var solution = LowLevelSearch.GetSingleAgentPlan(initialState, agentGoals, agentConstraints);
                     if (solution == null || solution == nextNode.Solutions[agent])
                     {
                         continue;
@@ -76,7 +75,7 @@ namespace MaMapF.Handlers
             return null;
         }
 
-        private Conflict GetConflict(Node node)
+        private static Conflict GetConflict(List<char> agents, Node node)
         {
             var maxLength = node.Solutions.Max(solution => solution.Value.Count);
             var solutions = new Dictionary<char, List<SingleAgentState>>(node.Solutions);
@@ -97,12 +96,12 @@ namespace MaMapF.Handlers
 
             for (var step = 1; step < maxLength; step++)
             {
-                for (var a0i = 0; a0i < Level.Agents.Count; a0i++)
+                for (var a0i = 0; a0i < agents.Count; a0i++)
                 {
-                    for (var a1i = a0i + 1; a1i < Level.Agents.Count; a1i++)
+                    for (var a1i = a0i + 1; a1i < agents.Count; a1i++)
                     {
-                        var a0 = Level.Agents[a0i];
-                        var a1 = Level.Agents[a1i];
+                        var a0 = agents[a0i];
+                        var a1 = agents[a1i];
                         var a0s = node.Solutions[a0];
                         var a1s = node.Solutions[a1];
 

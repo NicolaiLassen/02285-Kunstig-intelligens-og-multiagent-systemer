@@ -1,0 +1,45 @@
+#domain
+hospital
+#levelname
+DQaNon
+#colors
+red: 5, G
+orange: 4, R
+cyan: 1, T
+green: 6, E
+lightblue: 2, A
+blue: 3, M
+pink: 0, W
+grey: 7, K
+purple:8, O
+#initial
++++++++++++++++++
++               +
++               +
++  WORK0  RATE1 +
++    2      3   +
++               +
++               +
++       G       +
++               +
++       4  5    +
++    86MEAT7    +
++               +
++               +
++++++++++++++++++
+#goal
++++++++++++++++++
++               +
++               +
++  GREAT  WORK1 +
++    2      3   +
++               +
++               +
++       6       +
++               +
++    5     0    +
++    84TEAM7    +
++               +
++               +
++++++++++++++++++
+#end

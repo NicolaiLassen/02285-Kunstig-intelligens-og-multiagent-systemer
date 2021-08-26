@@ -9,22 +9,18 @@ namespace MaMapF
 {
     public class LowLevelSearch
     {
-        public readonly Level Level;
+        private readonly int MaxNoOp = 0;
 
-        public LowLevelSearch(Level level)
+        public  static List<SingleAgentState> GetSingleAgentPlan(
+            SingleAgentState initialState,
+            List<MapItem> goals,
+            List<Constraint> constraints
+        )
         {
-            this.Level = level;
-        }
-
-        public List<SingleAgentState> GetSingleAgentPlan(char agent, List<Constraint> constraints)
-        {
-            var goals = Level.Goals[agent];
             var heuristic = new LowLevelHeuristic(goals);
-            
             var frontier = new SimplePriorityQueue<SingleAgentState>();
             var explored = new HashSet<SingleAgentState>();
 
-            var initialState = Level.GetInitialState(agent);
             frontier.Enqueue(initialState, 0);
 
             while (frontier.Count != 0)
@@ -33,10 +29,10 @@ namespace MaMapF
                 explored.Add(state);
 
                 // Console.Error.WriteLine(frontier.Count);
-                // Console.Error.WriteLine(state);
                 // if (state.G > 10) Environment.Exit(0);
+                Console.Error.WriteLine(state);
 
-                if (Level.IsAgentGoalState(state))
+                if (IsGoalState(state, goals))
                 {
                     return GetSingleAgentSolutionFromState(state);
                 }
@@ -62,7 +58,15 @@ namespace MaMapF
             return null;
         }
 
-        public static List<SingleAgentState> ExpandSingleAgentState(SingleAgentState state,
+        private static bool IsGoalState(SingleAgentState state, List<MapItem> goals)
+        {
+            var counter = goals.Count(agentGoal =>
+                state.Map[agentGoal.Position.Row][agentGoal.Position.Column] == agentGoal.Value);
+            return counter == goals.Count;
+        }
+
+
+        private static List<SingleAgentState> ExpandSingleAgentState(SingleAgentState state,
             List<Constraint> constraints)
         {
             var states = new List<SingleAgentState>();

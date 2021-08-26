@@ -50,6 +50,7 @@ namespace MaMapF.Handlers
                     {
                         var c = goalLines[row][col];
                         if (!char.IsLetter(c) && c != agent) continue;
+                        if (colors[agent] != colors[c]) continue;
                         goals[agent].Add(
                             new MapItem(c, new Position(row, col))
                         );

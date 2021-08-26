@@ -1,0 +1,54 @@
+#domain
+hospital
+#levelname
+MAAlleys
+#colors
+red: 0, 1, B, C, D
+blue: 2, 3, E, F, G
+brown: A
+cyan: H 
+#initial
+++++++++++++++++++++
++0            E   2+
++        G       C +
++  D        F      +
++AAA     D      AAA+
++                  +
++AAA       F    AAA+
++         B D      +
++ C    C           +
++               F  +
++AAAAAAAAAAAAAAAAAA+
++1    D         F  +
++             F    +
++    C          B  +
++D       G         +
++   B              +
++           G   F C+
++    A A    AEA    +
++    A A    A A    +
++D   A A    A A   3+
+++++++++++++++++++++
+#goal
+++++++++++++++++++++
++0                2+
++                  +
++                  +
++AAA            AAA+
++BCD            EFG+
++AAA      D     AAA+
++                  +
++C         F       +
++                  +
++AAAAAAAAAAAAAAAAAA+
++1      D         3+
++                  +
++                  +
++                F +
++                B +
++        G         +
++    ABA    AGA    +
++    ACA    AFA    +
++    ADA    AEA    +
+++++++++++++++++++++
+#end

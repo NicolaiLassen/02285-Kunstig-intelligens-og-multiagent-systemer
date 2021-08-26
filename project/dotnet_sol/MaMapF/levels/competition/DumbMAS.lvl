@@ -1,0 +1,26 @@
+#domain
+hospital
+#levelname
+DumbMAS
+#colors
+blue: 0, A
+red: 2, 3, B
+cyan: 1, C
+purple: D
+#initial
++++++++++++++++++++
++0C   C   C    D 1+
++AC C C C C CC D C+
++ CB3 C C C C2 D  +
++ C C C C C CCCCDD+
++   C   C B       +
++++++++++++++++++++
+#goal
++++++++++++++++++++
++                1+
++                 +
++            2   C+
++                 +
++                A+
++++++++++++++++++++
+#end
