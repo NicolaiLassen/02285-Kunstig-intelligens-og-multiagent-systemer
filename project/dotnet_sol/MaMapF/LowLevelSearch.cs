@@ -16,10 +16,10 @@ namespace MaMapF
 
     public class LowLevelSearch
     {
-        public readonly SearchType SearchType = SearchType.GREEDY;
-        public readonly int MaxNoOp = 100;
+        public static readonly SearchType SearchType = SearchType.GREEDY;
+        public static readonly int MaxNoOp = 100;
 
-        public List<SingleAgentState> GetSingleAgentPlan(
+        public static List<SingleAgentState> GetSingleAgentPlan(
             SingleAgentState initialState,
             List<MapItem> goals,
             List<Constraint> constraints
@@ -38,6 +38,7 @@ namespace MaMapF
                 explored.Add(state);
 
                 // Console.Error.WriteLine(frontier.Count);
+                // if (state.G > 10) Environment.Exit(0);
                 Console.Error.WriteLine(state);
 
                 if (IsGoalState(state, goals))
@@ -63,7 +64,7 @@ namespace MaMapF
             return null;
         }
 
-        private bool IsNotExploredMaxNoOp(HashSet<SingleAgentState> explored, SingleAgentState state)
+        private static bool IsNotExploredMaxNoOp(HashSet<SingleAgentState> explored, SingleAgentState state)
         {
             if (MaxNoOp == -1) return true;
             var s = CreateNextState(state, Action.NoOp);
@@ -72,7 +73,7 @@ namespace MaMapF
             return isNotExplored;
         }
 
-        private int GetPriority(SingleAgentState s)
+        private static int GetPriority(SingleAgentState s)
         {
             if (SearchType == SearchType.GREEDY) return s.H;
             if (SearchType == SearchType.ASTAR) return s.F;
@@ -80,7 +81,7 @@ namespace MaMapF
         }
 
 
-        private bool IsGoalState(SingleAgentState state, List<MapItem> goals)
+        private static bool IsGoalState(SingleAgentState state, List<MapItem> goals)
         {
             var counter = goals.Count(agentGoal =>
                 state.Map[agentGoal.Position.Row][agentGoal.Position.Column] == agentGoal.Value);
