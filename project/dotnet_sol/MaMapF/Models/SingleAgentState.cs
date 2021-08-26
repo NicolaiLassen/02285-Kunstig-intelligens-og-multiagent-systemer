@@ -3,9 +3,6 @@ using System.Linq;
 
 namespace MaMapF.Models
 {
-
-
-
     public class SingleAgentState
     {
         private int Hash = -1;
@@ -22,6 +19,9 @@ namespace MaMapF.Models
         public int H { get; set; } // HEURISTIC
         public int F => G + H;
 
+
+        public List<MapItem> AllMapItems => Boxes.Concat(new[] {new MapItem(Agent, AgentPosition),}).ToList();
+        public List<Position> AllPositions => AllMapItems.Select(i => i.Position).ToList();
 
         public override string ToString()
         {

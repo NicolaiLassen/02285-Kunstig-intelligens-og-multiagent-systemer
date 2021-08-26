@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using MaMapF.Models;
 
-namespace MaMapF
+namespace MaMapF.Handlers
 {
     public class ServerHandler
     {
