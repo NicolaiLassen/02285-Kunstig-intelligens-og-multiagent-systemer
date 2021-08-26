@@ -17,7 +17,8 @@ namespace MaMapF.Handlers
         {
             
             
-            return new Dictionary<char, List<SingleAgentState>>();
+            
+            return CBSHandler.Search(Level.Agents, Level.AgentInitialStates, Level.Goals);
         } 
     }
 }

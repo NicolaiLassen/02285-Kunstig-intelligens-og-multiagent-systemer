@@ -9,8 +9,8 @@ namespace MaMapF.Handlers
     {
         public static Dictionary<char, List<SingleAgentState>> Search(
             List<char> agents,
-            Dictionary<char, List<MapItem>> goals,
-            Dictionary<char, SingleAgentState> initialStates
+            Dictionary<char, SingleAgentState> initialStates,
+            Dictionary<char, List<MapItem>> goals
         )
         {
             var open = new SimplePriorityQueue<Node>();
