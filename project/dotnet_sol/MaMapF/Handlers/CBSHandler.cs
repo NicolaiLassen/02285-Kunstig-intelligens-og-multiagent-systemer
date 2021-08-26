@@ -24,15 +24,7 @@ namespace MaMapF
             var solutions = new Dictionary<char, List<SingleAgentState>>();
             foreach (var agent in Level.Agents)
             {
-                solutions[agent] = LowLevelSearch.GetSingleAgentPlan(agent, new List<Constraint>()
-                {
-                    new Constraint()
-                    {
-                        Agent = '0',
-                        Position = new Position(2, 1),
-                        Step = 1,
-                    }
-                });
+                solutions[agent] = LowLevelSearch.GetSingleAgentPlan(agent, new List<Constraint>());
             }
 
             var initialNode = new Node
@@ -45,42 +37,38 @@ namespace MaMapF
             while (open.Count != 0)
             {
                 var p = open.Dequeue();
-
                 Console.Error.WriteLine($"OPEN: {open.Count}");
+                Console.Error.WriteLine($"p.Constraints.Count: {p.Constraints.Count}");
 
                 var conflict = GetConflict(p);
                 if (conflict == null)
                 {
-                    // PRINT SOLUTION
-                    // foreach (var singleAgentStates in p.Solutions.Values)
-                    // {
-                    //     foreach (var singleAgentState in singleAgentStates)
-                    //     {
-                    //         Console.Error.WriteLine(singleAgentState);
-                    //     }
-                    // }
-
                     return p.Solutions;
                 }
-
-                // Console.Error.WriteLine("Conflict");
-                // Console.Error.WriteLine(conflict);
-                // Environment.Exit(0);
 
                 foreach (var agent in new List<char> {conflict.AgentA, conflict.AgentB})
                 {
                     var nextNode = p.Copy();
 
                     var constraint = GetConstraint(agent, conflict);
-                    // if (constraint == null)
+                    // Console.Error.WriteLine("-------------------------------");
+                    // Console.Error.WriteLine(constraint);
+                    // Console.Error.WriteLine("");
+                    // Console.Error.WriteLine(nextNode.Constraints.Contains(constraint));
+                    //
+                    if (nextNode.Constraints.Contains(constraint))
+                    {
+                        continue;
+                    }
+                    
+                    
+                    nextNode.Constraints.Add(constraint);
+                    
+                    // if (p.Constraints.Contains(constraint))
                     // {
-                    //     Console.Error.WriteLine("Constraint == null");
-                    //     Environment.Exit(0);
+                    //     continue;
                     // }
 
-                    // TODO - check shit
-
-                    nextNode.Constraints.Add(constraint);
 
                     var agentConstraints = p.Constraints.Where(c => c.Agent == agent).ToList();
                     var solution = LowLevelSearch.GetSingleAgentPlan(agent, agentConstraints);
@@ -124,19 +112,52 @@ namespace MaMapF
                         var a0 = Level.Agents[a0i];
                         var a1 = Level.Agents[a1i];
 
-                        var agent0S = node.Solutions[a0];
-                        var agent1S = node.Solutions[a1];
+                        var a0s = node.Solutions[a0];
+                        var a1s = node.Solutions[a1];
+
+                        var a0CurrentPosition = a0s[step].AgentPosition;
+                        var a0PreviousPosition = a0s[step - 1].AgentPosition;
+
+                        var a1CurrentPosition = a1s[step].AgentPosition;
+                        var a1PreviousPosition = a1s[step - 1].AgentPosition;
+
 
                         // CONFLICT if agent 1 and agent 2 is at same position
-                        if (agent0S[step].AgentPosition.Equals(agent1S[step].AgentPosition))
+                        if (a0CurrentPosition.Equals(a1CurrentPosition))
                         {
                             return new Conflict
                             {
                                 Type = "position",
                                 AgentA = a0,
                                 AgentB = a1,
-                                Position = agent0S[step].AgentPosition,
+                                Position = a0s[step].AgentPosition,
                                 Step = step
+                            };
+                        }
+
+                        // CONFLICT if agent 1 follows agent 2
+                        if (a0CurrentPosition.Equals(a1PreviousPosition))
+                        {
+                            return new Conflict
+                            {
+                                Type = "follow",
+                                AgentA = a0,
+                                AgentB = a1,
+                                Position = a0CurrentPosition,
+                                Step = step,
+                            };
+                        }
+
+                        // CONFLICT if agent 1 follows agent 2
+                        if (a1CurrentPosition.Equals(a0PreviousPosition))
+                        {
+                            return new Conflict
+                            {
+                                Type = "follow",
+                                AgentA = a1,
+                                AgentB = a0,
+                                Position = a1CurrentPosition,
+                                Step = step,
                             };
                         }
                     }
@@ -155,6 +176,28 @@ namespace MaMapF
                     Agent = agent,
                     Position = conflict.Position,
                     Step = conflict.Step,
+                };
+            }
+
+            // Agent is follower
+            if (conflict.Type == "follow" && agent == conflict.AgentA)
+            {
+                return new Constraint
+                {
+                    Agent = agent,
+                    Position = conflict.Position,
+                    Step = conflict.Step,
+                };
+            }
+
+            // Agent is leader
+            if (conflict.Type == "follow" && agent == conflict.AgentB)
+            {
+                return new Constraint
+                {
+                    Agent = agent,
+                    Position = conflict.Position,
+                    Step = conflict.Step - 1,
                 };
             }
 

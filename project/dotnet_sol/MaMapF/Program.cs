@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using MaMapF.Models;
+﻿using System;
 
 namespace MaMapF
 {
@@ -9,9 +8,16 @@ namespace MaMapF
         {
             var level = ServerHandler.GetServerLevel();
             var cbs = new CBSHandler(level);
-            var plan = cbs.Search();
-            ServerHandler.SendServerPlan(plan);
-            
+            var solution = cbs.Search();
+
+            if (solution == null)
+            {
+                Console.Error.WriteLine("SOLUTION WAS NULL");
+                Environment.Exit(0);
+            }
+
+
+            ServerHandler.SendServerPlan(solution);
         }
     }
 }

@@ -71,7 +71,11 @@ namespace MaMapF
             for (var step = 0; step < plan[firstKey].Count; step++)
             {
                 var jointActions = plan.Keys.Select(agent => $"{plan[agent][step].Action}").ToList();
-                Console.WriteLine(String.Join("|", jointActions));
+                var command = string.Join("|", jointActions);
+
+                // skip joint action for initial state
+                if (command == "|") continue;
+                Console.WriteLine(command);
             }
         }
 
