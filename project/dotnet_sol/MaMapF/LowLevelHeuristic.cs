@@ -8,17 +8,17 @@ namespace MaMapF
     public class LowLevelHeuristic
     {
         private Position AgentGoalPosition { get; set; }
-        private List<Goal> BoxGoals { get; set; }
+        private List<MapItem> BoxGoals { get; set; }
 
-        public LowLevelHeuristic(List<Goal> goals)
+        public LowLevelHeuristic(List<MapItem> goals)
         {
-            var agentGoal = goals.FirstOrDefault(g => char.IsDigit(g.Item));
+            var agentGoal = goals.FirstOrDefault(g => char.IsDigit(g.Value));
             if (agentGoal != null)
             {
-                AgentGoalPosition = new Position(agentGoal.Row, agentGoal.Column);
+                AgentGoalPosition = agentGoal.Position;
             }
 
-            BoxGoals = goals.Where(g => !char.IsDigit(g.Item)).ToList();
+            BoxGoals = goals.Where(g => !char.IsDigit(g.Value)).ToList();
         }
 
 
@@ -28,7 +28,7 @@ namespace MaMapF
 
 
             var emptyBoxGoals = BoxGoals.Where(g =>
-                !state.Boxes.Any(b => b.Value == g.Item && b.Position.Equals(new Position(g.Row, g.Column)))).ToList();
+                !state.Boxes.Any(b => b.Value == g.Value && b.Position.Equals(g.Position))).ToList();
 
             // Console.WriteLine($"emptyBoxGoals: {emptyBoxGoals.Count}");
             // if (!emptyBoxGoals.Any())
@@ -45,8 +45,8 @@ namespace MaMapF
                 {
                     foreach (var box in state.Boxes)
                     {
-                        var distance = Math.Abs(boxGoal.Row - box.Position.Row) +
-                                       Math.Abs(boxGoal.Column - box.Position.Column);
+                        var distance = Math.Abs(boxGoal.Position.Row - box.Position.Row) +
+                                       Math.Abs(boxGoal.Position.Column - box.Position.Column);
                         if (distance < minBoxDistance)
                         {
                             minBoxDistance = distance;

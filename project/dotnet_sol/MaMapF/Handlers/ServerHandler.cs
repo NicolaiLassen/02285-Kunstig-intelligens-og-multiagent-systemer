@@ -39,11 +39,11 @@ namespace MaMapF
             var goalRangeCount = (endIndex - goalIndex) - 1;
             var goalLines = LinesToCharMatrix(serverLines.GetRange(goalIndex + 1, goalRangeCount));
 
-            var goals = new Dictionary<char, List<Goal>>();
+            var goals = new Dictionary<char, List<MapItem>>();
 
             foreach (var agent in agents)
             {
-                goals.Add(agent, new List<Goal>());
+                goals.Add(agent, new List<MapItem>());
                 for (var row = 0; row < goalLines.Count; row++)
                 {
                     for (var col = 0; col < goalLines[row].Count; col++)
@@ -51,12 +51,7 @@ namespace MaMapF
                         var c = goalLines[row][col];
                         if (!char.IsLetter(c) && c != agent) continue;
                         goals[agent].Add(
-                            new Goal
-                            {
-                                Item = c,
-                                Row = row,
-                                Column = col
-                            }
+                            new MapItem(c, new Position(row, col))
                         );
                     }
                 }
