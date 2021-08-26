@@ -7,37 +7,33 @@ namespace MaMapF
 {
     public class LowLevelHeuristic
     {
-        private Position AgentGoalPosition { get; set; }
-        private List<MapItem> BoxGoals { get; set; }
+        private MapItem AgentGoal { get; }
+        private List<MapItem> BoxGoals { get; }
+        private List<Constraint> Constraints { get; }
 
-        public LowLevelHeuristic(List<MapItem> goals)
+        public LowLevelHeuristic(List<MapItem> goals, List<Constraint> constraints)
         {
-            var agentGoal = goals.FirstOrDefault(g => char.IsDigit(g.Value));
-            if (agentGoal != null)
-            {
-                AgentGoalPosition = agentGoal.Position;
-            }
-
+            AgentGoal = goals.FirstOrDefault(g => char.IsDigit(g.Value));
             BoxGoals = goals.Where(g => !char.IsDigit(g.Value)).ToList();
+            Constraints = constraints;
         }
 
 
-        public int GetHeuristic(SingleAgentState state, List<Constraint> constraints)
+        public int GetHeuristic(SingleAgentState state)
         {
+            var h = 0;
+
             // Count future constraints that yields an alternative rute with an extra step
-            var h = constraints.Count(constraint => constraint.Step > state.G);
+            h += Constraints.Count(constraint => constraint.Step > state.G);
+
 
             // Base heuristic on boxes before agent finish
-            var emptyBoxGoals = BoxGoals.Where(g =>
-                !state.Boxes.Any(b => b.Value == g.Value && b.Position.Equals(g.Position))).ToList();
+            var emptyBoxGoals = BoxGoals.Where(goal => !state.Boxes.Any(box => box.Equals(goal))).ToList();
+            var unusedBoxes = state.Boxes.Where(box => !BoxGoals.Any(goal => goal.Equals(box))).ToList();
 
-
-            var hasEmptyBoxGoals = emptyBoxGoals.Any();
 
             // Does the format of the map include a box goal but no box
-            var hasBoxes = state.Boxes.Any();
-
-            if (hasEmptyBoxGoals && hasBoxes)
+            if (emptyBoxGoals.Any() && emptyBoxGoals.Count == unusedBoxes.Count)
             {
                 // Find box with shortest distance to goal
                 var minBoxDistance = Int32.MaxValue;
@@ -46,9 +42,7 @@ namespace MaMapF
                 {
                     foreach (var box in state.Boxes)
                     {
-                        var distance = Math.Abs(boxGoal.Position.Row - box.Position.Row) +
-                                       Math.Abs(boxGoal.Position.Column - box.Position.Column);
-
+                        var distance = Position.Distance(boxGoal.Position, box.Position);
                         if (distance >= minBoxDistance) continue;
                         minBoxDistance = distance;
                         minBox = box;
@@ -59,20 +53,15 @@ namespace MaMapF
                 h += minBoxDistance;
 
                 // Add distance from agent to minBox
-                var agentDistanceToMinBox = Math.Abs(state.AgentPosition.Row - minBox.Position.Row) +
-                                            Math.Abs(state.AgentPosition.Column - minBox.Position.Column);
-
+                var agentDistanceToMinBox = Position.Distance(state.AgentPosition, minBox.Position);
                 h += agentDistanceToMinBox;
-
-
-                return h;
             }
 
 
-            if (AgentGoalPosition == null) return h;
+            // Add distance from agent to agent goal
+            h += Position.Distance(AgentGoal.Position, state.AgentPosition);
 
-            return Math.Abs(AgentGoalPosition.Row - state.AgentPosition.Row) +
-                   Math.Abs(AgentGoalPosition.Column - state.AgentPosition.Column);
+            return h;
         }
     }
 }

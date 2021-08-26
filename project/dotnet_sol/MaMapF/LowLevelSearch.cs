@@ -7,9 +7,17 @@ using Action = MaMapF.Models.Action;
 
 namespace MaMapF
 {
+    public enum SearchType
+    {
+        BFS,
+        GREEDY,
+        ASTAR
+    }
+
     public class LowLevelSearch
     {
-        private readonly int MaxNoOp = 0;
+        public readonly SearchType SearchType = SearchType.GREEDY;
+        public readonly int MaxNoOp = 100;
 
         public List<SingleAgentState> GetSingleAgentPlan(
             SingleAgentState initialState,
@@ -17,7 +25,8 @@ namespace MaMapF
             List<Constraint> constraints
         )
         {
-            var heuristic = new LowLevelHeuristic(goals);
+            var heuristic = new LowLevelHeuristic(goals, constraints);
+
             var frontier = new SimplePriorityQueue<SingleAgentState>();
             var explored = new HashSet<SingleAgentState>();
 
@@ -41,21 +50,35 @@ namespace MaMapF
                 {
                     var isNotFrontier = !frontier.Contains(s);
                     var isNotExplored = !explored.Contains(s);
-                    if (isNotFrontier && isNotExplored)
+                    var isNotExploredMax = IsNotExploredMaxNoOp(explored, s);
+                    if (isNotFrontier && isNotExplored && isNotExploredMax)
                     {
-                        s.H = heuristic.GetHeuristic(s, constraints);
-
-                        // greedy
-                        // frontier.Enqueue(s, s.H);
-
-                        // astar
-                        frontier.Enqueue(s, s.F);
+                        s.H = heuristic.GetHeuristic(s);
+                        var priority = GetPriority(s);
+                        frontier.Enqueue(s, priority);
                     }
                 }
             }
 
             return null;
         }
+
+        private bool IsNotExploredMaxNoOp(HashSet<SingleAgentState> explored, SingleAgentState state)
+        {
+            if (MaxNoOp == -1) return true;
+            var s = CreateNextState(state, Action.NoOp);
+            s.G -= 10;
+            var isNotExplored = !explored.Contains(s);
+            return isNotExplored;
+        }
+
+        private int GetPriority(SingleAgentState s)
+        {
+            if (SearchType == SearchType.GREEDY) return s.H;
+            if (SearchType == SearchType.ASTAR) return s.F;
+            return s.G;
+        }
+
 
         private bool IsGoalState(SingleAgentState state, List<MapItem> goals)
         {
@@ -80,20 +103,6 @@ namespace MaMapF
                     }
                 }
             }
-
-            // if (constraints.Any())
-            // {
-            //     Console.Error.WriteLine("QQQQQQQQQQQQQQQQQQQQQQQQQQQ");
-            //     constraints.ForEach(c => Console.Error.WriteLine(c));
-            //
-            //     Console.Error.WriteLine("STATE");
-            //     Console.Error.WriteLine(state);
-            //
-            //     Console.Error.WriteLine("EXPANDED");
-            //     states.ForEach(s => Console.Error.WriteLine(s));
-            //     Environment.Exit(0);
-            // }
-
 
             return states;
         }
@@ -160,7 +169,7 @@ namespace MaMapF
             return nextState;
         }
 
-        public static bool BreaksConstraint(SingleAgentState state, List<Constraint> constraints)
+        private static bool BreaksConstraint(SingleAgentState state, List<Constraint> constraints)
         {
             foreach (var constraint in constraints.Where(c => c.Step == state.G))
             {
@@ -173,7 +182,7 @@ namespace MaMapF
             return false;
         }
 
-        public static bool IsValidAction(SingleAgentState state, Action action)
+        private static bool IsValidAction(SingleAgentState state, Action action)
         {
             if (action.Type == ActionType.NoOp)
             {
@@ -205,7 +214,7 @@ namespace MaMapF
             return false;
         }
 
-        public static List<SingleAgentState> GetSingleAgentSolutionFromState(SingleAgentState goal)
+        private static List<SingleAgentState> GetSingleAgentSolutionFromState(SingleAgentState goal)
         {
             var solution = new List<SingleAgentState>();
             var state = goal;
