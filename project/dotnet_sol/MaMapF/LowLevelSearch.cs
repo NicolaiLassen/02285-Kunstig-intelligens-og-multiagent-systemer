@@ -34,7 +34,7 @@ namespace MaMapF
                 explored.Add(state);
 
                 // Console.Error.WriteLine(frontier.Count);
-                Console.Error.WriteLine(state);
+                // Console.Error.WriteLine(state);
                 // if (state.G > 10) Environment.Exit(0);
 
                 if (Level.IsAgentGoalState(state))
@@ -73,6 +73,19 @@ namespace MaMapF
                     }
                 }
             }
+
+            // if (constraints.Any() && state.Agent == '0' && state.G == 4)
+            // {
+            //     constraints.ForEach(c => Console.Error.WriteLine(c));
+            //
+            //     Console.Error.WriteLine("STATE");
+            //     Console.Error.WriteLine(state);
+            //
+            //     Console.Error.WriteLine("EXPANDED");
+            //     states.ForEach(s => Console.Error.WriteLine(s));
+            //     Environment.Exit(0);
+            // }
+
 
             return states;
         }

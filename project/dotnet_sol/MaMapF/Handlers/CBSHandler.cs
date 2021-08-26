@@ -24,7 +24,15 @@ namespace MaMapF
             var solutions = new Dictionary<char, List<SingleAgentState>>();
             foreach (var agent in Level.Agents)
             {
-                solutions[agent] = LowLevelSearch.GetSingleAgentPlan(agent, new List<Constraint>());
+                solutions[agent] = LowLevelSearch.GetSingleAgentPlan(agent, new List<Constraint>()
+                {
+                    new Constraint()
+                    {
+                        Agent = '0',
+                        Position = new Position(2, 1),
+                        Step = 1,
+                    }
+                });
             }
 
             var initialNode = new Node
@@ -38,16 +46,19 @@ namespace MaMapF
             {
                 var p = open.Dequeue();
 
+                Console.Error.WriteLine($"OPEN: {open.Count}");
+
                 var conflict = GetConflict(p);
                 if (conflict == null)
                 {
-                    foreach (var singleAgentStates in p.Solutions.Values)
-                    {
-                        foreach (var singleAgentState in singleAgentStates)
-                        {
-                            Console.Error.WriteLine(singleAgentState);
-                        }
-                    }
+                    // PRINT SOLUTION
+                    // foreach (var singleAgentStates in p.Solutions.Values)
+                    // {
+                    //     foreach (var singleAgentState in singleAgentStates)
+                    //     {
+                    //         Console.Error.WriteLine(singleAgentState);
+                    //     }
+                    // }
 
                     return p.Solutions;
                 }
@@ -56,15 +67,10 @@ namespace MaMapF
                 // Console.Error.WriteLine(conflict);
                 // Environment.Exit(0);
 
-                var agents = new List<char>
+                foreach (var agent in new List<char> {conflict.AgentA, conflict.AgentB})
                 {
-                    conflict.AgentA,
-                    conflict.AgentB
-                };
+                    var nextNode = p.Copy();
 
-                foreach (var agent in agents)
-                {
-                    var c = p.Copy();
                     var constraint = GetConstraint(agent, conflict);
                     // if (constraint == null)
                     // {
@@ -74,22 +80,17 @@ namespace MaMapF
 
                     // TODO - check shit
 
-                    c.Constraints.Add(constraint);
+                    nextNode.Constraints.Add(constraint);
 
-                    var solution = LowLevelSearch.GetSingleAgentPlan(agent, p.Constraints);
-                    // if (solution == null)
-                    // {
-                    //     Console.Error.WriteLine("456645645645645645");
-                    //     Environment.Exit(0);
-                    // }
-
-                    if (solution == null || solution == c.Solutions[agent])
+                    var agentConstraints = p.Constraints.Where(c => c.Agent == agent).ToList();
+                    var solution = LowLevelSearch.GetSingleAgentPlan(agent, agentConstraints);
+                    if (solution == null || solution == nextNode.Solutions[agent])
                     {
                         continue;
                     }
 
-                    c.Solutions[agent] = solution;
-                    open.Enqueue(c, c.Cost);
+                    nextNode.Solutions[agent] = solution;
+                    open.Enqueue(nextNode, nextNode.Cost);
                 }
             }
 
@@ -99,18 +100,18 @@ namespace MaMapF
         private Conflict GetConflict(Node node)
         {
             var maxLength = node.Solutions.Max(solution => solution.Value.Count);
-            var solutions = new Dictionary<char, List<SingleAgentState>>();
-            foreach (var solutionsKey in node.Solutions.Keys)
-            {
-                var solutionsCount = node.Solutions[solutionsKey].Count;
-                var solutionsCountDifference = maxLength - solutionsCount;
-                solutions.Add(solutionsKey, node.Solutions[solutionsKey]);
+            var solutions = new Dictionary<char, List<SingleAgentState>>(node.Solutions);
 
-                for (int i = 0; i < solutionsCountDifference; i++)
+            foreach (var agent in solutions.Keys)
+            {
+                var solutionLength = node.Solutions[agent].Count;
+                var solutionLengthDiff = maxLength - solutionLength;
+                var solutionGoalState = solutions[agent][solutionLength - 1];
+
+                for (int i = 0; i < solutionLengthDiff; i++)
                 {
-                    var noOp =
-                        LowLevelSearch.CreateNextState(solutions[solutionsKey][solutionsCount], Action.AllActions[0]);
-                    solutions[solutionsKey].Add(noOp);
+                    var nextState = LowLevelSearch.CreateNextState(solutionGoalState, Action.NoOp);
+                    solutions[agent].Add(nextState);
                 }
             }
 
@@ -154,7 +155,6 @@ namespace MaMapF
                     Agent = agent,
                     Position = conflict.Position,
                     Step = conflict.Step,
-                    Conflict = conflict
                 };
             }
 

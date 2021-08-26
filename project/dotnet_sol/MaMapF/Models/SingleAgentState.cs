@@ -19,7 +19,7 @@ namespace MaMapF.Models
 
         public override string ToString()
         {
-            var info = $"Agent: {Agent} at ({AgentPosition})\nG: {G}, H: {H}, F: {F}\n{Action}";
+            var info = $"Agent {Agent} at ({AgentPosition}) {Action}\nG: {G}, H: {H}, F: {F}";
             var map = string.Join("\n", Map.Select(row => string.Join("", row)));
             return $"{info}\n{map}\n";
         }

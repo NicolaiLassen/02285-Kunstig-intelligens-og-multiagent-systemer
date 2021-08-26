@@ -18,9 +18,16 @@ namespace MaMapF.Models
         {
             return new Node
             {
-                Constraints = Constraints,
-                Solutions = Solutions,
+                Constraints = Constraints.Select(c => c).ToList(),
+                Solutions = new Dictionary<char, List<SingleAgentState>>(Solutions),
             };
+        }
+
+        public override string ToString()
+        {
+            var solutionString = string.Join("\n--------\n",
+                Solutions.Values.Select(val => string.Join("\n", val)).ToList());
+            return $"SOLUTION\nCost: {Cost}\n{solutionString}";
         }
     }
 }

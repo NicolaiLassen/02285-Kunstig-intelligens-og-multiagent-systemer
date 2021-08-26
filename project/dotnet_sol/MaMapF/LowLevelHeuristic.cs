@@ -7,8 +7,8 @@ namespace MaMapF
 {
     public class LowLevelHeuristic
     {
-        public Position AgentGoalPosition { get; set; }
-        public List<Goal> BoxGoals { get; set; } = new List<Goal>();
+        private Position AgentGoalPosition { get; set; }
+        private List<Goal> BoxGoals { get; set; }
 
         public LowLevelHeuristic(List<Goal> goals)
         {
@@ -29,9 +29,6 @@ namespace MaMapF
 
             var emptyBoxGoals = BoxGoals.Where(g => state.IsBox(new Position(g.Row, g.Column)));
 
-            
-            
-            
 
             // Find box closest to goal position not already taken
             // var minBoxPosition = new Position();
@@ -74,12 +71,12 @@ namespace MaMapF
             // Add manhatten distance to agent goal
             // if (minBoxDistance == Int32.MaxValue)
             // {
-                if (AgentGoalPosition != null)
-                {
-                    var dist = Math.Abs(AgentGoalPosition.Row - state.AgentPosition.Row) +
-                               Math.Abs(AgentGoalPosition.Column - state.AgentPosition.Column);
-                    h += dist;
-                }
+            if (AgentGoalPosition != null)
+            {
+                var dist = Math.Abs(AgentGoalPosition.Row - state.AgentPosition.Row) +
+                           Math.Abs(AgentGoalPosition.Column - state.AgentPosition.Column);
+                h += dist;
+            }
             // }
 
 
