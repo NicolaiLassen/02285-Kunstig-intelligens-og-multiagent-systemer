@@ -56,20 +56,19 @@ namespace MaMapF
                 }
 
                 // dont know
-                if (minBox == null || minBoxDistance == Int32.MaxValue)
+                if (minBox != null && minBoxDistance != Int32.MaxValue)
                 {
-                    Console.Error.WriteLine("LowLevelHeuristic MIN BOX WAS NULL???");
-                    Environment.Exit(0);
+                    // Add distance from closest box to non-taken goal
+                    h += minBoxDistance;
+
+                    // Add distance from agent to minBox
+                    var agentDistanceToMinBox = Math.Abs(state.AgentPosition.Row - minBox.Position.Row) +
+                                                Math.Abs(state.AgentPosition.Column - minBox.Position.Column);
+                    h += agentDistanceToMinBox;
+
                 }
 
 
-                // Add distance from closest box to non-taken goal
-                h += minBoxDistance;
-
-                // Add distance from agent to minBox
-                var agentDistanceToMinBox = Math.Abs(state.AgentPosition.Row - minBox.Position.Row) +
-                                            Math.Abs(state.AgentPosition.Column - minBox.Position.Column);
-                h += agentDistanceToMinBox;
             }
 
 
