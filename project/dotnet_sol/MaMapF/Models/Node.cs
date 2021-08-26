@@ -18,7 +18,7 @@ namespace MaMapF.Models
         {
             return new Node
             {
-                Constraints = Constraints.Select(c => c).ToList(),
+                Constraints = Constraints.Select(c => c.Copy()).ToList(),
                 Solutions = new Dictionary<char, List<SingleAgentState>>(Solutions),
             };
         }

@@ -36,11 +36,15 @@ namespace MaMapF
 
             while (open.Count != 0)
             {
-                var p = open.Dequeue();
                 Console.Error.WriteLine($"OPEN: {open.Count}");
-                Console.Error.WriteLine($"p.Constraints.Count: {p.Constraints.Count}");
+
+                var p = open.Dequeue();
+                // Console.Error.WriteLine($"p.Constraints.Count: {p.Constraints.Count}");
+                // p.Constraints.ForEach(c => Console.Error.WriteLine(c));
+                // Console.Error.WriteLine("");
 
                 var conflict = GetConflict(p);
+                // Console.Error.WriteLine(conflict);
                 if (conflict == null)
                 {
                     return p.Solutions;
@@ -58,6 +62,16 @@ namespace MaMapF
                     //
                     if (nextNode.Constraints.Contains(constraint))
                     {
+                        // Console.Error.WriteLine("!!!!!!!!!!!!!!!!!!");
+                        // Console.Error.WriteLine(constraint);
+                        // Console.Error.WriteLine("IS IN THIS LIST");
+                        // Console.Error.WriteLine("IS IN THIS LIST");
+                        // Console.Error.WriteLine("IS IN THIS LIST");
+                        // nextNode.Constraints.ForEach(c => Console.Error.WriteLine(c));
+
+
+                        
+                        // Environment.Exit(0);
                         continue;
                     }
                     
@@ -70,7 +84,7 @@ namespace MaMapF
                     // }
 
 
-                    var agentConstraints = p.Constraints.Where(c => c.Agent == agent).ToList();
+                    var agentConstraints = nextNode.Constraints.Where(c => c.Agent == agent).ToList();
                     var solution = LowLevelSearch.GetSingleAgentPlan(agent, agentConstraints);
                     if (solution == null || solution == nextNode.Solutions[agent])
                     {

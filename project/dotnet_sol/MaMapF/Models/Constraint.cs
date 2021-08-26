@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MaMapF.Models
+﻿namespace MaMapF.Models
 {
     public class Constraint
     {
@@ -12,7 +10,7 @@ namespace MaMapF.Models
 
         public override string ToString()
         {
-            return $"CONSTRAINT\nAgent: {Agent}, Position: {Position}, Step: {Step}\n";
+            return $"CONSTRAINT\nAgent: {Agent}, Position: {Position}, Step: {Step}";
         }
 
         public bool Equals(Constraint other)
@@ -29,8 +27,16 @@ namespace MaMapF.Models
 
         // public override int GetHashCode()
         // {
-        //     return 31 * Agent + Position.GetHashCode() + 23 * Step;
         //     return HashCode.Combine(Agent, Position, Step);
         // }
+        public Constraint Copy()
+        {
+            return new Constraint
+            {
+                Agent = Agent,
+                Position = Position.Next(0, 0),
+                Step = Step + 0,
+            };
+        }
     }
 }

@@ -71,11 +71,13 @@ namespace MaMapF
                     {
                         states.Add(nextState);
                     }
+
                 }
             }
-
-            // if (constraints.Any() && state.Agent == '0' && state.G == 4)
+            
+            // if (constraints.Any())
             // {
+            //     Console.Error.WriteLine("QQQQQQQQQQQQQQQQQQQQQQQQQQQ");
             //     constraints.ForEach(c => Console.Error.WriteLine(c));
             //
             //     Console.Error.WriteLine("STATE");
