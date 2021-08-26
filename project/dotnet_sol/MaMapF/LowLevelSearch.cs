@@ -20,8 +20,7 @@ namespace MaMapF
         {
             var goals = Level.Goals[agent];
             var heuristic = new LowLevelHeuristic(goals);
-
-
+            
             var frontier = new SimplePriorityQueue<SingleAgentState>();
             var explored = new HashSet<SingleAgentState>();
 

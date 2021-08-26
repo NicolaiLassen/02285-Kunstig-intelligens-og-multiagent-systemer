@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using MaMapF.Models;
 using Priority_Queue;
-using Action = MaMapF.Models.Action;
 
 namespace MaMapF
 {
@@ -84,6 +82,7 @@ namespace MaMapF
             var maxLength = node.Solutions.Max(solution => solution.Value.Count);
             var solutions = new Dictionary<char, List<SingleAgentState>>(node.Solutions);
 
+            // Make all solutions same length as longest
             foreach (var agent in solutions.Keys)
             {
                 var solutionLength = node.Solutions[agent].Count;
@@ -105,54 +104,65 @@ namespace MaMapF
                     {
                         var a0 = Level.Agents[a0i];
                         var a1 = Level.Agents[a1i];
-
                         var a0s = node.Solutions[a0];
                         var a1s = node.Solutions[a1];
 
-                        var a0CurrentPosition = a0s[step].AgentPosition;
-                        var a0PreviousPosition = a0s[step - 1].AgentPosition;
 
-                        var a1CurrentPosition = a1s[step].AgentPosition;
-                        var a1PreviousPosition = a1s[step - 1].AgentPosition;
-
-
-                        // CONFLICT if agent 1 and agent 2 is at same position
-                        if (a0CurrentPosition.Equals(a1CurrentPosition))
+                        // Check that no positions are equal in current step
+                        foreach (var a0p in a0s[step].AllPositions)
                         {
-                            return new Conflict
+                            foreach (var a1p in a1s[step].AllPositions)
                             {
-                                Type = "position",
-                                AgentA = a0,
-                                AgentB = a1,
-                                Position = a0s[step].AgentPosition,
-                                Step = step
-                            };
+                                if (a0p.Equals(a1p))
+                                {
+                                    return new Conflict
+                                    {
+                                        Type = "position",
+                                        AgentA = a0,
+                                        AgentB = a1,
+                                        Position = a0p,
+                                        Step = step
+                                    };
+                                }
+                            }
                         }
 
-                        // CONFLICT if agent 1 follows agent 2
-                        if (a0CurrentPosition.Equals(a1PreviousPosition))
+                        // Check that agent 0 does not move something to an agent 1 position
+                        foreach (var a0p in a0s[step].AllPositions)
                         {
-                            return new Conflict
+                            foreach (var a1p in a1s[step - 1].AllPositions)
                             {
-                                Type = "follow",
-                                AgentA = a0,
-                                AgentB = a1,
-                                Position = a0CurrentPosition,
-                                Step = step,
-                            };
+                                if (a0p.Equals(a1p))
+                                {
+                                    return new Conflict
+                                    {
+                                        Type = "position",
+                                        AgentA = a0,
+                                        AgentB = a1,
+                                        Position = a0p,
+                                        Step = step
+                                    };
+                                }
+                            }
                         }
 
-                        // CONFLICT if agent 1 follows agent 2
-                        if (a1CurrentPosition.Equals(a0PreviousPosition))
+                        // Check that agent 1 does not move something to an agent 0 position
+                        foreach (var a0p in a0s[step - 1].AllPositions)
                         {
-                            return new Conflict
+                            foreach (var a1p in a1s[step].AllPositions)
                             {
-                                Type = "follow",
-                                AgentA = a1,
-                                AgentB = a0,
-                                Position = a1CurrentPosition,
-                                Step = step,
-                            };
+                                if (a0p.Equals(a1p))
+                                {
+                                    return new Conflict
+                                    {
+                                        Type = "position",
+                                        AgentA = a1,
+                                        AgentB = a0,
+                                        Position = a1p,
+                                        Step = step
+                                    };
+                                }
+                            }
                         }
                     }
                 }

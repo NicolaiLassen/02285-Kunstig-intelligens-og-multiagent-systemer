@@ -1,0 +1,22 @@
+#domain
+hospital
+#levelname
+conflict3
+#colors
+blue: 0
+red: 1
+#initial
++++
++1+
++0+
++ +
++ +
++++
+#goal
++++
++ +
++ +
++1+
++0+
++++
+#end
