@@ -30,8 +30,10 @@ namespace MaMapF
             // Base heuristic on boxes before agent finish
             var emptyBoxGoals = BoxGoals.Where(g =>
                 !state.Boxes.Any(b => b.Value == g.Value && b.Position.Equals(g.Position))).ToList();
+
+
             var hasEmptyBoxGoals = emptyBoxGoals.Any();
-            
+
             // Does the format of the map include a box goal but no box
             var hasBoxes = state.Boxes.Any();
 
@@ -59,10 +61,13 @@ namespace MaMapF
                 // Add distance from agent to minBox
                 var agentDistanceToMinBox = Math.Abs(state.AgentPosition.Row - minBox.Position.Row) +
                                             Math.Abs(state.AgentPosition.Column - minBox.Position.Column);
+
                 h += agentDistanceToMinBox;
+
 
                 return h;
             }
+
 
             if (AgentGoalPosition == null) return h;
 

@@ -1,0 +1,54 @@
+#domain
+hospital
+#levelname
+GoneViral
+#colors
+blue: 0, A, J, S, H
+red: 1, B, K, T, Q
+green: 2, C, L, U
+cyan: 3, D, M
+purple: 4, E, N, W
+pink: 5, F, O, X
+orange: 6, G, P, Y
+grey: 7, Z
+#initial
++++++++++++++++++++++++++++++++++++++++
++Z 7+           ZUZ ZUZ               +
++   +           ZXZ ZXZ               +
++ +++           ZYZ ZYZ               +
++ +       ++++++ZZZ ZZZ++++++         +
++++       +E     ST OPQ    A+         +
++ZZZZZZZZZZF               BZZZZZZZZZZ+
++         ZG               CZ         +
++ZZZZZZZZZZH               DZZZZZZZZZZ+
++                01234                +
++ZZZZZZZZZZ      56         ZZZZZZZZZZ+
++         Z                LZ         +
++ZZZZZZZZZZJ               MZZZZZZZZZZ+
++         +K   UW      XY  N+         +
++         ++++++ZZZ ZZZ++++++         +
++               ZQZ ZQZ               +
++               ZSZ ZSZ               +
++               ZTZ ZTZ               +
++++++++++++++++++++++++++++++++++++++++
+#goal
++++++++++++++++++++++++++++++++++++++++
++   +           Z ZUZ Z               +
++   +           Z ZXZ Z               +
++ +++           Z ZYZ Z               +
++ +       ++++++ZZZ ZZZ++++++         +
++++       +                 +         +
++ZZZZZZZZZZ                 ZZZZZZZZZZ+
++         Z                 Z         +
++ZZZZZZZZZZ                 ZZZZZZZZZZ+
++ABCDEFGH                      WJKLMNO+
++ZZZZZZZZZZ                 ZZZZZZZZZZ+
++         Z                 Z         +
++ZZZZZZZZZZ                 ZZZZZZZZZZ+
++         +                 +         +
++         ++++++ZZZPZZZ++++++         +
++               Z ZQZ Z               +
++               Z ZSZ Z               +
++               Z ZTZ Z               +
++++++++++++++++++++++++++++++++++++++++
+#end

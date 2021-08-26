@@ -1,0 +1,19 @@
+#domain
+hospital
+#levelname
+corridor1
+#colors
+blue: 0, 1
+#initial
++++++++
++++ +++
++++ 1++
++++0+++
++++++++
+#goal
++++++++
++++0+++
++++  ++
++++1+++
++++++++
+#end

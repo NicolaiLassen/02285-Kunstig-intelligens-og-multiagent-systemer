@@ -1,0 +1,64 @@
+#domain
+hospital
+#levelname
+MACovid
+#colors
+red: 0,3, C, O, R, N, A, B, F,U, S, D, L
+brown:  1, T, H, E
+lightblue: 2, I, P
+purple: 4, Z
+blue: X, 5
+green: Y
+#initial
++++++++++++++++++++++++++++++
++  01234   Y5Y        XTEBXX+
++ X        YYY        XHPOXX+
++ X    CZ             XEINXX+
++ X   ZOZZ              CFXX+
++ X  CORONA              IXX+
++ X  ZZOXZZ              RXX+
++ X   ZNZX               EXX+
++ X    AZ X                 +
++ X        X X              +
++ X         X X             +
++ X        X   X            +
++ XXXX      X   X   X       +
++ XIFXX      X   X X        +
++ XYOUXXXXXX  X   X         +
++ XCONSIDERX   X XX         +
++ XTHESEXXXX     XXX        +
++ XBOXESX      X  XXX       +
++ XYOUXXX     X    XXX XX   +
++ XAREXXXXX         XXXX    +
++ XAXXXXX    XXXXXXXXXX     +
++ XLOSERXXXX XSORRYXX       +
++ XXXXXXXXXX XXXXXXXX       +
++                           +
++++++++++++++++++++++++++++++
+#goal
++++++++++++++++++++++++++++++
++                           +
++                           +
++                           +
++                           +
++                           +
++                           +
++                           +
++                           +
++                           +
++            B              +
++           PTI             +
++            FEO            +
++             ICN           +
++              ZHR          +
++               E           +
++                           +
++                           +
++N                          +
++O                          +
++O                          +
++C                          +
++A                          +
++RACOON                     +
++++++++++++++++++++++++++++++
+#end

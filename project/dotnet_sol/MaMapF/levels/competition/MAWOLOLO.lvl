@@ -1,0 +1,44 @@
+#domain
+hospital
+#levelname
+MAWOLOLO
+#colors
+red: 0,1,2,7, A,B,C,D,E,F,T
+blue: 3,4,5,G,H,K,L,M,N,S,U
+green: 6,O,P,R
+grey:X
+#initial
++++++++++++++++++++++++++++
++     H            6O   X +
++  5M      E2           X +
++  X  XA X  X  X  X  X  XR+
++L    D              4K X +
++              A        X +
++  X  X  X  X  X  X  XU X +
++  B       C1    P      X +
++                       X +
++  X  X  X  X  X  X  X  X +
++                F      X +
++   R                  DX7+
++  X  X  X SX  X  X  X  X +
++    3G  U           0A X +
++                  T    X +
++++++++++++++++++++++++++++
+#goal
++++++++++++++++++++++++++++
++  S    G   U    D  A  R  +
++                         +
++B                     H  +
++  K     T             A  +
++                O        +
++                      C  +
++     A                   +
++                E        +
++                         +
++           M        L    +
++  P                      +
++U                        +
++                         +
++     D                F  +
++++++++++++++++++++++++++++
+#end

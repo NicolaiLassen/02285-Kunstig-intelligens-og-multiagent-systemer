@@ -1,0 +1,52 @@
+#domain
+hospital
+#levelname
+MAlicious
+#colors
+red: 0, 4, 8, A, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Y
+blue: 1, 6, B
+green: 2, 3, 7, C
+cyan: 5,9, Z
+#initial
++++++++++++++++++++++++++++++++++++
++AAAAAAAAA1CAAB+3  A    A   A   AA+
++AAAAA     AAAA+     A    A   A   +
++AAAAAAAA AAAAA+AAAAAAAAAAAAAAAAA +
++AAAAAAAA      +CCCC              +
++AAAAAAAAAAAAA +BBBBBBBBBBBBBBBBBB+
++              +  ++  R+   +      +
++ZAAAAA2AAAAAAA+ +Y  +++ ++       +
++9AAAAABAAAAAAA+++++  +RS+        +
++AAAAAAAAAAAAAA+0       ++        +
++++++++++++++++++++++++++++++++++++
++4ZZ+ +EE+ +GG6+ZZZZZZZZZZZZZZZZZZ+
++ZZ+   ++   +GG+                  +
++Z+          +G+8ZZZZZZZZZZZZZZZZZ+
++              + Z  R     L     AZ+
++      5       +    Q  O  K  I  DZ+
++B+          +C+ZZ  P  N  J  H  EZ+
++BB+   ++   +CC+ZZ     M     G  FZ+
++7BB+ +EE+ +CCE+ZZZZZZZZZZZZZZZZZZ+
++++++++++++++++++++++++++++++++++++
+#goal
++++++++++++++++++++++++++++++++++++
++AAAAAAAAAZBAA +CC                +
++AAAAA129  AAAA+CC                +
++AAAAAAAA AAAAA+                  +
++AAAAAAAA      +                  +
++AAAAAAAAAAAAA +                  +
++              +  ++   +   +      +
++ AAAAA AAAAAAA+ +   +++ ++       +
++ AAAAACAAAAAAA+++++  +  +        +
++AAAAAAAAAAAAAA+SRR0Y   ++        +
++++++++++++++++++++++++++++++++++++
++   + +  + +   +ZZZZZZZZZZZZZZZZZZ+
++  +   ++   +  + RQPONMLKJIHGFEDA +
++ +          + + ZZZZZZZZZZZZZZZZZ+
++      GG      + Z               Z+
++      EZ      +                 Z+
++ +   4567   + +ZZ               Z+
++  +   ++   +  +ZZ               Z+
++   + +  + +   +ZZZZZZZZZZZZZZZZZZ+
++++++++++++++++++++++++++++++++++++
+#end

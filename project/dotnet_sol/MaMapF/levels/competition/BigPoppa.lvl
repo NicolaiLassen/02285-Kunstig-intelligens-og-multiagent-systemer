@@ -1,0 +1,32 @@
+#domain
+hospital
+#levelname
+BigPoppa
+#colors
+blue: 0, A
+green: 1, B
+cyan: C
+red: 2, D
+#initial
+ +++++++++++ 
+ + 1CACCCAD+ 
+ +  CDCCC C+ 
+ +0C  CCC 2+ 
+ + C CCCC C+ 
+ + C CCCCB + 
+ + C       + 
+ + CCCCCCCB+ 
+ +         + 
+ +++++++++++ 
+#goal
+ +++++++++++ 
+ +A        + 
+ +         + 
+ +B D     1+ 
+ +         + 
+ +         + 
+ +         + 
+ +         + 
+ +         + 
+ +++++++++++ 
+#end

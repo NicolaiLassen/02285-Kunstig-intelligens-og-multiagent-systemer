@@ -1,0 +1,48 @@
+#domain
+hospital
+#levelname
+DeePurple
+#colors
+blue: 0, 5, J, K
+red: 1, B, L
+cyan: 2, C
+green: 3, 7, D, G
+purple: 8, 9, H, I
+lightblue: 4, A, M
+grey:  6, E, F
+brown: Z
+#initial
+++++++++++++++++++++++++
++   G 1          7 A   +
++   H 2 ZZZ  0ZZ 8 B   +
++   I 3 ZZZZZZZZ 9 C   +
++                      +
++      ZZZZZD          +
++  4      FZE          +
++   5     KZZZ         +
++    6                 +
++       ZZZZZZZZ       +
++        MJL           +
++                Z Z   +
++                Z Z   +
++             ZZZZ ZZZZ+
++             Z        +
+++++++++++++++++++++++++
+#goal
+++++++++++++++++++++++++
++ A                  G +
++ B                  H +
++ C                  I +
++                      +
++                      +
++                      +
++                      +
++                      +
++                      +
++                      +
++                      +
++                 K    +
++EF                    +
++DM            L      J+
+++++++++++++++++++++++++
+#end

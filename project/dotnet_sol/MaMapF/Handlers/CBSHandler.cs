@@ -13,7 +13,7 @@ namespace MaMapF.Handlers
         public CBSHandler(Level level)
         {
             Level = level;
-            LowLevelSearch = new LowLevelSearch(level);
+            LowLevelSearch = new LowLevelSearch();
         }
 
         public Dictionary<char, List<SingleAgentState>> Search()
@@ -22,7 +22,9 @@ namespace MaMapF.Handlers
             var solutions = new Dictionary<char, List<SingleAgentState>>();
             foreach (var agent in Level.Agents)
             {
-                solutions[agent] = LowLevelSearch.GetSingleAgentPlan(agent, new List<Constraint>());
+                var initialState = Level.GetInitialState(agent);
+                var agentGoals = Level.Goals[agent];
+                solutions[agent] = LowLevelSearch.GetSingleAgentPlan(initialState, agentGoals, new List<Constraint>());
             }
 
             var initialNode = new Node
@@ -61,7 +63,10 @@ namespace MaMapF.Handlers
                     nextNode.Constraints.Add(constraint);
 
                     var agentConstraints = nextNode.Constraints.Where(c => c.Agent == agent).ToList();
-                    var solution = LowLevelSearch.GetSingleAgentPlan(agent, agentConstraints);
+
+                    var initialState = Level.GetInitialState(agent);
+                    var agentGoals = Level.Goals[agent];
+                    var solution = LowLevelSearch.GetSingleAgentPlan(initialState, agentGoals, agentConstraints);
                     if (solution == null || solution == nextNode.Solutions[agent])
                     {
                         continue;
