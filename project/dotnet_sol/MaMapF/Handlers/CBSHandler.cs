@@ -58,19 +58,15 @@ namespace MaMapF.Handlers
                     nextNode.Constraints.Add(constraint);
 
                     var agentConstraints = nextNode.Constraints.Where(c => c.Agent == agent).ToList();
-                    var constraintTime = constraint.Step - 1;
-                    var conflictState = nextNode.Solutions[agent][constraintTime];
-
-                    var solution = LowLevelSearch.GetSingleAgentPlan(conflictState, goals[agent], agentConstraints);
+                    var initialState = initialStates[agent];
+                    var agentGoals = goals[agent];
+                    var solution = LowLevelSearch.GetSingleAgentPlan(initialState, agentGoals, agentConstraints);
                     if (solution == null || solution == nextNode.Solutions[agent])
                     {
                         continue;
                     }
 
-                    var nextSolution = nextNode.Solutions[agent].GetRange(0, constraintTime);
-                    nextSolution.AddRange(solution);
-
-                    nextNode.Solutions[agent] = nextSolution;
+                    nextNode.Solutions[agent] = solution;
                     open.Enqueue(nextNode, nextNode.Cost);
                 }
             }
