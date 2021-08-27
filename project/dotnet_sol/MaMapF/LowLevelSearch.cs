@@ -16,7 +16,7 @@ namespace MaMapF
 
     public class LowLevelSearch
     {
-        public static readonly SearchType SearchType = SearchType.GREEDY;
+        public static readonly SearchType SearchType = SearchType.ASTAR;
         public static readonly int MaxActionRepeat = -1;
 
         public static List<SingleAgentState> GetSingleAgentPlan(
@@ -86,7 +86,7 @@ namespace MaMapF
         private static bool IsGoalState(SingleAgentState state, List<MapItem> goals, List<Constraint> constraints)
         {
             // false if there is a future constraint
-            if (constraints.Max(c => c.Step) > state.G)
+            if (constraints.Any(c => c.Step > state.G))
             {
                 return false;
             }
