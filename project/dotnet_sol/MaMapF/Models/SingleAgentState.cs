@@ -19,8 +19,6 @@ namespace MaMapF.Models
         public int H { get; set; } // HEURISTIC
         public int F => G + H;
 
-        public int Counter = 0;
-
 
         public List<MapItem> AllMapItems => Boxes.Concat(new[] {new MapItem(Agent, AgentPosition),}).ToList();
         public List<Position> AllPositions => AllMapItems.Select(i => i.Position).ToList();
@@ -58,7 +56,7 @@ namespace MaMapF.Models
 
             var prime = 31;
             var hash = prime + (AgentPosition.Row + 1) * 23 + (AgentPosition.Column + 1) * 29;
-            hash = hash * prime + Counter * 13;
+            hash = hash * prime + G * 13;
             hash = hash * prime + Map.Sum(row => row.Sum(c => c.GetHashCode()));
             Hash = hash;
             return Hash;
@@ -68,7 +66,7 @@ namespace MaMapF.Models
         {
             if (obj == null) return false;
             if (!(obj is SingleAgentState other)) return false;
-            if (Counter != other.Counter) return false;
+            if (G != other.G) return false;
             // if (AgentPosition.Row != other.AgentPosition.Row && AgentPosition.Column != other.AgentPosition.Column) return false;
             for (var row = 0; row < Map.Count; row++)
             {

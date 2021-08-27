@@ -108,7 +108,6 @@ namespace MaMapF
                     var nextState = CreateNextState(state, action);
                     if (!BreaksConstraint(nextState, constraints))
                     {
-                        nextState.Counter = constraints.Count;
                         states.Add(nextState);
                     }
                 }
