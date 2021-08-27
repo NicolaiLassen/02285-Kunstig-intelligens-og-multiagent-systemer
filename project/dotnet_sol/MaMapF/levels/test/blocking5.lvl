@@ -4,20 +4,19 @@ hospital
 A0
 #colors
 blue: 0, A
-red: 1
-purple: 2
+purple: 1
 #initial
 +++++++++
-+1A +2A +
-++  ++  +
++   +1A +
++AAA++  +
 +       +
-+0      +
++0 AAAAA+
 +++++++++
 #goal
 +++++++++
 +   +   +
-++  ++  +
++   ++  +
 +       +
-+012    +
++01     +
 +++++++++
 #end

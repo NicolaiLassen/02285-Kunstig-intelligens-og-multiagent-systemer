@@ -15,8 +15,7 @@ namespace MaMapF.Models
         public List<MapItem> Boxes { get; set; }
 
         public char AgentName => Agent.Value;
-
-
+        
         public Action Action { get; set; }
         public int G { get; set; } // COST
         public int H { get; set; } // HEURISTIC
@@ -29,9 +28,10 @@ namespace MaMapF.Models
         public override string ToString()
         {
             var info = $"Agent {AgentName} at ({Agent.Position}) {Action}\nG: {G}, H: {H}, F: {F}";
+            return $"{info}\n";
             // var map = string.Join("\n", Map.Select(row => string.Join("", row)));
-            var map = "";
-            return $"{info}\n{map}\n";
+            // var map = "";
+            // return $"{info}\n{map}\n";
         }
 
         public bool IsFree(Position position)

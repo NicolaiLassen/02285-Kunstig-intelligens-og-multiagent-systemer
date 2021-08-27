@@ -17,7 +17,8 @@ namespace MaMapF
     public class LowLevelSearch
     {
         public static readonly SearchType SearchType = SearchType.ASTAR;
-        public static readonly int MaxActionRepeat = -1;
+        public static readonly int MaxActionRepeat = -1; // does not make sense for ASTAR
+        public static readonly bool PrintProgress = false; // warning: very slow
 
         public static List<SingleAgentState> GetSingleAgentPlan(
             SingleAgentState initialState,
@@ -37,9 +38,10 @@ namespace MaMapF
                 var state = frontier.Dequeue();
                 explored.Add(state);
 
-                // Console.Error.WriteLine(frontier.Count);
-                // if (state.G > 10) Environment.Exit(0);
-                Console.Error.WriteLine(state);
+                if (PrintProgress)
+                {
+                    Console.Error.WriteLine(state);
+                }
 
                 if (IsGoalState(state, goals, constraints))
                 {
@@ -77,8 +79,8 @@ namespace MaMapF
 
         private static int GetPriority(SingleAgentState s)
         {
-            if (SearchType == SearchType.GREEDY) return s.H;
             if (SearchType == SearchType.ASTAR) return s.F;
+            if (SearchType == SearchType.GREEDY) return s.H;
             return s.G;
         }
 
