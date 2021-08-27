@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using MaMapF.Models;
@@ -8,7 +7,6 @@ namespace MaMapF.Handlers
     public class SearchHandler
     {
         private readonly Level _level;
-        private List<MapItem> Solved { get; set; }
 
         public SearchHandler(Level level)
         {
@@ -25,22 +23,23 @@ namespace MaMapF.Handlers
                     allSolved = false;
                 }
             }
-
             return allSolved;
         }
 
         public Dictionary<char, List<SingleAgentState>> Search()
         {
+            var solved = new List<MapItem>();
             var solutions =
                 _level.Agents.ToDictionary(levelAgent => levelAgent, levelAgent => new List<SingleAgentState>());
-            
-            var agentInitialStates = new Dictionary<char, SingleAgentState>(_level.AgentInitialStates);
+            var nextInitialStates = new Dictionary<char, SingleAgentState>(_level.AgentInitialStates);
 
-            while (!IsAllMainGoalsSolved())
+            while (!IsAllMainGoalsSolved(solved))
             {
-                var delegation = DelegateSubGoals();
-                foreach (var (key, value) in CBSHandler.Search(_level.Agents, delegation.NextInitialStates,
-                    delegation.Goals))
+                var delegation = DelegateSubGoals(solved, nextInitialStates);
+                foreach (var (key, value) in
+                    CBSHandler.Search(_level.Agents,
+                        delegation.NextInitialStates,
+                        delegation.Goals))
                 {
                     if (value == null)
                     {
@@ -49,22 +48,21 @@ namespace MaMapF.Handlers
 
                     solutions[key].AddRange(value);
                     solved.AddRange(delegation.Goals[key]);
-                    agentInitialStates[key] = value.Last();
+                    nextInitialStates[key] = value.Last();
                 }
             }
 
             return solutions;
         }
 
-        public GoalDelegate DelegateSubGoals()
+        public GoalDelegate DelegateSubGoals(List<MapItem> solved, Dictionary<char, SingleAgentState> nextInitialStates)
         {
-            var goals = new Dictionary<char, List<MapItem>>(_level.Goals);
             var subGoals = _level.Agents.ToDictionary(agent => agent, agent => new List<MapItem>());
-            var subGoalInitialStates = new Dictionary<char, List<List<char>>>();
+            var agentInitialStates = new Dictionary<char, SingleAgentState>(nextInitialStates);
 
             foreach (var agent in _level.Agents)
             {
-                var goalsToSolve = goals[agent].Where(goal => !solved.Contains(goal)).ToList();
+                var goalsToSolve = _level.Goals[agent].Where(goal => !solved.Contains(goal)).ToList();
                 var boxGoals = goalsToSolve.Where(goal => char.IsLetter(goal.Value));
 
                 if (!goalsToSolve.Any())
@@ -79,14 +77,12 @@ namespace MaMapF.Handlers
                     var selectedBox = agentInitialStates[agent].Boxes.First();
                     foreach (var mapItem in agentInitialStates[agent].Boxes)
                     {
-                        Console.Error.WriteLine(selectedGoal);
-                        Console.Error.WriteLine(mapItem);
                         if (selectedBox.Position.Equals(mapItem.Position))
                         {
                             continue;
                         }
 
-                        agentInitialStates[agent].Map[mapItem.Position.Row][mapItem.Position.Column] = '+';
+                        agentInitialStates[agent].Walls.Add($"{mapItem.Position.Row},{mapItem.Position.Column}");
                     }
                 }
                 else
@@ -97,7 +93,11 @@ namespace MaMapF.Handlers
                 subGoals[agent].Add(selectedGoal);
             }
 
-            return new GoalDelegate();
+            return new GoalDelegate
+            {
+                Goals = subGoals,
+                NextInitialStates = agentInitialStates
+            };
         }
     }
 }

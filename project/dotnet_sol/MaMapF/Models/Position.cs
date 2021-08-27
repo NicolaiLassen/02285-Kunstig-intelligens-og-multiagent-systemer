@@ -25,6 +25,11 @@ namespace MaMapF.Models
             );
         }
 
+        public static int Distance(MapItem a, MapItem b)
+        {
+            return Distance(a.Position, b.Position);
+        }
+
         public static int Distance(Position a, Position b)
         {
             return Math.Abs(a.Row - b.Row) + Math.Abs(a.Column - b.Column);

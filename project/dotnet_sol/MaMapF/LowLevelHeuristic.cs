@@ -50,7 +50,7 @@ namespace MaMapF
                 {
                     foreach (var box in unusedBoxes)
                     {
-                        var distance = Position.Distance(boxGoal.Position, box.Position);
+                        var distance = Position.Distance(boxGoal, box);
                         if (distance >= minBoxDistance) continue;
                         minBoxDistance = distance;
                         minBox = box;
@@ -62,7 +62,7 @@ namespace MaMapF
                 h += minBoxDistance;
 
                 // Add distance from agent to minBox
-                var agentDistanceToMinBox = Position.Distance(state.AgentPosition, minBox.Position);
+                var agentDistanceToMinBox = Position.Distance(state.Agent, minBox);
                 h += agentDistanceToMinBox;
             }
 
@@ -70,7 +70,7 @@ namespace MaMapF
             // Add distance from agent to agent goal
             if (AgentGoal != null)
             {
-                h += Position.Distance(AgentGoal.Position, state.AgentPosition);
+                h += Position.Distance(AgentGoal, state.Agent);
             }
 
             return h;

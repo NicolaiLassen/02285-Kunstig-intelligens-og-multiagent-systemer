@@ -17,7 +17,8 @@ namespace MaMapF
     public class LowLevelSearch
     {
         public static readonly SearchType SearchType = SearchType.ASTAR;
-        public static readonly int MaxActionRepeat = -1;
+        public static readonly int MaxActionRepeat = -1; // does not make sense for ASTAR
+        public static readonly bool PrintProgress = false; // warning: very slow
 
         public static List<SingleAgentState> GetSingleAgentPlan(
             SingleAgentState initialState,
@@ -37,9 +38,10 @@ namespace MaMapF
                 var state = frontier.Dequeue();
                 explored.Add(state);
 
-                // Console.Error.WriteLine(frontier.Count);
-                // if (state.G > 10) Environment.Exit(0);
-                Console.Error.WriteLine(state);
+                if (PrintProgress)
+                {
+                    Console.Error.WriteLine(state);
+                }
 
                 if (IsGoalState(state, goals, constraints))
                 {
@@ -77,8 +79,8 @@ namespace MaMapF
 
         private static int GetPriority(SingleAgentState s)
         {
-            if (SearchType == SearchType.GREEDY) return s.H;
             if (SearchType == SearchType.ASTAR) return s.F;
+            if (SearchType == SearchType.GREEDY) return s.H;
             return s.G;
         }
 
@@ -92,7 +94,7 @@ namespace MaMapF
             }
 
             // false if satisfied goals != goals
-            var counter = goals.Count(goal => state.Map[goal.Position.Row][goal.Position.Column] == goal.Value);
+            var counter = goals.Count(goal => state.AllMapItems.Any(item => item.Equals(goal)));
             return counter == goals.Count;
         }
 
@@ -122,50 +124,52 @@ namespace MaMapF
             nextState.Parent = state;
             nextState.Action = action;
 
-            nextState.Agent = state.Agent;
-            nextState.AgentPosition = state.AgentPosition;
+            // use reffernce to walls
+            nextState.Walls = state.Walls;
+
+            nextState.Agent = new MapItem(state.Agent.Value, state.Agent.Position);
             nextState.Boxes = state.Boxes.Select(b => b).ToList();
-            nextState.Map = state.Map.Select(item => item.Select(e => e).ToList()).ToList();
+            // nextState.Map = state.Map.Select(item => item.Select(e => e).ToList()).ToList();
 
 
             // if (action.Type == ActionType.NoOp)
             if (action.Type == ActionType.Move)
             {
-                nextState.AgentPosition = state.AgentPosition.Next(action.AgentRowDelta, action.AgentColumnDelta);
+                nextState.Agent.Position = state.Agent.Position.Next(action.AgentRowDelta, action.AgentColumnDelta);
 
                 // Update map
-                nextState.Map[nextState.AgentPosition.Row][nextState.AgentPosition.Column] = state.Agent;
-                nextState.Map[state.AgentPosition.Row][state.AgentPosition.Column] = ' ';
+                // nextState.Map[nextState.AgentPosition.Row][nextState.AgentPosition.Column] = state.Agent;
+                // nextState.Map[state.AgentPosition.Row][state.AgentPosition.Column] = ' ';
             }
 
             if (action.Type == ActionType.Push)
             {
-                nextState.AgentPosition = state.AgentPosition.Next(action.AgentRowDelta, action.AgentColumnDelta);
-                var nextBoxPosition = nextState.AgentPosition.Next(action.BoxRowDelta, action.BoxColumnDelta);
+                nextState.Agent.Position = state.Agent.Position.Next(action.AgentRowDelta, action.AgentColumnDelta);
+                var nextBoxPosition = nextState.Agent.Position.Next(action.BoxRowDelta, action.BoxColumnDelta);
                 nextState.Boxes = state.Boxes.Select(b =>
-                    b.Position.Equals(nextState.AgentPosition) ? new MapItem(b.Value, nextBoxPosition) : b).ToList();
+                    b.Position.Equals(nextState.Agent.Position) ? new MapItem(b.Value, nextBoxPosition) : b).ToList();
 
 
                 // update map
-                var boxValue = state.Map[nextState.AgentPosition.Row][nextState.AgentPosition.Column];
-                nextState.Map[nextBoxPosition.Row][nextBoxPosition.Column] = boxValue;
-                nextState.Map[nextState.AgentPosition.Row][nextState.AgentPosition.Column] = state.Agent;
-                nextState.Map[state.AgentPosition.Row][state.AgentPosition.Column] = ' ';
+                // var boxValue = state.Map[nextState.AgentPosition.Row][nextState.AgentPosition.Column];
+                // nextState.Map[nextBoxPosition.Row][nextBoxPosition.Column] = boxValue;
+                // nextState.Map[nextState.AgentPosition.Row][nextState.AgentPosition.Column] = state.Agent;
+                // nextState.Map[state.AgentPosition.Row][state.AgentPosition.Column] = ' ';
             }
 
             if (action.Type == ActionType.Pull)
             {
-                var boxPosition = state.AgentPosition.Next(action.BoxRowDelta * -1, action.BoxColumnDelta * -1);
-                var nextBoxPosition = state.AgentPosition.Next(0, 0);
-                nextState.AgentPosition = state.AgentPosition.Next(action.AgentRowDelta, action.AgentColumnDelta);
+                var boxPosition = state.Agent.Position.Next(action.BoxRowDelta * -1, action.BoxColumnDelta * -1);
+                var nextBoxPosition = state.Agent.Position.Next(0, 0);
+                nextState.Agent.Position = state.Agent.Position.Next(action.AgentRowDelta, action.AgentColumnDelta);
                 nextState.Boxes = state.Boxes
                     .Select(b => b.Position.Equals(boxPosition) ? new MapItem(b.Value, nextBoxPosition) : b).ToList();
 
                 // update map
-                var boxValue = state.Map[boxPosition.Row][boxPosition.Column];
-                nextState.Map[nextState.AgentPosition.Row][nextState.AgentPosition.Column] = state.Agent;
-                nextState.Map[state.AgentPosition.Row][state.AgentPosition.Column] = boxValue;
-                nextState.Map[boxPosition.Row][boxPosition.Column] = ' ';
+                // var boxValue = state.Map[boxPosition.Row][boxPosition.Column];
+                // nextState.Map[nextState.AgentPosition.Row][nextState.AgentPosition.Column] = state.Agent;
+                // nextState.Map[state.AgentPosition.Row][state.AgentPosition.Column] = boxValue;
+                // nextState.Map[boxPosition.Row][boxPosition.Column] = ' ';
             }
 
             nextState.G = state.G + 1;
@@ -200,14 +204,14 @@ namespace MaMapF
 
             if (action.Type == ActionType.Move)
             {
-                var nextAgentPosition = state.AgentPosition.Next(action.AgentRowDelta, action.AgentColumnDelta);
+                var nextAgentPosition = state.Agent.Position.Next(action.AgentRowDelta, action.AgentColumnDelta);
                 return state.IsFree(nextAgentPosition);
             }
 
             if (action.Type == ActionType.Push)
             {
                 // check that next agent position is box and next box position is free
-                var nextAgentPosition = state.AgentPosition.Next(action.AgentRowDelta, action.AgentColumnDelta);
+                var nextAgentPosition = state.Agent.Position.Next(action.AgentRowDelta, action.AgentColumnDelta);
                 var nextBoxPosition = nextAgentPosition.Next(action.BoxRowDelta, action.BoxColumnDelta);
                 return state.IsBox(nextAgentPosition) && state.IsFree(nextBoxPosition);
             }
@@ -215,8 +219,8 @@ namespace MaMapF
             if (action.Type == ActionType.Pull)
             {
                 // check that next agent position is free and box position is box
-                var nextAgentPosition = state.AgentPosition.Next(action.AgentRowDelta, action.AgentColumnDelta);
-                var boxPosition = state.AgentPosition.Next(action.BoxRowDelta * -1, action.BoxColumnDelta * -1);
+                var nextAgentPosition = state.Agent.Position.Next(action.AgentRowDelta, action.AgentColumnDelta);
+                var boxPosition = state.Agent.Position.Next(action.BoxRowDelta * -1, action.BoxColumnDelta * -1);
                 return state.IsFree(nextAgentPosition) && state.IsBox(boxPosition);
             }
 
