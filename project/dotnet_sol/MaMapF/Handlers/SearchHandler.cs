@@ -55,7 +55,7 @@ namespace MaMapF.Handlers
             return solutions;
         }
 
-        public GoalDelegate DelegateSubGoals(List<MapItem> solved, Dictionary<char, SingleAgentState> nextInitialStates)
+        public Delegate DelegateSubGoals(List<MapItem> solved, Dictionary<char, SingleAgentState> nextInitialStates)
         {
             var subGoals = _level.Agents.ToDictionary(agent => agent, agent => new List<MapItem>());
             var agentInitialStates = new Dictionary<char, SingleAgentState>(nextInitialStates);
@@ -93,7 +93,7 @@ namespace MaMapF.Handlers
                 subGoals[agent].Add(selectedGoal);
             }
 
-            return new GoalDelegate
+            return new Delegate
             {
                 Goals = subGoals,
                 NextInitialStates = agentInitialStates
