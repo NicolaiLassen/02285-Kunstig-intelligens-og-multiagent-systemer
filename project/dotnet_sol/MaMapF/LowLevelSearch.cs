@@ -41,7 +41,7 @@ namespace MaMapF
                 // if (state.G > 10) Environment.Exit(0);
                 Console.Error.WriteLine(state);
 
-                if (IsGoalState(state, goals))
+                if (IsGoalState(state, goals, constraints))
                 {
                     return GetSingleAgentSolutionFromState(state);
                 }
@@ -49,28 +49,30 @@ namespace MaMapF
                 var expandedStates = ExpandSingleAgentState(state, constraints);
                 foreach (var s in expandedStates)
                 {
-                    var isNotFrontier = !frontier.Contains(s);
-                    var isNotExplored = !explored.Contains(s);
-                    var isNotExploredMax = IsNotExploredMaxNoOp(explored, s);
-                    if (isNotFrontier && isNotExplored && isNotExploredMax)
-                    {
-                        s.H = heuristic.GetHeuristic(s);
-                        var priority = GetPriority(s);
-                        frontier.Enqueue(s, priority);
-                    }
+                    // skip if state is already in list of frontiers
+                    if (frontier.Contains(s)) continue;
+
+                    // skip if state is already explored
+                    if (explored.Contains(s)) continue;
+
+                    // skip if state is explored with (state.G - MaxNoOp)
+                    if (IsExploredMaxNoOp(explored, s)) continue;
+
+                    s.H = heuristic.GetHeuristic(s);
+                    var priority = GetPriority(s);
+                    frontier.Enqueue(s, priority);
                 }
             }
 
             return null;
         }
 
-        private static bool IsNotExploredMaxNoOp(HashSet<SingleAgentState> explored, SingleAgentState state)
+        private static bool IsExploredMaxNoOp(HashSet<SingleAgentState> explored, SingleAgentState state)
         {
-            if (MaxActionRepeat == -1) return true;
+            if (MaxActionRepeat == -1) return false;
             var s = CreateNextState(state, Action.NoOp);
             s.G -= MaxActionRepeat;
-            var isNotExplored = !explored.Contains(s);
-            return isNotExplored;
+            return explored.Contains(s);
         }
 
         private static int GetPriority(SingleAgentState s)
@@ -81,10 +83,16 @@ namespace MaMapF
         }
 
 
-        private static bool IsGoalState(SingleAgentState state, List<MapItem> goals)
+        private static bool IsGoalState(SingleAgentState state, List<MapItem> goals, List<Constraint> constraints)
         {
-            var counter = goals.Count(agentGoal =>
-                state.Map[agentGoal.Position.Row][agentGoal.Position.Column] == agentGoal.Value);
+            // false if there is a future constraint
+            if (constraints.Max(c => c.Step) > state.G)
+            {
+                return false;
+            }
+
+            // false if satisfied goals != goals
+            var counter = goals.Count(goal => state.Map[goal.Position.Row][goal.Position.Column] == goal.Value);
             return counter == goals.Count;
         }
 
