@@ -14,9 +14,6 @@ namespace MaMapF
         public Dictionary<char, List<MapItem>> Goals { get; set; }
 
         public Dictionary<char, SingleAgentState> AgentInitialStates { get; set; }
-        
-        
-        
 
         public Level(
             Dictionary<char, string> colors,

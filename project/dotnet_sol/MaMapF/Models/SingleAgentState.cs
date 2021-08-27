@@ -48,8 +48,7 @@ namespace MaMapF.Models
             // return Boxes.Any(b => b.Position.Equals(position));
             return char.IsLetter(Map[position.Row][position.Column]);
         }
-
-
+        
         public override int GetHashCode()
         {
             if (Hash != -1) return Hash;

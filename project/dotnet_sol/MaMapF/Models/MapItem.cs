@@ -7,9 +7,18 @@
 
         public MapItem(char value, Position position)
         {
-            this.Value = value;
-            this.Position = position;
+            Value = value;
+            Position = position;
         }
+
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null) return false;
+            if (!(obj is MapItem other)) return false;
+            return Position.Equals(other.Position) && Value == other.Value;
+        }
+
 
         public override string ToString()
         {
