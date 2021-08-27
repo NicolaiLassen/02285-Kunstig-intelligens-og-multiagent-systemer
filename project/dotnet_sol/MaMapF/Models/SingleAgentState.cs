@@ -11,9 +11,10 @@ namespace MaMapF.Models
         public HashSet<string> Walls { get; set; }
         // public List<List<char>> Map { get; set; }
 
-        public char Agent { get; set; }
-        public Position AgentPosition { get; set; }
+        public MapItem Agent { get; set; }
         public List<MapItem> Boxes { get; set; }
+
+        public char AgentName => Agent.Value;
 
 
         public Action Action { get; set; }
@@ -22,12 +23,12 @@ namespace MaMapF.Models
         public int F => G + H;
 
 
-        public List<MapItem> AllMapItems => Boxes.Concat(new[] {new MapItem(Agent, AgentPosition),}).ToList();
+        public List<MapItem> AllMapItems => Boxes.Concat(new[] {Agent}).ToList();
         public List<Position> AllPositions => AllMapItems.Select(i => i.Position).ToList();
 
         public override string ToString()
         {
-            var info = $"Agent {Agent} at ({AgentPosition}) {Action}\nG: {G}, H: {H}, F: {F}";
+            var info = $"Agent {AgentName} at ({Agent.Position}) {Action}\nG: {G}, H: {H}, F: {F}";
             // var map = string.Join("\n", Map.Select(row => string.Join("", row)));
             var map = "";
             return $"{info}\n{map}\n";
@@ -35,7 +36,7 @@ namespace MaMapF.Models
 
         public bool IsFree(Position position)
         {
-            if (AgentPosition.Equals(position)) return false;
+            if (Agent.Position.Equals(position)) return false;
             if (IsBox(position)) return false;
             if (IsWall(position)) return false;
             return true;
@@ -74,8 +75,7 @@ namespace MaMapF.Models
             if (G != other.G) return false;
 
             // If my agent is the same as the other state
-            if (Agent != other.Agent) return false;
-            if (!AgentPosition.Equals(other.AgentPosition)) return false;
+            if (!Agent.Equals(other.Agent)) return false;
 
             // If the other state has all the boxes that I do
             return Boxes.All(b => other.Boxes.Any(b.Equals));

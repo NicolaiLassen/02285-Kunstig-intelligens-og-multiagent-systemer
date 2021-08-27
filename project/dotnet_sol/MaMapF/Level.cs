@@ -94,8 +94,7 @@ namespace MaMapF
             {
                 G = 0,
                 // Map = map,
-                Agent = agent,
-                AgentPosition = agentPosition,
+                Agent = new MapItem(agent, agentPosition),
                 Boxes = boxes,
                 Walls = walls,
             };

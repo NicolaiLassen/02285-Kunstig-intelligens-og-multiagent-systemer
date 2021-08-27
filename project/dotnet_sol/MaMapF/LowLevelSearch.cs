@@ -125,8 +125,7 @@ namespace MaMapF
             // use reffernce to walls
             nextState.Walls = state.Walls;
 
-            nextState.Agent = state.Agent;
-            nextState.AgentPosition = state.AgentPosition;
+            nextState.Agent = new MapItem(state.Agent.Value, state.Agent.Position);
             nextState.Boxes = state.Boxes.Select(b => b).ToList();
             // nextState.Map = state.Map.Select(item => item.Select(e => e).ToList()).ToList();
 
@@ -134,7 +133,7 @@ namespace MaMapF
             // if (action.Type == ActionType.NoOp)
             if (action.Type == ActionType.Move)
             {
-                nextState.AgentPosition = state.AgentPosition.Next(action.AgentRowDelta, action.AgentColumnDelta);
+                nextState.Agent.Position = state.Agent.Position.Next(action.AgentRowDelta, action.AgentColumnDelta);
 
                 // Update map
                 // nextState.Map[nextState.AgentPosition.Row][nextState.AgentPosition.Column] = state.Agent;
@@ -143,10 +142,10 @@ namespace MaMapF
 
             if (action.Type == ActionType.Push)
             {
-                nextState.AgentPosition = state.AgentPosition.Next(action.AgentRowDelta, action.AgentColumnDelta);
-                var nextBoxPosition = nextState.AgentPosition.Next(action.BoxRowDelta, action.BoxColumnDelta);
+                nextState.Agent.Position = state.Agent.Position.Next(action.AgentRowDelta, action.AgentColumnDelta);
+                var nextBoxPosition = nextState.Agent.Position.Next(action.BoxRowDelta, action.BoxColumnDelta);
                 nextState.Boxes = state.Boxes.Select(b =>
-                    b.Position.Equals(nextState.AgentPosition) ? new MapItem(b.Value, nextBoxPosition) : b).ToList();
+                    b.Position.Equals(nextState.Agent.Position) ? new MapItem(b.Value, nextBoxPosition) : b).ToList();
 
 
                 // update map
@@ -158,9 +157,9 @@ namespace MaMapF
 
             if (action.Type == ActionType.Pull)
             {
-                var boxPosition = state.AgentPosition.Next(action.BoxRowDelta * -1, action.BoxColumnDelta * -1);
-                var nextBoxPosition = state.AgentPosition.Next(0, 0);
-                nextState.AgentPosition = state.AgentPosition.Next(action.AgentRowDelta, action.AgentColumnDelta);
+                var boxPosition = state.Agent.Position.Next(action.BoxRowDelta * -1, action.BoxColumnDelta * -1);
+                var nextBoxPosition = state.Agent.Position.Next(0, 0);
+                nextState.Agent.Position = state.Agent.Position.Next(action.AgentRowDelta, action.AgentColumnDelta);
                 nextState.Boxes = state.Boxes
                     .Select(b => b.Position.Equals(boxPosition) ? new MapItem(b.Value, nextBoxPosition) : b).ToList();
 
@@ -203,14 +202,14 @@ namespace MaMapF
 
             if (action.Type == ActionType.Move)
             {
-                var nextAgentPosition = state.AgentPosition.Next(action.AgentRowDelta, action.AgentColumnDelta);
+                var nextAgentPosition = state.Agent.Position.Next(action.AgentRowDelta, action.AgentColumnDelta);
                 return state.IsFree(nextAgentPosition);
             }
 
             if (action.Type == ActionType.Push)
             {
                 // check that next agent position is box and next box position is free
-                var nextAgentPosition = state.AgentPosition.Next(action.AgentRowDelta, action.AgentColumnDelta);
+                var nextAgentPosition = state.Agent.Position.Next(action.AgentRowDelta, action.AgentColumnDelta);
                 var nextBoxPosition = nextAgentPosition.Next(action.BoxRowDelta, action.BoxColumnDelta);
                 return state.IsBox(nextAgentPosition) && state.IsFree(nextBoxPosition);
             }
@@ -218,8 +217,8 @@ namespace MaMapF
             if (action.Type == ActionType.Pull)
             {
                 // check that next agent position is free and box position is box
-                var nextAgentPosition = state.AgentPosition.Next(action.AgentRowDelta, action.AgentColumnDelta);
-                var boxPosition = state.AgentPosition.Next(action.BoxRowDelta * -1, action.BoxColumnDelta * -1);
+                var nextAgentPosition = state.Agent.Position.Next(action.AgentRowDelta, action.AgentColumnDelta);
+                var boxPosition = state.Agent.Position.Next(action.BoxRowDelta * -1, action.BoxColumnDelta * -1);
                 return state.IsFree(nextAgentPosition) && state.IsBox(boxPosition);
             }
 
