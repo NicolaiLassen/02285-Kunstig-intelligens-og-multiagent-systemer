@@ -7,7 +7,9 @@ namespace MaMapF.Models
     {
         private int Hash = -1;
         public SingleAgentState Parent { get; set; }
-        public List<List<char>> Map { get; set; }
+
+        public HashSet<string> Walls { get; set; }
+        // public List<List<char>> Map { get; set; }
 
         public char Agent { get; set; }
         public Position AgentPosition { get; set; }
@@ -26,7 +28,8 @@ namespace MaMapF.Models
         public override string ToString()
         {
             var info = $"Agent {Agent} at ({AgentPosition}) {Action}\nG: {G}, H: {H}, F: {F}";
-            var map = string.Join("\n", Map.Select(row => string.Join("", row)));
+            // var map = string.Join("\n", Map.Select(row => string.Join("", row)));
+            var map = "";
             return $"{info}\n{map}\n";
         }
 
@@ -40,13 +43,12 @@ namespace MaMapF.Models
 
         public bool IsWall(Position position)
         {
-            return Map[position.Row][position.Column] == '+';
+            return Walls.Contains($"{position.Row},{position.Column}");
         }
 
         public bool IsBox(Position position)
         {
-            // return Boxes.Any(b => b.Position.Equals(position));
-            return char.IsLetter(Map[position.Row][position.Column]);
+            return Boxes.Any(b => b.Position.Equals(position));
         }
 
 
@@ -55,9 +57,10 @@ namespace MaMapF.Models
             if (Hash != -1) return Hash;
 
             var prime = 31;
-            var hash = prime + (AgentPosition.Row + 1) * 23 + (AgentPosition.Column + 1) * 29;
-            hash = hash * prime + G * 13;
-            hash = hash * prime + Map.Sum(row => row.Sum(c => c.GetHashCode()));
+            var hash = prime * 1;
+            hash = hash * prime + G * 23;
+            hash = hash * prime * AllMapItems.Sum(item =>
+                item.Value.GetHashCode() + item.Position.Row * 11 + item.Position.Column * 13);
             Hash = hash;
             return Hash;
         }
@@ -66,20 +69,16 @@ namespace MaMapF.Models
         {
             if (obj == null) return false;
             if (!(obj is SingleAgentState other)) return false;
-            if (G != other.G) return false;
-            // if (AgentPosition.Row != other.AgentPosition.Row && AgentPosition.Column != other.AgentPosition.Column) return false;
-            for (var row = 0; row < Map.Count; row++)
-            {
-                for (var col = 0; col < Map[row].Count; col++)
-                {
-                    if (Map[row][col] != other.Map[row][col])
-                    {
-                        return false;
-                    }
-                }
-            }
 
-            return true;
+            // If the time is different
+            if (G != other.G) return false;
+
+            // If my agent is the same as the other state
+            if (Agent != other.Agent) return false;
+            if (!AgentPosition.Equals(other.AgentPosition)) return false;
+
+            // If the other state has all the boxes that I do
+            return Boxes.All(b => other.Boxes.Any(b.Equals));
         }
     }
 }

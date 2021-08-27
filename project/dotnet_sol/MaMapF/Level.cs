@@ -14,9 +14,7 @@ namespace MaMapF
         public Dictionary<char, List<MapItem>> Goals { get; set; }
 
         public Dictionary<char, SingleAgentState> AgentInitialStates { get; set; }
-        
-        
-        
+
 
         public Level(
             Dictionary<char, string> colors,
@@ -45,14 +43,22 @@ namespace MaMapF
             var agentColor = Colors[agent];
             var agentPosition = new Position();
             var boxes = new List<MapItem>();
+            var walls = new HashSet<string>();
+
 
             for (var row = 0; row < InitialMap.Count; row++)
             {
                 for (var col = 0; col < InitialMap[row].Count; col++)
                 {
                     var c = InitialMap[row][col];
-                    if (c == '+' || c == ' ')
+                    if (c == ' ')
                     {
+                        continue;
+                    }
+
+                    if (c == '+')
+                    {
+                        walls.Add($"{row},{col}");
                         continue;
                     }
 
@@ -87,21 +93,12 @@ namespace MaMapF
             return new SingleAgentState
             {
                 G = 0,
-                Map = map,
+                // Map = map,
                 Agent = agent,
                 AgentPosition = agentPosition,
                 Boxes = boxes,
+                Walls = walls,
             };
-        }
-
-        public SingleAgentState GetInitialState(char agent) => AgentInitialStates[agent];
-
-        public bool IsAgentGoalState(SingleAgentState state)
-        {
-            var agentGoals = Goals[state.Agent];
-            var counter = agentGoals.Count(agentGoal =>
-                state.Map[agentGoal.Position.Row][agentGoal.Position.Column] == agentGoal.Value);
-            return counter == Goals[state.Agent].Count;
         }
     }
 }

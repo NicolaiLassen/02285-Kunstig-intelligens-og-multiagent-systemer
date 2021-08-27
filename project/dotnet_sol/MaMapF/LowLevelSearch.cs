@@ -92,7 +92,7 @@ namespace MaMapF
             }
 
             // false if satisfied goals != goals
-            var counter = goals.Count(goal => state.Map[goal.Position.Row][goal.Position.Column] == goal.Value);
+            var counter = goals.Count(goal => state.AllMapItems.Any(item => item.Equals(goal)));
             return counter == goals.Count;
         }
 
@@ -122,10 +122,13 @@ namespace MaMapF
             nextState.Parent = state;
             nextState.Action = action;
 
+            // use reffernce to walls
+            nextState.Walls = state.Walls;
+
             nextState.Agent = state.Agent;
             nextState.AgentPosition = state.AgentPosition;
             nextState.Boxes = state.Boxes.Select(b => b).ToList();
-            nextState.Map = state.Map.Select(item => item.Select(e => e).ToList()).ToList();
+            // nextState.Map = state.Map.Select(item => item.Select(e => e).ToList()).ToList();
 
 
             // if (action.Type == ActionType.NoOp)
@@ -134,8 +137,8 @@ namespace MaMapF
                 nextState.AgentPosition = state.AgentPosition.Next(action.AgentRowDelta, action.AgentColumnDelta);
 
                 // Update map
-                nextState.Map[nextState.AgentPosition.Row][nextState.AgentPosition.Column] = state.Agent;
-                nextState.Map[state.AgentPosition.Row][state.AgentPosition.Column] = ' ';
+                // nextState.Map[nextState.AgentPosition.Row][nextState.AgentPosition.Column] = state.Agent;
+                // nextState.Map[state.AgentPosition.Row][state.AgentPosition.Column] = ' ';
             }
 
             if (action.Type == ActionType.Push)
@@ -147,10 +150,10 @@ namespace MaMapF
 
 
                 // update map
-                var boxValue = state.Map[nextState.AgentPosition.Row][nextState.AgentPosition.Column];
-                nextState.Map[nextBoxPosition.Row][nextBoxPosition.Column] = boxValue;
-                nextState.Map[nextState.AgentPosition.Row][nextState.AgentPosition.Column] = state.Agent;
-                nextState.Map[state.AgentPosition.Row][state.AgentPosition.Column] = ' ';
+                // var boxValue = state.Map[nextState.AgentPosition.Row][nextState.AgentPosition.Column];
+                // nextState.Map[nextBoxPosition.Row][nextBoxPosition.Column] = boxValue;
+                // nextState.Map[nextState.AgentPosition.Row][nextState.AgentPosition.Column] = state.Agent;
+                // nextState.Map[state.AgentPosition.Row][state.AgentPosition.Column] = ' ';
             }
 
             if (action.Type == ActionType.Pull)
@@ -162,10 +165,10 @@ namespace MaMapF
                     .Select(b => b.Position.Equals(boxPosition) ? new MapItem(b.Value, nextBoxPosition) : b).ToList();
 
                 // update map
-                var boxValue = state.Map[boxPosition.Row][boxPosition.Column];
-                nextState.Map[nextState.AgentPosition.Row][nextState.AgentPosition.Column] = state.Agent;
-                nextState.Map[state.AgentPosition.Row][state.AgentPosition.Column] = boxValue;
-                nextState.Map[boxPosition.Row][boxPosition.Column] = ' ';
+                // var boxValue = state.Map[boxPosition.Row][boxPosition.Column];
+                // nextState.Map[nextState.AgentPosition.Row][nextState.AgentPosition.Column] = state.Agent;
+                // nextState.Map[state.AgentPosition.Row][state.AgentPosition.Column] = boxValue;
+                // nextState.Map[boxPosition.Row][boxPosition.Column] = ' ';
             }
 
             nextState.G = state.G + 1;
