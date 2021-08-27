@@ -39,7 +39,7 @@ namespace MaMapF.Handlers
                 foreach (var (key, value) in
                     CBSHandler.Search(_level.Agents,
                         delegation.NextInitialStates,
-                        delegation.Goals))
+                        _level.Goals))
                 {
                     if (value == null)
                     {

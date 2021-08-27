@@ -56,8 +56,7 @@ namespace MaMapF
                         minBox = box;
                     }
                 }
-
-
+                
                 // Add distance from closest box to non-taken goal
                 h += minBoxDistance;
 
