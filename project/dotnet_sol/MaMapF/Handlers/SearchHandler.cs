@@ -39,13 +39,19 @@ namespace MaMapF.Handlers
 
             while (!IsAllMainGoalsSolved(solved))
             {
-                var subGoals = new Dictionary<char, List<MapItem>>();
+                var subGoals = _level.Agents.ToDictionary(agent => agent, agent => new List<MapItem>());
+
                 var subGoalInitialStates = new Dictionary<char, List<List<char>>>();
                 foreach (var agent in _level.Agents)
                 {
                     var goalsToSolve = goals[agent].Where(goal => !solved.Contains(goal)).ToList();
                     var boxGoals = goalsToSolve.Where(goal => char.IsLetter(goal.Value));
 
+                    if (!goalsToSolve.Any())
+                    {
+                        continue;
+                    }
+                    
                     MapItem selectedGoal;
                     if (boxGoals.Any())
                     {
@@ -59,6 +65,7 @@ namespace MaMapF.Handlers
                             {
                                 continue;
                             }
+
                             agentInitialStates[agent].Map[mapItem.Position.Row][mapItem.Position.Column] = '+';
                         }
                     }
@@ -67,15 +74,10 @@ namespace MaMapF.Handlers
                         selectedGoal = goalsToSolve.First();
                     }
 
-                    if (selectedGoal == null)
-                    {
-                        continue;
-                    }
-                    
-                    subGoals.Add(agent, new List<MapItem> {selectedGoal});
+                    subGoals[agent].Add(selectedGoal);
                 }
 
-                foreach (var (key, value) in CBSHandler.Search(subGoals.Keys.ToList(), agentInitialStates, subGoals))
+                foreach (var (key, value) in CBSHandler.Search(_level.Agents, agentInitialStates, subGoals))
                 {
                     if (value == null)
                     {

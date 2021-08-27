@@ -4,16 +4,17 @@ hospital
 A2
 #colors
 blue: 0, A
+red: 1
 #initial
 +++++++++++++++
 +0            +
-+AAAAAAA      +
-+AAAAAAA      +
++AAAAA        +
++1AAAA        +
 +++++++++++++++
 #goal
 +++++++++++++++
-+0           A+
-+             +
++0           1+
++            A+
 +             +
 +++++++++++++++
 #end
