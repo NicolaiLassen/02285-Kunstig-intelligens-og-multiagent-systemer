@@ -7,17 +7,26 @@ using Action = MaMapF.Models.Action;
 
 namespace MaMapF
 {
+    public enum SearchType
+    {
+        BFS,
+        GREEDY,
+        ASTAR
+    }
+
     public class LowLevelSearch
     {
-        private readonly int MaxNoOp = 0;
+        public static readonly SearchType SearchType = SearchType.GREEDY;
+        public static readonly int MaxActionRepeat = -1;
 
-        public  static List<SingleAgentState> GetSingleAgentPlan(
+        public static List<SingleAgentState> GetSingleAgentPlan(
             SingleAgentState initialState,
             List<MapItem> goals,
             List<Constraint> constraints
         )
         {
-            var heuristic = new LowLevelHeuristic(goals);
+            var heuristic = new LowLevelHeuristic(goals, constraints);
+
             var frontier = new SimplePriorityQueue<SingleAgentState>();
             var explored = new HashSet<SingleAgentState>();
 
@@ -32,7 +41,7 @@ namespace MaMapF
                 // if (state.G > 10) Environment.Exit(0);
                 Console.Error.WriteLine(state);
 
-                if (IsGoalState(state, goals))
+                if (IsGoalState(state, goals, constraints))
                 {
                     return GetSingleAgentSolutionFromState(state);
                 }
@@ -40,28 +49,50 @@ namespace MaMapF
                 var expandedStates = ExpandSingleAgentState(state, constraints);
                 foreach (var s in expandedStates)
                 {
-                    var isNotFrontier = !frontier.Contains(s);
-                    var isNotExplored = !explored.Contains(s);
-                    if (isNotFrontier && isNotExplored)
-                    {
-                        s.H = heuristic.GetHeuristic(s, constraints);
+                    // skip if state is already in list of frontiers
+                    if (frontier.Contains(s)) continue;
 
-                        // greedy
-                        // frontier.Enqueue(s, s.H);
+                    // skip if state is already explored
+                    if (explored.Contains(s)) continue;
 
-                        // astar
-                        frontier.Enqueue(s, s.F);
-                    }
+                    // skip if state is explored with (state.G - MaxNoOp)
+                    if (IsExploredMaxNoOp(explored, s)) continue;
+
+                    s.H = heuristic.GetHeuristic(s);
+                    var priority = GetPriority(s);
+                    frontier.Enqueue(s, priority);
                 }
             }
 
             return null;
         }
 
-        private static bool IsGoalState(SingleAgentState state, List<MapItem> goals)
+        private static bool IsExploredMaxNoOp(HashSet<SingleAgentState> explored, SingleAgentState state)
         {
-            var counter = goals.Count(agentGoal =>
-                state.Map[agentGoal.Position.Row][agentGoal.Position.Column] == agentGoal.Value);
+            if (MaxActionRepeat == -1) return false;
+            var s = CreateNextState(state, Action.NoOp);
+            s.G -= MaxActionRepeat;
+            return explored.Contains(s);
+        }
+
+        private static int GetPriority(SingleAgentState s)
+        {
+            if (SearchType == SearchType.GREEDY) return s.H;
+            if (SearchType == SearchType.ASTAR) return s.F;
+            return s.G;
+        }
+
+
+        private static bool IsGoalState(SingleAgentState state, List<MapItem> goals, List<Constraint> constraints)
+        {
+            // false if there is a future constraint
+            if (constraints.Max(c => c.Step) > state.G)
+            {
+                return false;
+            }
+
+            // false if satisfied goals != goals
+            var counter = goals.Count(goal => state.Map[goal.Position.Row][goal.Position.Column] == goal.Value);
             return counter == goals.Count;
         }
 
@@ -81,20 +112,6 @@ namespace MaMapF
                     }
                 }
             }
-
-            // if (constraints.Any())
-            // {
-            //     Console.Error.WriteLine("QQQQQQQQQQQQQQQQQQQQQQQQQQQ");
-            //     constraints.ForEach(c => Console.Error.WriteLine(c));
-            //
-            //     Console.Error.WriteLine("STATE");
-            //     Console.Error.WriteLine(state);
-            //
-            //     Console.Error.WriteLine("EXPANDED");
-            //     states.ForEach(s => Console.Error.WriteLine(s));
-            //     Environment.Exit(0);
-            // }
-
 
             return states;
         }
@@ -161,7 +178,7 @@ namespace MaMapF
             return nextState;
         }
 
-        public static bool BreaksConstraint(SingleAgentState state, List<Constraint> constraints)
+        private static bool BreaksConstraint(SingleAgentState state, List<Constraint> constraints)
         {
             foreach (var constraint in constraints.Where(c => c.Step == state.G))
             {
@@ -174,7 +191,7 @@ namespace MaMapF
             return false;
         }
 
-        public static bool IsValidAction(SingleAgentState state, Action action)
+        private static bool IsValidAction(SingleAgentState state, Action action)
         {
             if (action.Type == ActionType.NoOp)
             {
@@ -206,7 +223,7 @@ namespace MaMapF
             return false;
         }
 
-        public static List<SingleAgentState> GetSingleAgentSolutionFromState(SingleAgentState goal)
+        private static List<SingleAgentState> GetSingleAgentSolutionFromState(SingleAgentState goal)
         {
             var solution = new List<SingleAgentState>();
             var state = goal;

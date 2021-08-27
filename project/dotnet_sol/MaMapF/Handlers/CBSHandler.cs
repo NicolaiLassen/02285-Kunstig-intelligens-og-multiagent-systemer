@@ -58,7 +58,6 @@ namespace MaMapF.Handlers
                     nextNode.Constraints.Add(constraint);
 
                     var agentConstraints = nextNode.Constraints.Where(c => c.Agent == agent).ToList();
-
                     var initialState = initialStates[agent];
                     var agentGoals = goals[agent];
                     var solution = LowLevelSearch.GetSingleAgentPlan(initialState, agentGoals, agentConstraints);

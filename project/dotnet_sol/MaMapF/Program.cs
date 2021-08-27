@@ -20,5 +20,6 @@ namespace MaMapF
 
             ServerHandler.SendServerPlan(solution);
         }
+
     }
 }

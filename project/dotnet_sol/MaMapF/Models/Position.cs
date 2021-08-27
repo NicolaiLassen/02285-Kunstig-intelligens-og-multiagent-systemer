@@ -1,4 +1,6 @@
-﻿namespace MaMapF.Models
+﻿using System;
+
+namespace MaMapF.Models
 {
     public class Position
     {
@@ -23,6 +25,10 @@
             );
         }
 
+        public static int Distance(Position a, Position b)
+        {
+            return Math.Abs(a.Row - b.Row) + Math.Abs(a.Column - b.Column);
+        }
 
         public override string ToString()
         {

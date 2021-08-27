@@ -24,5 +24,10 @@
         {
             return $"MAPITEM\n Value: {Value}, Position: {Position}";
         }
+
+        public bool Equals(MapItem other)
+        {
+            return Value == other.Value && Position.Equals(other.Position);
+        }
     }
 }
