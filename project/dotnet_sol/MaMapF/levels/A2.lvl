@@ -7,16 +7,16 @@ blue: 0, A
 red: 1, B
 #initial
 +++++++++++++++
-+ 0           +
++0            +
 +AAAAAAAAAA   +
 +AAAAAAAAAA   +
 +BBBBBBBBBB   +
 +BBBBBBBBBB   +
-+ 1           +
++1            +
 +++++++++++++++
 #goal
 +++++++++++++++
-+0           A+
++            A+
 +            A+
 +            A+
 +            B+
