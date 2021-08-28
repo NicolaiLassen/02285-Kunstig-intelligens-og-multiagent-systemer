@@ -143,9 +143,19 @@ namespace MaMapF.Handlers
                     // If all boxes are in place solve the agent problem
                     // TODO: this should still make walls for all boxes
                     // be aware of block
+                    // TODO make func CLEAN THIS UP
+                    foreach (var box in agentInitialStates[agent].Boxes)
+                    {
+                        // Modify the map to optimize for a*
+                        wallModifications[agent].Add(box.Position);
+                        boxModifications[agent].Add(box);
+                        agentInitialStates[agent].Walls.Add($"{box.Position.Row},{box.Position.Column}");
+                    }
+                    
                     selectedGoal = goalsToSolve.First();
                 }
 
+                Console.Error.WriteLine(selectedGoal);
                 // Delegate the task to the agent
                 subGoals[agent].Add(selectedGoal);
                 // Remove boxes
@@ -158,5 +168,6 @@ namespace MaMapF.Handlers
             delegation.BoxModifications = boxModifications;
             delegation.NextInitialStates = agentInitialStates;
         }
+
     }
 }
