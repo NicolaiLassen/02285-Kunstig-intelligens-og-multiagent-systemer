@@ -10,12 +10,21 @@ namespace MaMapF.Models
         public List<MapItem> BoxMods { get; set; }
         public List<Position> WallMods { get; set; }
 
+        public MapItem SelectedBox { get; set; }
+        public MapItem SelectedBoxGoal { get; set; }
+
+
+        public bool IsGoToBoxProblem { get; set; }
+        public bool IsMoveBoxToGoalProblem { get; set; }
+
         public SingleAgentProblem(SingleAgentState initialState)
         {
             InitialState = initialState;
             Goals = new List<MapItem>();
             WallMods = new List<Position>();
             BoxMods = new List<MapItem>();
+            IsGoToBoxProblem = false;
+            IsMoveBoxToGoalProblem = false;
         }
 
 
@@ -27,7 +36,7 @@ namespace MaMapF.Models
             InitialState.Boxes = InitialState.Boxes.Where(b => !b.Equals(box)).ToList();
         }
 
-        public void Reset()
+        public void ResetMods()
         {
             foreach (var position in WallMods)
             {
@@ -39,7 +48,6 @@ namespace MaMapF.Models
                 InitialState.Boxes.Add(box);
             }
 
-            Goals = new List<MapItem>();
             BoxMods = new List<MapItem>();
             WallMods = new List<Position>();
         }

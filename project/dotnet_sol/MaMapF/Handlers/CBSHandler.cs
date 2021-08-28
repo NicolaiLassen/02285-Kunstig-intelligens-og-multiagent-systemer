@@ -17,8 +17,7 @@ namespace MaMapF.Handlers
             {
                 var problem = problems[agent];
                 return SingleAgentSearch.GetSingleAgentPlan(
-                    problem.InitialState,
-                    problem.Goals,
+                    problem,
                     new List<Constraint>()
                 );
             });
@@ -58,9 +57,7 @@ namespace MaMapF.Handlers
 
                     // Create agent solution with new constraint
                     var constraints = nextNode.Constraints.Where(c => c.Agent == agent).ToList();
-                    var initialState = problems[agent].InitialState;
-                    var goals = problems[agent].Goals;
-                    var solution = SingleAgentSearch.GetSingleAgentPlan(initialState, goals, constraints);
+                    var solution = SingleAgentSearch.GetSingleAgentPlan(problems[agent], constraints);
 
                     // Skip if agent solution is null
                     if (solution == null) continue;

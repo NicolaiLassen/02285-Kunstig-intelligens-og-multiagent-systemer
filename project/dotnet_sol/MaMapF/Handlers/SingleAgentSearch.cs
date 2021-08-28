@@ -21,11 +21,13 @@ namespace MaMapF.Handlers
         public static readonly bool PrintProgress = false; // warning: very slow
 
         public static List<SingleAgentState> GetSingleAgentPlan(
-            SingleAgentState initialState,
-            List<MapItem> goals,
+            SingleAgentProblem problem,
             List<Constraint> constraints
         )
         {
+            var initialState = problem.InitialState;
+            var goals = problem.Goals;
+
             var heuristic = new SingleAgentHeuristic(goals, constraints);
 
             var frontier = new SimplePriorityQueue<SingleAgentState>();
@@ -60,7 +62,7 @@ namespace MaMapF.Handlers
                     // skip if state is explored with (state.G - MaxNoOp)
                     if (IsExploredMaxNoOp(explored, s)) continue;
 
-                    s.H = heuristic.GetHeuristic(s);
+                    s.H = heuristic.GetHeuristic(problem, s);
                     var priority = GetPriority(s);
                     frontier.Enqueue(s, priority);
                 }
@@ -127,7 +129,7 @@ namespace MaMapF.Handlers
             // use reffernce to walls
             nextState.Walls = state.Walls;
 
-            nextState.Agent = new MapItem(state.Agent.Value, state.Agent.Position);
+            nextState.Agent = new MapItem(state.Agent.UID, state.Agent.Value, state.Agent.Position);
             nextState.Boxes = state.Boxes.Select(b => b).ToList();
             // nextState.Map = state.Map.Select(item => item.Select(e => e).ToList()).ToList();
 
@@ -146,8 +148,9 @@ namespace MaMapF.Handlers
             {
                 nextState.Agent.Position = state.Agent.Position.Next(action.AgentRowDelta, action.AgentColumnDelta);
                 var nextBoxPosition = nextState.Agent.Position.Next(action.BoxRowDelta, action.BoxColumnDelta);
-                nextState.Boxes = state.Boxes.Select(b =>
-                    b.Position.Equals(nextState.Agent.Position) ? new MapItem(b.Value, nextBoxPosition) : b).ToList();
+                nextState.Boxes = state.Boxes.Select(b => b.Position.Equals(nextState.Agent.Position)
+                    ? new MapItem(b.UID, b.Value, nextBoxPosition)
+                    : b).ToList();
 
 
                 // update map
@@ -162,8 +165,9 @@ namespace MaMapF.Handlers
                 var boxPosition = state.Agent.Position.Next(action.BoxRowDelta * -1, action.BoxColumnDelta * -1);
                 var nextBoxPosition = state.Agent.Position.Next(0, 0);
                 nextState.Agent.Position = state.Agent.Position.Next(action.AgentRowDelta, action.AgentColumnDelta);
-                nextState.Boxes = state.Boxes
-                    .Select(b => b.Position.Equals(boxPosition) ? new MapItem(b.Value, nextBoxPosition) : b).ToList();
+                nextState.Boxes = state.Boxes.Select(b => b.Position.Equals(boxPosition)
+                    ? new MapItem(b.UID, b.Value, nextBoxPosition)
+                    : b).ToList();
 
                 // update map
                 // var boxValue = state.Map[boxPosition.Row][boxPosition.Column];

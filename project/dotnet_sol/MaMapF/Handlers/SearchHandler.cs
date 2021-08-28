@@ -7,6 +7,10 @@ using MaMapF.Models;
 // Try map A2 to see delegation in action
 //*******************
 
+// Remove waiting time for other agents to finnish their sub goals
+// Improve search time for levels with corridor
+
+
 namespace MaMapF.Handlers
 {
     public class SearchHandler
@@ -52,7 +56,7 @@ namespace MaMapF.Handlers
                     solutions[agent] = solution;
                     solved.AddRange(problems[agent].Goals);
                     problems[agent].InitialState = solution.Last();
-                    problems[agent].Reset();
+                    problems[agent].ResetMods();
                 }
             }
 
@@ -90,12 +94,30 @@ namespace MaMapF.Handlers
                 return problem;
             }
 
+            var allBoxes = problem.InitialState.Boxes;
+            var unusedBoxes = allBoxes.Where(box => !solved.Any(box.Equals)).ToList();
+
             // Sub goal: Move previously selected box to goal
+            if (previous.IsGoToBoxProblem)
+            {
+                // Add goal to problem
+                problem.Goals.Add(previous.SelectedBoxGoal);
+                problem.SelectedBox = previous.SelectedBox;
+                problem.SelectedBoxGoal = previous.SelectedBoxGoal;
+                problem.IsMoveBoxToGoalProblem = true;
+
+                // Convert all non-selected boxes to walls
+                var otherBoxes = allBoxes.Where(box => !previous.SelectedBox.Equals(box));
+                foreach (var box in otherBoxes)
+                {
+                    problem.AddBoxMod(box);
+                }
+
+                return problem;
+            }
 
 
             // Sub goal: Move agent to a box
-            var allBoxes = problem.InitialState.Boxes;
-            var unusedBoxes = allBoxes.Where(box => !solved.Any(box.Equals)).ToList();
 
             // Select "unused-box" and "unsolved-goal" with smallest distance
             // distance(agent, box) + distance(box, goal)
@@ -118,37 +140,32 @@ namespace MaMapF.Handlers
                 }
             }
 
-            // // Find best neighbour position to selected box
-            // var neighbours = Position.GetNeighbours(selectedBox.Position).Where(p => !initialState.IsWall(p)).ToList();
-            // // var otherAgentsBoxPositions = _level.AgentInitialStates.Values
-            // //     .Where(s => s.AgentName != agent)
-            // //     .SelectMany(s => s.Boxes)
-            // //     .Select(b => b.Position).ToList();
-            //
-            // var bestPosition = neighbours.OrderBy(p =>
-            // {
-            //     var distance = Position.Distance(initialState.Agent.Position, p);
-            //     // previous box goal bonus
-            //     // other agent box penalty
-            //     return distance;
-            // }).First();
-            //
-            // // Add agent position goal to problem and convert all boxes to walls
-            // problem.Goals.Add(new MapItem(agent, bestPosition));
-            // foreach (var box in allBoxes)
-            // {
-            //     problem.AddBoxMod(box);
-            // }
-            //
-            // return problem;
+            // Find best neighbour position to selected box
+            var neighbours = Position.GetNeighbours(selectedBox.Position)
+                .Where(p => !initialState.IsWall(p)).ToList();
+            // var otherAgentsBoxPositions = _level.AgentInitialStates.Values
+            //     .Where(s => s.AgentName != agent)
+            //     .SelectMany(s => s.Boxes)
+            //     .Select(b => b.Position).ToList();
 
+            var bestPosition = neighbours.OrderBy(p =>
+            {
+                var distance = Position.Distance(initialState.Agent.Position, p);
+                // previous box goal bonus
+                // other agent box penalty
+                return distance;
+            }).First();
 
-            // Add goal to problem
-            problem.Goals.Add(selectedGoal);
+            // Console.Error.WriteLine($"bestPosition: {bestPosition}");
 
-            // Convert all other boxes to walls
-            var otherBoxes = allBoxes.Where(box => !selectedBox.Equals(box));
-            foreach (var box in otherBoxes)
+            // Add agent position goal to problem
+            problem.Goals.Add(new MapItem(agent, bestPosition));
+            problem.SelectedBox = selectedBox;
+            problem.SelectedBoxGoal = selectedGoal;
+            problem.IsGoToBoxProblem = true;
+
+            // convert all boxes to walls
+            foreach (var box in allBoxes)
             {
                 problem.AddBoxMod(box);
             }

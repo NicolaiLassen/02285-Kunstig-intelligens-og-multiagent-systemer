@@ -2,10 +2,16 @@
 {
     public class MapItem
     {
-        // COULD COME IN HANDY TO TRACK THE USED BOXES
         public string UID { get; }
         public char Value { get; }
         public Position Position { get; set; }
+
+        public MapItem(string uid, char value, Position position)
+        {
+            UID = uid;
+            Value = value;
+            Position = position;
+        }
 
         public MapItem(char value, Position position)
         {
@@ -25,7 +31,7 @@
 
         public override string ToString()
         {
-            return $"MAPITEM {Value} at {Position}";
+            return $"MAPITEM {Value} at {Position} | {UID}";
         }
 
         public bool Equals(MapItem other)
