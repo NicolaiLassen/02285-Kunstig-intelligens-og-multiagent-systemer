@@ -60,12 +60,6 @@ namespace MaMapF.Handlers
 
                     solutions[key] = value;
                     solved.AddRange(delegation.Goals[key]);
-                    
-                    foreach (var singleAgentState in value)
-                    {
-                        Console.Error.WriteLine(singleAgentState.Action);
-                    }
-
                     delegation.NextInitialStates[key] = value.Last();
                     delegation.ResetNextStateDelegation();
                 }

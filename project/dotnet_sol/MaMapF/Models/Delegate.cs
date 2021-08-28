@@ -22,8 +22,6 @@ namespace MaMapF.Models
             var resetNext = new Dictionary<char, SingleAgentState>(NextInitialStates);
             foreach (var agent in WallModifications.Keys)
             {
-                Console.Error.WriteLine(resetNext[agent].Boxes.Count);
-                
                 foreach (var position in WallModifications[agent])
                 {
                     resetNext[agent].Walls.Remove($"{position.Row},{position.Column}");
