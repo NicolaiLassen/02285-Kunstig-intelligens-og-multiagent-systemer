@@ -83,71 +83,84 @@ namespace MaMapF.Handlers
                     problem.AddBoxMod(box);
                 }
 
-                initialState.Boxes = initialState.Boxes.Except(problem.BoxMods).ToList();
                 problem.Goals.Add(unsolved.First());
                 return problem;
             }
 
 
-            MapItem selectedGoal;
-            // TODO: SELECT BETTER
+            // TODO only boxes not used for other goals
+            var allBoxes = problem.InitialState.Boxes;
+            var unusedBoxes = allBoxes.Where(box => !solved.Any(box.Equals)).ToList();
 
-            selectedGoal = unsolvedBoxGoals.First();
-            // COULD BE MIN DONO
-            var maxBoxGoalDistance = 0;
 
-            // Solve the goals that is fathest from our agent
-            foreach (var boxGoal in unsolvedBoxGoals)
+            // // Find the agent, unused box and goal with the smallest distance
+            // // distance(agent, unused box) + distance(unused box, goal)
+
+
+            // var maxAgentGoalDistance = 0;
+            // var minBoxGoalDistance = Int32.MaxValue;
+
+
+            var minDistance = Int32.MaxValue;
+            var selectedBox = unusedBoxes.First();
+            var selectedGoal = unsolvedBoxGoals.First();
+            foreach (var goal in unsolvedBoxGoals)
             {
-                var distance = Position.Distance(initialState.Agent, boxGoal);
-                if (distance <= maxBoxGoalDistance) continue;
-
-                maxBoxGoalDistance = distance;
-                selectedGoal = boxGoal;
-            }
-
-            MapItem selectedBox = initialState.Boxes.First();
-            var minBoxDistance = Int32.MaxValue;
-
-            // pick the box that is closest to our goal
-            foreach (var box in initialState.Boxes)
-            {
-                if (solved.Any(s => s.Position.Equals(box.Position)))
+                foreach (var box in unusedBoxes)
                 {
-                    continue;
+                    // // Select goal furthest from agent and last box
+                    // var agentGoalDistance = Position.Distance(initialState.Agent, goal);
+                    // if (agentGoalDistance > maxAgentGoalDistance)
+                    // {
+                    //     maxAgentGoalDistance = agentGoalDistance;
+                    //     selectedGoal = goal;
+                    // }
+                    //
+                    // // Select box closest to the goal
+                    // var distance = Position.Distance(selectedGoal, box);
+                    // if (distance < minBoxGoalDistance)
+                    // {
+                    //     minBoxGoalDistance = distance;
+                    //     selectedBox = box;
+                    // }
+
+                    // Select goal,box where distance(agent, box) + distance(box, goal) < minDistance
+                    var agentBoxDistance = Position.Distance(initialState.Agent, box);
+                    var boxGoalDistance = Position.Distance(box, goal);
+                    var distance = agentBoxDistance + boxGoalDistance;
+                    if (distance < minDistance)
+                    {
+                        minDistance = distance;
+                        selectedBox = box;
+                        selectedGoal = goal;
+                    }
                 }
-
-                var distance = Position.Distance(selectedGoal, box);
-                if (distance >= minBoxDistance) continue;
-
-                // check if the box can be moved to the goal "block"!
-                minBoxDistance = distance;
-                selectedBox = box;
             }
 
-            // Remove boxes and add walls
-            foreach (var box in initialState.Boxes)
-            {
-                if (selectedBox.Position.Equals(box.Position))
-                {
-                    continue;
-                }
-
-                // Modify the map to optimize for a*
-                problem.WallMods.Add(box.Position);
-                problem.BoxMods.Add(box);
-                initialState.Walls.Add($"{box.Position.Row},{box.Position.Column}");
-            }
-
-            // TODO used boxes
-            // delegation.UsedBoxes.Add(selectedBox.UID);
-
-
-            // Console.Error.WriteLine(selectedGoal);
-            // Delegate the task to the agent
+            // Add goal to problem
             problem.Goals.Add(selectedGoal);
-            // Remove boxes
-            initialState.Boxes = initialState.Boxes.Except(problem.BoxMods).ToList();
+
+
+            // Convert all other boxes to walls
+            var otherBoxes = allBoxes.Where(box => !selectedBox.Equals(box));
+            foreach (var box in otherBoxes)
+            {
+                problem.AddBoxMod(box);
+            }
+
+            // if (solved.Any())
+            // {
+            //     Console.Error.WriteLine("solved:");
+            //     solved.ForEach(box => Console.Error.WriteLine(box));
+            //     Console.Error.WriteLine("unusedBoxes:");
+            //     unusedBoxes.ForEach(box => Console.Error.WriteLine(box));
+            //     Console.Error.WriteLine("selectedBox:");
+            //     Console.Error.WriteLine(selectedBox);
+            //
+            //     
+            //     Environment.Exit(0);
+            // }
+
 
             return problem;
         }

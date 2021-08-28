@@ -24,6 +24,7 @@ namespace MaMapF.Models
             BoxMods.Add(box);
             WallMods.Add(box.Position);
             InitialState.Walls.Add($"{box.Position.Row},{box.Position.Column}");
+            InitialState.Boxes = InitialState.Boxes.Where(b => !b.Equals(box)).ToList();
         }
 
         public void Reset()

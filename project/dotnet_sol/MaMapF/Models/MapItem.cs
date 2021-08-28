@@ -25,7 +25,7 @@
 
         public override string ToString()
         {
-            return $"MAPITEM\n Value: {Value}, Position: {Position}";
+            return $"MAPITEM {Value} at {Position}";
         }
 
         public bool Equals(MapItem other)
