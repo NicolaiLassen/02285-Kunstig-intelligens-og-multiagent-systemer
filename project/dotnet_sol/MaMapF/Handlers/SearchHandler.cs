@@ -93,13 +93,8 @@ namespace MaMapF.Handlers
             var unusedBoxes = allBoxes.Where(box => !solved.Any(box.Equals)).ToList();
 
 
-            // // Find the agent, unused box and goal with the smallest distance
-            // // distance(agent, unused box) + distance(unused box, goal)
-
-
-            // var maxAgentGoalDistance = 0;
-            // var minBoxGoalDistance = Int32.MaxValue;
-
+            // Select "unused-box" and "unsolved-goal" with smallest distance
+            // distance(agent, box) + distance(box, goal)
             var minDistance = Int32.MaxValue;
             var selectedBox = unusedBoxes.First();
             var selectedGoal = unsolvedBoxGoals.First();
@@ -107,23 +102,6 @@ namespace MaMapF.Handlers
             {
                 foreach (var box in unusedBoxes)
                 {
-                    // // Select goal furthest from agent and last box
-                    // var agentGoalDistance = Position.Distance(initialState.Agent, goal);
-                    // if (agentGoalDistance > maxAgentGoalDistance)
-                    // {
-                    //     maxAgentGoalDistance = agentGoalDistance;
-                    //     selectedGoal = goal;
-                    // }
-                    //
-                    // // Select box closest to the goal
-                    // var distance = Position.Distance(selectedGoal, box);
-                    // if (distance < minBoxGoalDistance)
-                    // {
-                    //     minBoxGoalDistance = distance;
-                    //     selectedBox = box;
-                    // }
-
-                    // Select goal,box where distance(agent, box) + distance(box, goal) < minDistance
                     var agentBoxDistance = Position.Distance(initialState.Agent, box);
                     var boxGoalDistance = Position.Distance(box, goal);
                     var distance = agentBoxDistance + boxGoalDistance;
