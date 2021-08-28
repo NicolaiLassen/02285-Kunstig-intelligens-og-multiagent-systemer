@@ -14,13 +14,13 @@ namespace MaMapF.Handlers
         ASTAR
     }
 
-    public class SingleAgentSearch
+    public class SingleAgentSearchHandler
     {
         public static readonly SearchType SearchType = SearchType.ASTAR;
         public static readonly int MaxActionRepeat = -1; // does not make sense for ASTAR
         public static readonly bool PrintProgress = false; // warning: very slow
 
-        public static List<SingleAgentState> GetSingleAgentPlan(
+        public static List<SingleAgentState> Search(
             SingleAgentProblem problem,
             List<Constraint> constraints
         )

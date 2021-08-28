@@ -16,12 +16,11 @@ namespace MaMapF.Handlers
             var solutions = agents.ToDictionary(agent => agent, agent =>
             {
                 var problem = problems[agent];
-                return SingleAgentSearch.GetSingleAgentPlan(
+                return SingleAgentSearchHandler.Search(
                     problem,
                     new List<Constraint>()
                 );
             });
-
 
             // Create priority queue and add the initial node
             var initialNode = new Node {Solutions = solutions};
@@ -57,7 +56,7 @@ namespace MaMapF.Handlers
 
                     // Create agent solution with new constraint
                     var constraints = nextNode.Constraints.Where(c => c.Agent == agent).ToList();
-                    var solution = SingleAgentSearch.GetSingleAgentPlan(problems[agent], constraints);
+                    var solution = SingleAgentSearchHandler.Search(problems[agent], constraints);
 
                     // Skip if agent solution is null
                     if (solution == null) continue;
@@ -91,7 +90,7 @@ namespace MaMapF.Handlers
 
                 for (int i = 0; i < solutionLengthDiff; i++)
                 {
-                    var nextState = SingleAgentSearch.CreateNextState(solutionGoalState, Action.NoOp);
+                    var nextState = SingleAgentSearchHandler.CreateNextState(solutionGoalState, Action.NoOp);
                     solutions[agent].Add(nextState);
                 }
             }

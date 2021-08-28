@@ -45,6 +45,7 @@ namespace MaMapF.Handlers
 
                 var nextSolutions = CBSHandler.Search(problems);
 
+
                 foreach (var (agent, solution) in nextSolutions)
                 {
                     if (solution == null)
