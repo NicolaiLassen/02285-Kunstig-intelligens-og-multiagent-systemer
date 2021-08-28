@@ -36,32 +36,31 @@ namespace MaMapF.Handlers
         public Dictionary<char, List<SingleAgentState>> Search()
         {
             var solved = new List<MapItem>();
-            var solutions =
-                _level.Agents.ToDictionary(levelAgent => levelAgent, levelAgent => new List<SingleAgentState>());
+            var solutions = _level.Agents.ToDictionary(agent => agent, agent => new List<SingleAgentState>());
             var nextInitialStates = new Dictionary<char, SingleAgentState>(_level.AgentInitialStates);
             var delegation = new Delegate
             {
-                NextInitialStates = nextInitialStates
+                InitialStates = nextInitialStates
             };
 
             while (!IsAllMainGoalsSolved(solved))
             {
                 DecorateSubGoals(delegation, solved);
-                foreach (var (key, value) in
-                    CBSHandler.Search(_level.Agents,
-                        delegation.NextInitialStates,
-                        delegation.Goals))
+
+
+                var nextSolutions = CBSHandler.Search(_level.Agents, delegation.InitialStates, delegation.Goals);
+                foreach (var (agent, solution) in nextSolutions)
                 {
-                    if (value == null)
+                    if (solution == null)
                     {
                         // TODO change delegation (delete some box-walls etc) and trie again
                         continue;
                     }
 
-                    solutions[key] = value;
-                    solved.AddRange(delegation.Goals[key]);
-                    delegation.NextInitialStates[key] = value.Last();
-                    delegation.ResetNextStateDelegation();
+                    solutions[agent] = solution;
+                    solved.AddRange(delegation.Goals[agent]);
+                    delegation.InitialStates[agent] = solution.Last();
+                    delegation.ResetInitialStates();
                 }
             }
 
@@ -73,7 +72,7 @@ namespace MaMapF.Handlers
             var subGoals = _level.Agents.ToDictionary(agent => agent, agent => new List<MapItem>());
             var wallModifications = _level.Agents.ToDictionary(agent => agent, agent => new List<Position>());
             var boxModifications = _level.Agents.ToDictionary(agent => agent, agent => new List<MapItem>());
-            var agentInitialStates = new Dictionary<char, SingleAgentState>(delegation.NextInitialStates);
+            var agentInitialStates = new Dictionary<char, SingleAgentState>(delegation.InitialStates);
 
             foreach (var agent in _level.Agents)
             {
@@ -99,7 +98,7 @@ namespace MaMapF.Handlers
                     {
                         var distance = Position.Distance(agentInitialStates[agent].Agent, boxGoal);
                         if (distance <= maxBoxGoalDistance) continue;
-                        
+
                         maxBoxGoalDistance = distance;
                         selectedGoal = boxGoal;
                     }
@@ -114,10 +113,10 @@ namespace MaMapF.Handlers
                         {
                             continue;
                         }
-                        
+
                         var distance = Position.Distance(selectedGoal, box);
                         if (distance >= minBoxDistance) continue;
-                       
+
                         // check if the box can be moved to the goal "block"!
                         minBoxDistance = distance;
                         selectedBox = box;
@@ -136,7 +135,7 @@ namespace MaMapF.Handlers
                         boxModifications[agent].Add(box);
                         agentInitialStates[agent].Walls.Add($"{box.Position.Row},{box.Position.Column}");
                     }
-                    
+
                     delegation.UsedBoxes.Add(selectedBox.UID);
                 }
                 else
@@ -152,7 +151,7 @@ namespace MaMapF.Handlers
                         boxModifications[agent].Add(box);
                         agentInitialStates[agent].Walls.Add($"{box.Position.Row},{box.Position.Column}");
                     }
-                    
+
                     selectedGoal = goalsToSolve.First();
                 }
 
@@ -167,8 +166,7 @@ namespace MaMapF.Handlers
             delegation.Goals = subGoals;
             delegation.WallModifications = wallModifications;
             delegation.BoxModifications = boxModifications;
-            delegation.NextInitialStates = agentInitialStates;
+            delegation.InitialStates = agentInitialStates;
         }
-
     }
 }

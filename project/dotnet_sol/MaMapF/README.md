@@ -1,6 +1,6 @@
 ﻿
 # Test
-java -jar server.jar -l levels/A1.lvl -c "dotnet run" -g -s 150 -t 180
+java -jar server.jar -l levels/A2.lvl -c "dotnet run" -g -s 150 -t 180
 
 
 # Run

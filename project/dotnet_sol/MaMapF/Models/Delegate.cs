@@ -1,11 +1,10 @@
-using System;
 using System.Collections.Generic;
 
 namespace MaMapF.Models
 {
     public class Delegate
     {
-        public Dictionary<char, SingleAgentState> NextInitialStates { get; set; }
+        public Dictionary<char, SingleAgentState> InitialStates { get; set; }
 
         public Dictionary<char, List<Position>> WallModifications { get; set; } =
             new Dictionary<char, List<Position>>();
@@ -17,19 +16,18 @@ namespace MaMapF.Models
 
         public Dictionary<char, List<MapItem>> Goals { get; set; }
 
-        public void ResetNextStateDelegation()
+        public void ResetInitialStates()
         {
-            var resetNext = new Dictionary<char, SingleAgentState>(NextInitialStates);
             foreach (var agent in WallModifications.Keys)
             {
                 foreach (var position in WallModifications[agent])
                 {
-                    resetNext[agent].Walls.Remove($"{position.Row},{position.Column}");
+                    InitialStates[agent].Walls.Remove($"{position.Row},{position.Column}");
                 }
-                
+
                 foreach (var box in BoxModifications[agent])
                 {
-                    resetNext[agent].Boxes.Add(box);
+                    InitialStates[agent].Boxes.Add(box);
                 }
             }
         }
