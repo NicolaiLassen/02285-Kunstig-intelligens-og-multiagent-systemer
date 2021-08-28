@@ -25,11 +25,8 @@ namespace MaMapF.Handlers
             var solutions = agents.ToDictionary(agent => agent, agent => new List<SingleAgentState>());
 
 
-            var problems = agents.ToDictionary(agent => agent, agent => new SingleAgentProblem
-            {
-                AgentName = agent,
-                InitialState = _level.AgentInitialStates[agent],
-            });
+            var problems = agents.ToDictionary(agent => agent,
+                agent => new SingleAgentProblem(_level.AgentInitialStates[agent]));
 
 
             while (!IsAllMainGoalsSolved(solved))
@@ -66,13 +63,7 @@ namespace MaMapF.Handlers
         private static SingleAgentProblem CreateSubProblem(SingleAgentState initialState, List<MapItem> unsolved,
             List<MapItem> solved)
         {
-            var problem = new SingleAgentProblem();
-            problem.AgentName = initialState.AgentName;
-            problem.InitialState = initialState;
-            problem.Goals = new List<MapItem>();
-            problem.BoxMods = new List<MapItem>();
-            problem.WallMods = new List<Position>();
-
+            var problem = new SingleAgentProblem(initialState);
 
             // Return problem with no goals if no unsolved goals left 
             if (!unsolved.Any())

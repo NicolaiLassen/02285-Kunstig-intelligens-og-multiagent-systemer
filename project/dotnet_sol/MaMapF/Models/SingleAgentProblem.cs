@@ -5,11 +5,19 @@ namespace MaMapF.Models
 {
     public class SingleAgentProblem
     {
-        public char AgentName { get; set; }
         public SingleAgentState InitialState { get; set; }
-        public List<MapItem> Goals { get; set; } = new List<MapItem>();
-        public List<Position> WallMods { get; set; } = new List<Position>();
-        public List<MapItem> BoxMods { get; set; } = new List<MapItem>();
+        public List<MapItem> Goals { get; set; }
+        public List<MapItem> BoxMods { get; set; }
+        public List<Position> WallMods { get; set; }
+
+        public SingleAgentProblem(SingleAgentState initialState)
+        {
+            InitialState = initialState;
+            Goals = new List<MapItem>();
+            WallMods = new List<Position>();
+            BoxMods = new List<MapItem>();
+        }
+
 
         public void AddBoxMod(MapItem box)
         {
@@ -31,14 +39,14 @@ namespace MaMapF.Models
             }
 
             Goals = new List<MapItem>();
-            WallMods = new List<Position>();
             BoxMods = new List<MapItem>();
+            WallMods = new List<Position>();
         }
 
         public override string ToString()
         {
             var goalString = string.Join("\n", Goals.Select(g => g.ToString()));
-            return $"SingleAgentProblem {AgentName}\n" +
+            return $"SingleAgentProblem\n" +
                    $"{InitialState}" +
                    $"GOALS\n{goalString}\n";
         }
