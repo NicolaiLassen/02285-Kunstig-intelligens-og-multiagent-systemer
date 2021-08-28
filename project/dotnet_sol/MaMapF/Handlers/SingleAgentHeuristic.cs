@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using MaMapF.Models;
 
-namespace MaMapF
+namespace MaMapF.Handlers
 {
-    public class LowLevelHeuristic
+    public class SingleAgentHeuristic
     {
         private MapItem AgentGoal { get; }
         private List<MapItem> BoxGoals { get; }
         private List<Constraint> Constraints { get; }
 
-        public LowLevelHeuristic(List<MapItem> goals, List<Constraint> constraints)
+        public SingleAgentHeuristic(List<MapItem> goals, List<Constraint> constraints)
         {
             AgentGoal = goals.FirstOrDefault(g => char.IsDigit(g.Value));
             BoxGoals = goals.Where(g => !char.IsDigit(g.Value)).ToList();

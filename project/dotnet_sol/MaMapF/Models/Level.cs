@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using MaMapF.Models;
 
-namespace MaMapF
+namespace MaMapF.Models
 {
     public class Level
     {

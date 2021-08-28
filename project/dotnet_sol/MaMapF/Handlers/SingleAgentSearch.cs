@@ -5,7 +5,7 @@ using MaMapF.Models;
 using Priority_Queue;
 using Action = MaMapF.Models.Action;
 
-namespace MaMapF
+namespace MaMapF.Handlers
 {
     public enum SearchType
     {
@@ -14,7 +14,7 @@ namespace MaMapF
         ASTAR
     }
 
-    public class LowLevelSearch
+    public class SingleAgentSearch
     {
         public static readonly SearchType SearchType = SearchType.ASTAR;
         public static readonly int MaxActionRepeat = -1; // does not make sense for ASTAR
@@ -26,7 +26,7 @@ namespace MaMapF
             List<Constraint> constraints
         )
         {
-            var heuristic = new LowLevelHeuristic(goals, constraints);
+            var heuristic = new SingleAgentHeuristic(goals, constraints);
 
             var frontier = new SimplePriorityQueue<SingleAgentState>();
             var explored = new HashSet<SingleAgentState>();

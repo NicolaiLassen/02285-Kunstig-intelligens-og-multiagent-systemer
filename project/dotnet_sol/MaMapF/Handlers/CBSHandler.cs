@@ -8,36 +8,33 @@ namespace MaMapF.Handlers
     public class CBSHandler
     {
         public static Dictionary<char, List<SingleAgentState>> Search(
-            List<char> agents,
-            Dictionary<char, SingleAgentState> initialStates,
-            Dictionary<char, List<MapItem>> goals
+            Dictionary<char, SingleAgentProblem> problems
         )
         {
+            // Create initial solutions for each agent
+            var agents = problems.Keys.ToList();
+            var solutions = agents.ToDictionary(agent => agent, agent =>
+            {
+                var problem = problems[agent];
+                return SingleAgentSearch.GetSingleAgentPlan(
+                    problem.InitialState,
+                    problem.Goals,
+                    new List<Constraint>()
+                );
+            });
+
+
+            // Create priority queue and add the initial node
+            var initialNode = new Node {Solutions = solutions};
             var open = new SimplePriorityQueue<Node>();
-            var solutions = new Dictionary<char, List<SingleAgentState>>();
-            foreach (var agent in agents)
-            {
-                var initialState = initialStates[agent];
-                var agentGoals = goals[agent];
-                solutions[agent] = LowLevelSearch.GetSingleAgentPlan(initialState, agentGoals, new List<Constraint>());
-            }
-
-            var initialNode = new Node
-            {
-                Solutions = solutions
-            };
-
             open.Enqueue(initialNode, initialNode.Cost);
 
             while (open.Count != 0)
             {
-                // Console.Error.WriteLine($"OPEN: {open.Count}");
-
+                // Get the node with lowest cost
                 var p = open.Dequeue();
-                // Console.Error.WriteLine($"p.Constraints.Count: {p.Constraints.Count}");
-                // p.Constraints.ForEach(c => Console.Error.WriteLine(c));
-                // Console.Error.WriteLine("");
 
+                // If no solutions conflict then return the solutions
                 var conflict = GetConflict(agents, p);
                 if (conflict == null)
                 {
@@ -46,26 +43,35 @@ namespace MaMapF.Handlers
 
                 foreach (var agent in new List<char> {conflict.AgentA, conflict.AgentB})
                 {
+                    // Create next cbs search node
                     var nextNode = p.Copy();
 
+                    // Add constraint to next node
                     var constraint = GetConstraint(agent, conflict);
-                    if (nextNode.Constraints.Contains(constraint))
-                    {
-                        continue;
-                    }
-
-
                     nextNode.Constraints.Add(constraint);
 
-                    var agentConstraints = nextNode.Constraints.Where(c => c.Agent == agent).ToList();
-                    var initialState = initialStates[agent];
-                    var agentGoals = goals[agent];
-                    var solution = LowLevelSearch.GetSingleAgentPlan(initialState, agentGoals, agentConstraints);
-                    if (solution == null || solution == nextNode.Solutions[agent])
+                    // Skip if the previous node already contains the new constraint 
+                    if (p.Constraints.Contains(constraint))
                     {
                         continue;
                     }
 
+                    // Create agent solution with new constraint
+                    var constraints = nextNode.Constraints.Where(c => c.Agent == agent).ToList();
+                    var initialState = problems[agent].InitialState;
+                    var goals = problems[agent].Goals;
+                    var solution = SingleAgentSearch.GetSingleAgentPlan(initialState, goals, constraints);
+
+                    // Skip if agent solution is null
+                    if (solution == null) continue;
+
+                    // Skip if agent solution is equal agent solution in previous node
+                    if (solution == nextNode.Solutions[agent])
+                    {
+                        continue;
+                    }
+
+                    // Update agent solution and add node to queue
                     nextNode.Solutions[agent] = solution;
                     open.Enqueue(nextNode, nextNode.Cost);
                 }
@@ -88,7 +94,7 @@ namespace MaMapF.Handlers
 
                 for (int i = 0; i < solutionLengthDiff; i++)
                 {
-                    var nextState = LowLevelSearch.CreateNextState(solutionGoalState, Action.NoOp);
+                    var nextState = SingleAgentSearch.CreateNextState(solutionGoalState, Action.NoOp);
                     solutions[agent].Add(nextState);
                 }
             }

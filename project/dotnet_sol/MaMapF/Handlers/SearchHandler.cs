@@ -48,7 +48,14 @@ namespace MaMapF.Handlers
                 DecorateSubGoals(delegation, solved);
 
 
-                var nextSolutions = CBSHandler.Search(_level.Agents, delegation.InitialStates, delegation.Goals);
+                var problems = _level.Agents.ToDictionary(a => a, a => new SingleAgentProblem
+                {
+                    AgentName = a,
+                    InitialState = delegation.InitialStates[a],
+                    Goals = delegation.Goals[a],
+                });
+                
+                var nextSolutions = CBSHandler.Search(problems);
                 foreach (var (agent, solution) in nextSolutions)
                 {
                     if (solution == null)
