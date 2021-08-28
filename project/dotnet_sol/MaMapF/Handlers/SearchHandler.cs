@@ -32,33 +32,35 @@ namespace MaMapF.Handlers
             var problems = agents.ToDictionary(agent => agent,
                 agent => new SingleAgentProblem(_level.AgentInitialStates[agent]));
 
+            var blocked = new List<Position>();
 
             while (!IsAllMainGoalsSolved(solved))
             {
                 // Create sub problem for each agent
                 foreach (var agent in agents)
                 {
+                    problems[agent].ResetMods();
                     var unsolvedAgentGoals = _level.Goals[agent].Where(goal => !solved.Contains(goal)).ToList();
-                    problems[agent] = CreateSubProblem(problems[agent], unsolvedAgentGoals, solved);
+                    problems[agent] = CreateSubProblem(problems[agent], unsolvedAgentGoals, solved, blocked);
                 }
 
-
                 var nextSolutions = CBSHandler.Search(problems);
+                Console.Error.WriteLine(nextSolutions.Solutions['0'][1]);
+                Console.Error.WriteLine(nextSolutions.Solutions['1'][1]);
+                // if (!blocked.Contains(nextSolutions.Blocked))
+                // {
+                //     blocked.Add(nextSolutions.Blocked);
+                //     continue;
+                // }
 
-
-                foreach (var (agent, solution) in nextSolutions)
+                foreach (var (agent, solution) in nextSolutions.Solutions)
                 {
-                    if (solution == null)
-                    {
-                        // TODO change delegation (delete some box-walls etc) and trie again
-                        continue;
-                    }
-
                     solutions[agent] = solution;
                     solved.AddRange(problems[agent].Goals);
                     problems[agent].InitialState = solution.Last();
-                    problems[agent].ResetMods();
                 }
+                
+                Console.Error.WriteLine(solved.Count);
             }
 
             return solutions;
@@ -66,7 +68,7 @@ namespace MaMapF.Handlers
 
 
         private SingleAgentProblem CreateSubProblem(SingleAgentProblem previous, List<MapItem> unsolved,
-            List<MapItem> solved)
+            List<MapItem> solved, List<Position> blocked)
         {
             var agent = previous.InitialState.AgentName;
             var initialState = previous.InitialState;
@@ -78,9 +80,8 @@ namespace MaMapF.Handlers
                 return problem;
             }
 
-
             var unsolvedBoxGoals = unsolved.Where(goal => char.IsLetter(goal.Value)).ToList();
-
+            
             // If no unsolved box goals then return agent problem
             // Sub goal: Move agent to agent goal position
             if (!unsolvedBoxGoals.Any())
@@ -170,7 +171,7 @@ namespace MaMapF.Handlers
             {
                 problem.AddBoxMod(box);
             }
-
+            
             return problem;
         }
 

@@ -12,8 +12,7 @@ namespace MaMapF.Models
 
         public MapItem SelectedBox { get; set; }
         public MapItem SelectedBoxGoal { get; set; }
-
-
+        
         public bool IsGoToBoxProblem { get; set; }
         public bool IsMoveBoxToGoalProblem { get; set; }
 
@@ -27,13 +26,13 @@ namespace MaMapF.Models
             IsMoveBoxToGoalProblem = false;
         }
 
-
         public void AddBoxMod(MapItem box)
         {
             BoxMods.Add(box);
             WallMods.Add(box.Position);
             InitialState.Walls.Add($"{box.Position.Row},{box.Position.Column}");
             InitialState.Boxes = InitialState.Boxes.Where(b => !b.Equals(box)).ToList();
+            InitialState.WalledBoxes.Add(box);
         }
 
         public void ResetMods()

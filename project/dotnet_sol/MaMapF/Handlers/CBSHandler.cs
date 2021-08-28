@@ -7,7 +7,7 @@ namespace MaMapF.Handlers
 {
     public class CBSHandler
     {
-        public static Dictionary<char, List<SingleAgentState>> Search(
+        public static Node Search(
             Dictionary<char, SingleAgentProblem> problems
         )
         {
@@ -36,7 +36,7 @@ namespace MaMapF.Handlers
                 var conflict = GetConflict(agents, p);
                 if (conflict == null)
                 {
-                    return p.Solutions;
+                    return p;
                 }
 
                 foreach (var agent in new List<char> {conflict.AgentA, conflict.AgentB})
@@ -59,7 +59,10 @@ namespace MaMapF.Handlers
                     var solution = SingleAgentSearchHandler.Search(problems[agent], constraints);
 
                     // Skip if agent solution is null
-                    if (solution == null) continue;
+                    if (solution == null)
+                    {
+                        continue;
+                    }
 
                     // Skip if agent solution is equal agent solution in previous node
                     if (solution == nextNode.Solutions[agent])
