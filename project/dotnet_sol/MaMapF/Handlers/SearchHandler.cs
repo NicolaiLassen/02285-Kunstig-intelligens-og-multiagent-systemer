@@ -91,6 +91,7 @@ namespace MaMapF.Handlers
                     // TODO: SELECT BETTER
 
                     selectedGoal = boxGoals.First();
+                    // COULD BE MIN DONO
                     var maxBoxGoalDistance = 0;
 
                     // Solve the goals that is fathest from our agent

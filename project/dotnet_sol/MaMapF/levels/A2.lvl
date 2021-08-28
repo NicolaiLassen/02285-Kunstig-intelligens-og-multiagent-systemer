@@ -8,17 +8,39 @@ red: 1, B
 #initial
 +++++++++++++++
 +0            +
++             +
++AAAAAAAAAA   +
++             +
 +AAAAAAAAAA   +
 +AAAAAAAAAA   +
++             +
++AAAAAAAAAA   +
++             +
++BBBBBBBBBB   +
++             +
 +BBBBBBBBBB   +
 +BBBBBBBBBB   +
-+1            +
++             +
++BBBBBBBBBB   +
++             +
++1            + 
 +++++++++++++++
 #goal
 +++++++++++++++
 +            A+
 +            A+
 +            A+
++            A+
++            A+
++            A+
++            A+
++             +
++             +
++             +
++            B+
++            B+
++            B+
++            B+
 +            B+
 +            B+
 +1           B+
