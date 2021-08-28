@@ -35,7 +35,7 @@ namespace MaMapF.Handlers
                 foreach (var agent in agents)
                 {
                     var unsolvedAgentGoals = _level.Goals[agent].Where(goal => !solved.Contains(goal)).ToList();
-                    problems[agent] = CreateSubProblem(problems[agent].InitialState, unsolvedAgentGoals, solved);
+                    problems[agent] = CreateSubProblem(problems[agent], unsolvedAgentGoals, solved);
                 }
 
 
@@ -60,10 +60,12 @@ namespace MaMapF.Handlers
         }
 
 
-        private static SingleAgentProblem CreateSubProblem(SingleAgentState initialState, List<MapItem> unsolved,
+        private SingleAgentProblem CreateSubProblem(SingleAgentProblem previous, List<MapItem> unsolved,
             List<MapItem> solved)
         {
-            var problem = new SingleAgentProblem(initialState);
+            var agent = previous.InitialState.AgentName;
+            var initialState = previous.InitialState;
+            var problem = new SingleAgentProblem(previous.InitialState);
 
             // Return problem with no goals if no unsolved goals left 
             if (!unsolved.Any())
@@ -75,6 +77,7 @@ namespace MaMapF.Handlers
             var unsolvedBoxGoals = unsolved.Where(goal => char.IsLetter(goal.Value)).ToList();
 
             // If no unsolved box goals then return agent problem
+            // Sub goal: Move agent to agent goal position
             if (!unsolvedBoxGoals.Any())
             {
                 // Convert all boxes to walls to optimize a*
@@ -87,11 +90,12 @@ namespace MaMapF.Handlers
                 return problem;
             }
 
+            // Sub goal: Move previously selected box to goal
 
-            // TODO only boxes not used for other goals
+
+            // Sub goal: Move agent to a box
             var allBoxes = problem.InitialState.Boxes;
             var unusedBoxes = allBoxes.Where(box => !solved.Any(box.Equals)).ToList();
-
 
             // Select "unused-box" and "unsolved-goal" with smallest distance
             // distance(agent, box) + distance(box, goal)
@@ -113,6 +117,31 @@ namespace MaMapF.Handlers
                     }
                 }
             }
+
+            // // Find best neighbour position to selected box
+            // var neighbours = Position.GetNeighbours(selectedBox.Position).Where(p => !initialState.IsWall(p)).ToList();
+            // // var otherAgentsBoxPositions = _level.AgentInitialStates.Values
+            // //     .Where(s => s.AgentName != agent)
+            // //     .SelectMany(s => s.Boxes)
+            // //     .Select(b => b.Position).ToList();
+            //
+            // var bestPosition = neighbours.OrderBy(p =>
+            // {
+            //     var distance = Position.Distance(initialState.Agent.Position, p);
+            //     // previous box goal bonus
+            //     // other agent box penalty
+            //     return distance;
+            // }).First();
+            //
+            // // Add agent position goal to problem and convert all boxes to walls
+            // problem.Goals.Add(new MapItem(agent, bestPosition));
+            // foreach (var box in allBoxes)
+            // {
+            //     problem.AddBoxMod(box);
+            // }
+            //
+            // return problem;
+
 
             // Add goal to problem
             problem.Goals.Add(selectedGoal);

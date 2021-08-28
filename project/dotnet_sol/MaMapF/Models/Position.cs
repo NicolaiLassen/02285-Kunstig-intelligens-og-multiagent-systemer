@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace MaMapF.Models
 {
@@ -43,6 +44,17 @@ namespace MaMapF.Models
         public bool Equals(Position other)
         {
             return Row == other.Row && Column == other.Column;
+        }
+
+        public static List<Position> GetNeighbours(Position p)
+        {
+            return new List<Position>
+            {
+                new Position(p.Row - 1, p.Column),
+                new Position(p.Row + 1, p.Column),
+                new Position(p.Row, p.Column + 1),
+                new Position(p.Row, p.Column + -1),
+            };
         }
     }
 }
