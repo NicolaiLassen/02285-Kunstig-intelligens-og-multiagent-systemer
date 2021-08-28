@@ -1,4 +1,6 @@
-﻿namespace MaMapF.Models
+﻿using System;
+
+namespace MaMapF.Models
 {
     public class MapItem
     {
@@ -26,6 +28,11 @@
             if (obj == null) return false;
             if (!(obj is MapItem other)) return false;
             return Position.Equals(other.Position) && Value == other.Value;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(UID, Value, Position.GetHashCode());
         }
 
 

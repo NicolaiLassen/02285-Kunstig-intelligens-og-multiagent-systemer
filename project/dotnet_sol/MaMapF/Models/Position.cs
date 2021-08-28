@@ -5,8 +5,8 @@ namespace MaMapF.Models
 {
     public class Position
     {
-        public int Row { get; set; }
-        public int Column { get; set; }
+        public int Row { get; }
+        public int Column { get; }
 
         public Position()
         {
@@ -44,6 +44,18 @@ namespace MaMapF.Models
         public bool Equals(Position other)
         {
             return Row == other.Row && Column == other.Column;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj == null) return false;
+            if (!(obj is Position other)) return false;
+            return Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Row, Column);
         }
 
         public static List<Position> GetNeighbours(Position p)

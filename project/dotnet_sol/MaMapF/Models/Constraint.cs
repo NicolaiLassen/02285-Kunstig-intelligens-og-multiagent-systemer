@@ -1,4 +1,6 @@
-﻿namespace MaMapF.Models
+﻿using System;
+
+namespace MaMapF.Models
 {
     public class Constraint
     {
@@ -25,10 +27,11 @@
             return Equals(other);
         }
 
-        // public override int GetHashCode()
-        // {
-        //     return HashCode.Combine(Agent, Position, Step);
-        // }
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Agent, Position, Step);
+        }
+
         public Constraint Copy()
         {
             return new Constraint
