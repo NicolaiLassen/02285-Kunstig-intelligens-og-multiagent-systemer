@@ -4,6 +4,10 @@ using System.Linq;
 using MaMapF.Models;
 using Delegate = MaMapF.Models.Delegate;
 
+//********************
+// Try map A2 to see delegation in action
+//*******************
+
 namespace MaMapF.Handlers
 {
     public class SearchHandler
