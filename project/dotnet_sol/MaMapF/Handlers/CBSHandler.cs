@@ -61,7 +61,17 @@ namespace MaMapF.Handlers
                     // Skip if agent solution is null
                     if (solution == null)
                     {
-                        continue;
+                        if (constraint.Agent == agent)
+                        {
+                            continue;
+                        }
+
+                        nextNode.Blocked = new Blocked
+                        {
+                            Agent = constraint.Agent,
+                            Position = constraint.Position
+                        };
+                        return nextNode;
                     }
 
                     // Skip if agent solution is equal agent solution in previous node
@@ -185,27 +195,27 @@ namespace MaMapF.Handlers
                 };
             }
 
-            // Agent is follower
-            if (conflict.Type == "follow" && agent == conflict.AgentA)
-            {
-                return new Constraint
-                {
-                    Agent = agent,
-                    Position = conflict.Position,
-                    Step = conflict.Step,
-                };
-            }
-
-            // Agent is leader
-            if (conflict.Type == "follow" && agent == conflict.AgentB)
-            {
-                return new Constraint
-                {
-                    Agent = agent,
-                    Position = conflict.Position,
-                    Step = conflict.Step - 1,
-                };
-            }
+            // // Agent is follower
+            // if (conflict.Type == "follow" && agent == conflict.AgentA)
+            // {
+            //     return new Constraint
+            //     {
+            //         Agent = agent,
+            //         Position = conflict.Position,
+            //         Step = conflict.Step,
+            //     };
+            // }
+            //
+            // // Agent is leader
+            // if (conflict.Type == "follow" && agent == conflict.AgentB)
+            // {
+            //     return new Constraint
+            //     {
+            //         Agent = agent,
+            //         Position = conflict.Position,
+            //         Step = conflict.Step - 1,
+            //     };
+            // }
 
             return null;
         }

@@ -32,12 +32,11 @@ namespace MaMapF.Handlers
             var problems = agents.ToDictionary(agent => agent,
                 agent => new SingleAgentProblem(_level.AgentInitialStates[agent]));
 
-            var blocked = new List<Position>();
+            var blocked = new List<Blocked>();
 
             while (!IsAllMainGoalsSolved(solved))
             {
                 Console.Error.WriteLine($"Goals: {_level.Goals.Values.Sum(g => g.Count(g1 => solved.Any(g1.Equals)))}/{_level.Goals.Values.Sum(e => e.Count)}");
-                
                 
                 // Create sub problem for each agent
                 foreach (var agent in agents)
@@ -48,13 +47,14 @@ namespace MaMapF.Handlers
                 }
 
                 var nextSolutions = CBSHandler.Search(problems);
-                Console.Error.WriteLine(nextSolutions.Solutions['0'][1]);
-                Console.Error.WriteLine(nextSolutions.Solutions['1'][1]);
-                // if (!blocked.Contains(nextSolutions.Blocked))
-                // {
-                //     blocked.Add(nextSolutions.Blocked);
-                //     continue;
-                // }
+                if (nextSolutions.Blocked != null)
+                {
+                    Console.Error.WriteLine(nextSolutions.Blocked);
+                    blocked.Add(nextSolutions.Blocked);
+                    continue;
+                }
+                
+                blocked = new List<Blocked>();
 
                 foreach (var (agent, solution) in nextSolutions.Solutions)
                 {
@@ -71,12 +71,31 @@ namespace MaMapF.Handlers
 
 
         private SingleAgentProblem CreateSubProblem(SingleAgentProblem previous, List<MapItem> unsolved,
-            List<MapItem> solved, List<Position> blocked)
+            List<MapItem> solved, List<Blocked> blocked)
         {
             var agent = previous.InitialState.AgentName;
             var initialState = previous.InitialState;
             var problem = new SingleAgentProblem(previous.InitialState);
 
+            // help block first
+            if (blocked.Any())
+            {
+                var agentB = blocked.Where(b => b.Agent == agent).Select(b => b.Position);
+                
+                var blockedPosition = agentB.First();
+                Console.Error.WriteLine("blockedPosition:" + blockedPosition);
+                foreach (var box in initialState.Boxes)
+                {
+                    if (blockedPosition.Equals(box.Position))
+                    {
+                        continue;
+                    }
+                    problem.AddBoxMod(box);
+                }
+                
+                return problem;
+            }
+            
             // Return problem with no goals if no unsolved goals left 
             if (!unsolved.Any())
             {
@@ -172,6 +191,7 @@ namespace MaMapF.Handlers
             // convert all boxes to walls
             foreach (var box in allBoxes)
             {
+                Console.Error.WriteLine(box.Position);
                 problem.AddBoxMod(box);
             }
             
