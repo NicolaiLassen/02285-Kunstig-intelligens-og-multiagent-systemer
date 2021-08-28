@@ -35,6 +35,9 @@ namespace MaMapF.Handlers
 
             while (!IsAllMainGoalsSolved(solved))
             {
+                Console.Error.WriteLine($"Goals: {_level.Goals.Values.Sum(g => g.Count(g1 => solved.Any(g1.Equals)))}/{_level.Goals.Values.Sum(e => e.Count)}");
+                
+                
                 // Create sub problem for each agent
                 foreach (var agent in agents)
                 {
