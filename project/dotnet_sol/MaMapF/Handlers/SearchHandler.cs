@@ -34,7 +34,12 @@ namespace MaMapF.Handlers
 
             while (!IsAllMainGoalsSolved(solved))
             {
-                CreateSubProblems(problems, solved);
+                // Create sub problem for each agent
+                foreach (var agent in agents)
+                {
+                    var unsolvedAgentGoals = _level.Goals[agent].Where(goal => !solved.Contains(goal)).ToList();
+                    problems[agent] = CreateSubProblem(problems[agent].InitialState, unsolvedAgentGoals, solved);
+                }
 
 
                 var nextSolutions = CBSHandler.Search(problems);
@@ -57,112 +62,105 @@ namespace MaMapF.Handlers
             return solutions;
         }
 
-        public void CreateSubProblems(Dictionary<char, SingleAgentProblem> problems,
+
+        private static SingleAgentProblem CreateSubProblem(SingleAgentState initialState, List<MapItem> unsolved,
             List<MapItem> solved)
         {
-            var agents = problems.Keys;
+            var problem = new SingleAgentProblem();
+            problem.AgentName = initialState.AgentName;
+            problem.InitialState = initialState;
+            problem.Goals = new List<MapItem>();
+            problem.BoxMods = new List<MapItem>();
+            problem.WallMods = new List<Position>();
 
-            foreach (var agent in agents)
+
+            // Return problem with no goals if no unsolved goals left 
+            if (!unsolved.Any())
             {
-                var problem = problems[agent];
-                var initialState = problem.InitialState;
-                var goals = new List<MapItem>();
-                var boxMods = new List<MapItem>();
-                var wallMods = new List<Position>();
+                return problem;
+            }
 
 
-                var goalsToSolve = _level.Goals[agent].Where(goal => !solved.Contains(goal)).ToList();
-                var boxGoals = goalsToSolve.Where(goal => char.IsLetter(goal.Value));
+            var unsolvedBoxGoals = unsolved.Where(goal => char.IsLetter(goal.Value)).ToList();
 
-                if (!goalsToSolve.Any())
+            // If no unsolved box goals then return agent problem
+            if (!unsolvedBoxGoals.Any())
+            {
+                // Convert all boxes to walls to optimize a*
+                foreach (var box in initialState.Boxes)
+                {
+                    problem.AddBoxMod(box);
+                }
+
+                initialState.Boxes = initialState.Boxes.Except(problem.BoxMods).ToList();
+                problem.Goals.Add(unsolved.First());
+                return problem;
+            }
+
+
+            MapItem selectedGoal;
+            // TODO: SELECT BETTER
+
+            selectedGoal = unsolvedBoxGoals.First();
+            // COULD BE MIN DONO
+            var maxBoxGoalDistance = 0;
+
+            // Solve the goals that is fathest from our agent
+            foreach (var boxGoal in unsolvedBoxGoals)
+            {
+                var distance = Position.Distance(initialState.Agent, boxGoal);
+                if (distance <= maxBoxGoalDistance) continue;
+
+                maxBoxGoalDistance = distance;
+                selectedGoal = boxGoal;
+            }
+
+            MapItem selectedBox = initialState.Boxes.First();
+            var minBoxDistance = Int32.MaxValue;
+
+            // pick the box that is closest to our goal
+            foreach (var box in initialState.Boxes)
+            {
+                if (solved.Any(s => s.Position.Equals(box.Position)))
                 {
                     continue;
                 }
 
-                MapItem selectedGoal;
-                if (boxGoals.Any())
-                {
-                    // TODO: SELECT BETTER
+                var distance = Position.Distance(selectedGoal, box);
+                if (distance >= minBoxDistance) continue;
 
-                    selectedGoal = boxGoals.First();
-                    // COULD BE MIN DONO
-                    var maxBoxGoalDistance = 0;
-
-                    // Solve the goals that is fathest from our agent
-                    foreach (var boxGoal in boxGoals)
-                    {
-                        var distance = Position.Distance(initialState.Agent, boxGoal);
-                        if (distance <= maxBoxGoalDistance) continue;
-
-                        maxBoxGoalDistance = distance;
-                        selectedGoal = boxGoal;
-                    }
-
-                    MapItem selectedBox = initialState.Boxes.First();
-                    var minBoxDistance = Int32.MaxValue;
-
-                    // pick the box that is closest to our goal
-                    foreach (var box in initialState.Boxes)
-                    {
-                        if (solved.Any(s => s.Position.Equals(box.Position)))
-                        {
-                            continue;
-                        }
-
-                        var distance = Position.Distance(selectedGoal, box);
-                        if (distance >= minBoxDistance) continue;
-
-                        // check if the box can be moved to the goal "block"!
-                        minBoxDistance = distance;
-                        selectedBox = box;
-                    }
-
-                    // Remove boxes and add walls
-                    foreach (var box in initialState.Boxes)
-                    {
-                        if (selectedBox.Position.Equals(box.Position))
-                        {
-                            continue;
-                        }
-
-                        // Modify the map to optimize for a*
-                        wallMods.Add(box.Position);
-                        boxMods.Add(box);
-                        initialState.Walls.Add($"{box.Position.Row},{box.Position.Column}");
-                    }
-
-                    // TODO used boxes
-                    // delegation.UsedBoxes.Add(selectedBox.UID);
-                }
-                else
-                {
-                    // If all boxes are in place solve the agent problem
-                    // TODO: this should still make walls for all boxes
-                    // be aware of block
-                    // TODO make func CLEAN THIS UP
-                    foreach (var box in initialState.Boxes)
-                    {
-                        // Modify the map to optimize for a*
-                        wallMods.Add(box.Position);
-                        boxMods.Add(box);
-                        initialState.Walls.Add($"{box.Position.Row},{box.Position.Column}");
-                    }
-
-                    selectedGoal = goalsToSolve.First();
-                }
-
-                // Console.Error.WriteLine(selectedGoal);
-                // Delegate the task to the agent
-                goals.Add(selectedGoal);
-                // Remove boxes
-                initialState.Boxes = initialState.Boxes.Except(boxMods).ToList();
-
-
-                problem.Goals = goals;
-                problem.BoxModifications = boxMods;
-                problem.WallModifications = wallMods;
+                // check if the box can be moved to the goal "block"!
+                minBoxDistance = distance;
+                selectedBox = box;
             }
+
+            // Remove boxes and add walls
+            foreach (var box in initialState.Boxes)
+            {
+                if (selectedBox.Position.Equals(box.Position))
+                {
+                    continue;
+                }
+
+                // Modify the map to optimize for a*
+                problem.WallMods.Add(box.Position);
+                problem.BoxMods.Add(box);
+                initialState.Walls.Add($"{box.Position.Row},{box.Position.Column}");
+            }
+
+            // TODO used boxes
+            // delegation.UsedBoxes.Add(selectedBox.UID);
+
+
+            // Console.Error.WriteLine(selectedGoal);
+            // Delegate the task to the agent
+            problem.Goals.Add(selectedGoal);
+            // Remove boxes
+            initialState.Boxes = initialState.Boxes.Except(problem.BoxMods).ToList();
+
+            return problem;
         }
+
 
         private bool IsAllMainGoalsSolved(List<MapItem> solved)
         {
