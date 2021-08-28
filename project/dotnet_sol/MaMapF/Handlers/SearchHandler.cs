@@ -100,7 +100,6 @@ namespace MaMapF.Handlers
             // var maxAgentGoalDistance = 0;
             // var minBoxGoalDistance = Int32.MaxValue;
 
-
             var minDistance = Int32.MaxValue;
             var selectedBox = unusedBoxes.First();
             var selectedGoal = unsolvedBoxGoals.First();
@@ -140,7 +139,6 @@ namespace MaMapF.Handlers
             // Add goal to problem
             problem.Goals.Add(selectedGoal);
 
-
             // Convert all other boxes to walls
             var otherBoxes = allBoxes.Where(box => !selectedBox.Equals(box));
             foreach (var box in otherBoxes)
@@ -148,23 +146,8 @@ namespace MaMapF.Handlers
                 problem.AddBoxMod(box);
             }
 
-            // if (solved.Any())
-            // {
-            //     Console.Error.WriteLine("solved:");
-            //     solved.ForEach(box => Console.Error.WriteLine(box));
-            //     Console.Error.WriteLine("unusedBoxes:");
-            //     unusedBoxes.ForEach(box => Console.Error.WriteLine(box));
-            //     Console.Error.WriteLine("selectedBox:");
-            //     Console.Error.WriteLine(selectedBox);
-            //
-            //     
-            //     Environment.Exit(0);
-            // }
-
-
             return problem;
         }
-
 
         private bool IsAllMainGoalsSolved(List<MapItem> solved)
         {
