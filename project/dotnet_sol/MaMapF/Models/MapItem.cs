@@ -2,13 +2,16 @@
 {
     public class MapItem
     {
-        public char Value { get; set; }
+        // COULD COME IN HANDY TO TRACK THE USED BOXES
+        public string UID { get; }
+        public char Value { get; }
         public Position Position { get; set; }
 
         public MapItem(char value, Position position)
         {
             Value = value;
             Position = position;
+            UID = $"{value}.{position.Row}.{position.Column}";
         }
 
 

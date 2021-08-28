@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using MaMapF.Models;
+using Delegate = MaMapF.Models.Delegate;
 
 namespace MaMapF.Handlers
 {
@@ -23,6 +25,7 @@ namespace MaMapF.Handlers
                     allSolved = false;
                 }
             }
+
             return allSolved;
         }
 
@@ -32,33 +35,47 @@ namespace MaMapF.Handlers
             var solutions =
                 _level.Agents.ToDictionary(levelAgent => levelAgent, levelAgent => new List<SingleAgentState>());
             var nextInitialStates = new Dictionary<char, SingleAgentState>(_level.AgentInitialStates);
+            var delegation = new Delegate
+            {
+                NextInitialStates = nextInitialStates
+            };
 
             while (!IsAllMainGoalsSolved(solved))
             {
-                var delegation = DelegateSubGoals(solved, nextInitialStates);
+                DecorateSubGoals(delegation, solved);
                 foreach (var (key, value) in
                     CBSHandler.Search(_level.Agents,
                         delegation.NextInitialStates,
-                        _level.Goals))
+                        delegation.Goals))
                 {
                     if (value == null)
                     {
+                        // TODO change delegation (delete some box-walls etc) and trie again
                         continue;
                     }
 
-                    solutions[key].AddRange(value);
+                    solutions[key] = value;
                     solved.AddRange(delegation.Goals[key]);
-                    nextInitialStates[key] = value.Last();
+                    
+                    foreach (var singleAgentState in value)
+                    {
+                        Console.Error.WriteLine(singleAgentState.Action);
+                    }
+
+                    delegation.NextInitialStates[key] = value.Last();
+                    delegation.ResetNextStateDelegation();
                 }
             }
 
             return solutions;
         }
 
-        public Delegate DelegateSubGoals(List<MapItem> solved, Dictionary<char, SingleAgentState> nextInitialStates)
+        public void DecorateSubGoals(Delegate delegation, List<MapItem> solved)
         {
             var subGoals = _level.Agents.ToDictionary(agent => agent, agent => new List<MapItem>());
-            var agentInitialStates = new Dictionary<char, SingleAgentState>(nextInitialStates);
+            var wallModifications = _level.Agents.ToDictionary(agent => agent, agent => new List<Position>());
+            var boxModifications = _level.Agents.ToDictionary(agent => agent, agent => new List<MapItem>());
+            var agentInitialStates = new Dictionary<char, SingleAgentState>(delegation.NextInitialStates);
 
             foreach (var agent in _level.Agents)
             {
@@ -73,31 +90,75 @@ namespace MaMapF.Handlers
                 MapItem selectedGoal;
                 if (boxGoals.Any())
                 {
+                    // TODO: SELECT BETTER
+
                     selectedGoal = boxGoals.First();
-                    var selectedBox = agentInitialStates[agent].Boxes.First();
-                    foreach (var mapItem in agentInitialStates[agent].Boxes)
+                    var maxBoxGoalDistance = 0;
+
+                    // Solve the goals that is fathest from our agent
+                    foreach (var boxGoal in boxGoals)
                     {
-                        if (selectedBox.Position.Equals(mapItem.Position))
+                        var distance = Position.Distance(agentInitialStates[agent].Agent, boxGoal);
+                        if (distance <= maxBoxGoalDistance) continue;
+                        
+                        maxBoxGoalDistance = distance;
+                        selectedGoal = boxGoal;
+                    }
+
+                    MapItem selectedBox = agentInitialStates[agent].Boxes.First();
+                    var minBoxDistance = Int32.MaxValue;
+
+                    // pick the box that is closest to our goal
+                    foreach (var box in agentInitialStates[agent].Boxes)
+                    {
+                        if (solved.Any(s => s.Position.Equals(box.Position)))
+                        {
+                            continue;
+                        }
+                        
+                        var distance = Position.Distance(selectedGoal, box);
+                        if (distance >= minBoxDistance) continue;
+                       
+                        // check if the box can be moved to the goal "block"!
+                        minBoxDistance = distance;
+                        selectedBox = box;
+                    }
+
+                    // Remove boxes and add walls
+                    foreach (var box in agentInitialStates[agent].Boxes)
+                    {
+                        if (selectedBox.Position.Equals(box.Position))
                         {
                             continue;
                         }
 
-                        agentInitialStates[agent].Walls.Add($"{mapItem.Position.Row},{mapItem.Position.Column}");
+                        // Modify the map to optimize for a*
+                        wallModifications[agent].Add(box.Position);
+                        boxModifications[agent].Add(box);
+                        agentInitialStates[agent].Walls.Add($"{box.Position.Row},{box.Position.Column}");
                     }
+                    
+                    delegation.UsedBoxes.Add(selectedBox.UID);
                 }
                 else
                 {
+                    // If all boxes are in place solve the agent problem
+                    // TODO: this should still make walls for all boxes
+                    // be aware of block
                     selectedGoal = goalsToSolve.First();
                 }
 
+                // Delegate the task to the agent
                 subGoals[agent].Add(selectedGoal);
+                // Remove boxes
+                agentInitialStates[agent].Boxes =
+                    agentInitialStates[agent].Boxes.Except(boxModifications[agent]).ToList();
             }
 
-            return new Delegate
-            {
-                Goals = subGoals,
-                NextInitialStates = agentInitialStates
-            };
+            delegation.Goals = subGoals;
+            delegation.WallModifications = wallModifications;
+            delegation.BoxModifications = boxModifications;
+            delegation.NextInitialStates = agentInitialStates;
         }
     }
 }
