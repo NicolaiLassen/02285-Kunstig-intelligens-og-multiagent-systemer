@@ -37,12 +37,6 @@ namespace MaMapF.Handlers
                 }
             }
 
-
-            // Base heuristic on boxes before agent finish
-            // var emptyBoxGoals = BoxGoals.Where(goal => !state.Boxes.Any(box => box.Equals(goal))).ToList();
-            // var unusedBoxes = state.Boxes.Where(box => !BoxGoals.Any(goal => goal.Equals(box))).ToList();
-
-
             if (problem.IsMoveBoxToGoalProblem)
             {
                 var currentSelectedBoxPosition = state.Boxes.FirstOrDefault(b => b.UID == problem.SelectedBox.UID);
