@@ -28,6 +28,17 @@ namespace MaMapF.Handlers
             var initialState = problem.InitialState;
             var goals = problem.Goals;
 
+            // Skip node has unreachable constraints
+            foreach (var constraint in constraints)
+            {
+                var distanceToConstraint = Position.Distance(initialState.Agent.Position, constraint.Position);
+                if (distanceToConstraint > constraint.Step + 1)
+                {
+                    return null;
+                }
+            }
+
+
             var heuristic = new SingleAgentHeuristic(goals, constraints);
 
             var frontier = new SimplePriorityQueue<SingleAgentState>();
