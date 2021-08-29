@@ -137,25 +137,25 @@ namespace MaMapF.Handlers
             var allBoxes = problem.InitialState.Boxes;
 
             // Sub goal: Remove blocking box for other agent
-            if (previous.Constraints.Any())
-            {
-                problem.Type = SingleAgentProblemType.MoveBlock;
-                problem.Constraints = previous.Constraints;
-
-                // // var blockPosition = problem.SelectedBox == null ? previous.Constraints.First().Position : previous.Constraints.Last().Position;
-                // var blockPosition = previous.Constraints.First().Position;
-                // problem.SelectedBox = initialState.Boxes.FirstOrDefault(b => b.Position.Equals(blockPosition));
-                //
-                // // Select first block constraint and convert all other boxes to walls
-                // var nonBlockBoxes = allBoxes.Where(b => !blockPosition.Equals(b.Position));
-                // foreach (var box in nonBlockBoxes)
-                // {
-                //     problem.AddBoxMod(box);
-                // }
-
-
-                return problem;
-            }
+            // if (previous.Constraints.Any())
+            // {
+            //     problem.Type = SingleAgentProblemType.MoveBlock;
+            //     problem.Constraints = previous.Constraints;
+            //
+            //     // // var blockPosition = problem.SelectedBox == null ? previous.Constraints.First().Position : previous.Constraints.Last().Position;
+            //     // var blockPosition = previous.Constraints.First().Position;
+            //     // problem.SelectedBox = initialState.Boxes.FirstOrDefault(b => b.Position.Equals(blockPosition));
+            //     //
+            //     // // Select first block constraint and convert all other boxes to walls
+            //     // var nonBlockBoxes = allBoxes.Where(b => !blockPosition.Equals(b.Position));
+            //     // foreach (var box in nonBlockBoxes)
+            //     // {
+            //     //     problem.AddBoxMod(box);
+            //     // }
+            //
+            //
+            //     return problem;
+            // }
 
             // Return problem with no goals if no unsolved goals left 
             if (!unsolved.Any())
@@ -205,7 +205,7 @@ namespace MaMapF.Handlers
                 }
 
 
-                Console.Error.WriteLine($"prevBox: {problem.SelectedBox}");
+                // Console.Error.WriteLine($"prevBox: {problem.SelectedBox}");
                 return problem;
             }
 
@@ -233,9 +233,15 @@ namespace MaMapF.Handlers
                     foreach (var boxNeighbour in boxNeighbours)
                     {
                         var hasBlock = false;
-                        foreach (var problemsKey in problems.Keys)
+                        foreach (var otherAgent in problems.Keys)
                         {
-                            if (problems[problemsKey].InitialState.AllPositions.Contains(boxNeighbour))
+                            if (problems[otherAgent].InitialState.IsWall(boxNeighbour))
+                            {
+                                hasBlock = true;
+                            }
+                            
+                            
+                            if (problems[otherAgent].InitialState.Boxes.Select(b => b.Position).Contains(boxNeighbour))
                             {
                                 hasBlock = true;
                             }

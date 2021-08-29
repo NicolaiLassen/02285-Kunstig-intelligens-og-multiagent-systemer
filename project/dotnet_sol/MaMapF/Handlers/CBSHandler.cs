@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using MaMapF.Models;
 using Priority_Queue;
-using Action = MaMapF.Models.Action;
 
 namespace MaMapF.Handlers
 {
@@ -70,7 +68,7 @@ namespace MaMapF.Handlers
                         {
                             continue;
                         }
-                        
+
                         // If new constraint position is a WallBox
                         var wallBox = problems[agent].InitialState.BoxWalls
                             .FirstOrDefault(w => w.Position.Equals(constraint.Position));
@@ -104,27 +102,31 @@ namespace MaMapF.Handlers
         {
             var maxLength = node.Solutions.Max(solution => solution.Value.Count);
             var minLength = node.Solutions.Min(solution => solution.Value.Count);
-            var solutions = new Dictionary<char, List<SingleAgentState>>(node.Solutions);
+            var solutions = agents.ToDictionary(agent => agent, agent => node.Solutions[agent].Select(s => s).ToList());
 
-            if (minLength > SearchHandler.MaxMoves)
-            {
-                return null;
-            }
-
+            // if (minLength > SearchHandler.MaxMoves)
+            // {
+            //     return null;
+            // }
 
             // Make all solutions same length as longest
             foreach (var agent in solutions.Keys)
             {
-                var solutionLength = node.Solutions[agent].Count;
-                var solutionLengthDiff = maxLength - solutionLength;
-                var solutionGoalState = solutions[agent][solutionLength - 1];
+                var solutionLength = solutions[agent].Count;
+                if (solutionLength == maxLength)
+                {
+                    continue;
+                }
 
+                var solutionLengthDiff = maxLength - solutionLength;
+                var nextState = solutions[agent].Last();
                 for (int i = 0; i < solutionLengthDiff; i++)
                 {
-                    var nextState = SingleAgentSearchHandler.CreateNextState(solutionGoalState, Action.NoOp);
+                    nextState = SingleAgentSearchHandler.CreateNextState(nextState, Action.NoOp);
                     solutions[agent].Add(nextState);
                 }
             }
+
 
             for (var step = 1; step < maxLength; step++)
             {
@@ -134,8 +136,8 @@ namespace MaMapF.Handlers
                     {
                         var a0 = agents[a0i];
                         var a1 = agents[a1i];
-                        var a0s = node.Solutions[a0];
-                        var a1s = node.Solutions[a1];
+                        var a0s = solutions[a0];
+                        var a1s = solutions[a1];
 
 
                         // Check that no positions are equal in current step
