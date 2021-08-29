@@ -60,6 +60,21 @@ namespace MaMapF.Handlers
 
                 var nextNode = CBSHandler.Search(problems, solvedAgents);
 
+                if (nextNode == null)
+                {
+                    Console.Error.WriteLine("WTF");
+                    Environment.Exit(0);
+                }
+                
+
+                // foreach (var key in nextNode.Solutions.Keys)
+                // {
+                //     if (nextNode.Solutions[key] == null)
+                //     {
+                //         nextNode.Solutions[key] = new List<SingleAgentState>() {problems[key].InitialState};
+                //     }
+                // }
+
 
                 // If an agent could not finnish because it is blocked by a WallBox
                 // var wallBoxConstraint = nextNode.WallBoxConstraint;
