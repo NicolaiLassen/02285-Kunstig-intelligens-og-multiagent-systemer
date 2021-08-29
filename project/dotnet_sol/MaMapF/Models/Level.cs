@@ -12,6 +12,8 @@ namespace MaMapF.Models
         public List<List<char>> GoalMap { get; set; }
         public Dictionary<char, List<MapItem>> Goals { get; set; }
 
+        public int GoalCount { get; set; }
+
         public Dictionary<char, SingleAgentState> AgentInitialStates { get; set; }
 
         public Level(
@@ -27,6 +29,7 @@ namespace MaMapF.Models
             InitialMap = initialMap;
             GoalMap = goalMap;
             Goals = goals;
+            GoalCount = goals.Values.SelectMany(g => g).Distinct().Count();
             AgentInitialStates = new Dictionary<char, SingleAgentState>();
 
             foreach (var agent in agents)

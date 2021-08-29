@@ -51,14 +51,14 @@ namespace MaMapF.Handlers
                 {
                     // Don't change the agent if its still on its path in life
                     if (!solvedSubGoal.Contains(agent)) continue;
-                    
+
                     problems[agent].ResetMods();
                     problems[agent] = CreateSubProblem(problems[agent], goals[agent], solved[agent], problems);
 
                     // Console.Error.WriteLine("problems[agent]:");
                     // Console.Error.WriteLine(problems[agent]);
                 }
-                
+
                 solvedSubGoal = new List<char>();
 
                 var nextNode = CBSHandler.Search(problems, solvedAgents);
@@ -100,19 +100,16 @@ namespace MaMapF.Handlers
                 // {
                 //     MaxMoves += 1;
                 // }
-                
+
                 foreach (var agent in agents)
                 {
                     var solution = nextNode.Solutions[agent];
 
-                    Console.Error.WriteLine(solution.Count);
-                    
                     if (solution.Count == minUnsolvedSolutionLength)
                     {
-                        Console.Error.WriteLine("agent: " + agent);
                         solvedSubGoal.Add(agent);
                     }
-                    
+
                     // If I'm the guy or I'm still going then cut me off
                     if (solution.Count >= minUnsolvedSolutionLength)
                     {
@@ -152,8 +149,8 @@ namespace MaMapF.Handlers
                     return goals[agent].Where(g => lastState.AllMapItems.Any(g.Equals)).ToList();
                 });
                 solvedAgents = agents.Where(a => IsAgentDone(a, solved[a])).ToList();
-                
-                
+
+
                 // Console.Error.WriteLine($"MaxMoves: {MaxMoves}");
                 // Console.Error.WriteLine($"minSolutionLength: {minUnsolvedSolutionLength}");
                 // Console.Error.WriteLine($"maxSolutionLength: {maxSolutionLength}");
@@ -295,7 +292,7 @@ namespace MaMapF.Handlers
                         continue;
                     }
 
-                    var pathExists = HasPathToObject(initialState, initialState.Agent.Position, goal.Position);
+                    var pathExists = BFSToPath(initialState, initialState.Agent.Position, goal.Position);
                     if (!pathExists)
                     {
                         continue;
@@ -314,7 +311,6 @@ namespace MaMapF.Handlers
                             {
                                 hasBlock = true;
                             }
-
 
                             if (problems[otherAgent].InitialState.Boxes.Select(b => b.Position).Contains(boxNeighbour))
                             {
@@ -384,7 +380,7 @@ namespace MaMapF.Handlers
             return problem;
         }
 
-        public bool HasPathToObject(SingleAgentState state, Position start, Position end)
+        public bool BFSToPath(SingleAgentState state, Position start, Position end)
         {
             Queue<Position> struc = new Queue<Position>();
             var visited = new HashSet<Position>();
@@ -428,8 +424,7 @@ namespace MaMapF.Handlers
 
         private bool IsAllAgentsDone(Dictionary<char, List<MapItem>> solved)
         {
-            return _level.Goals.Values.Select( g => g).Distinct().Count() == solved.Values.Sum( s => s.Count);
-            // return _level.Agents.All(agent => IsAgentDone(agent, solved[agent]));
+            return _level.GoalCount == solved.Values.Sum(s => s.Count);
         }
 
         private bool IsAgentDone(char agent, List<MapItem> solved)
