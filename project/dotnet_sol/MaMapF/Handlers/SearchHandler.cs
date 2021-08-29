@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using MaMapF.Models;
-using Action = MaMapF.Models.Action;
 
 //********************
 // Try map A2 to see delegation in action
@@ -43,7 +42,7 @@ namespace MaMapF.Handlers
                 foreach (var agent in agents)
                 {
                     problems[agent].ResetMods();
-                    problems[agent] = CreateSubProblem(problems[agent], goals[agent], solved[agent],problems);
+                    problems[agent] = CreateSubProblem(problems[agent], goals[agent], solved[agent], problems);
                 }
 
                 var nextNode = CBSHandler.Search(problems);
@@ -100,7 +99,7 @@ namespace MaMapF.Handlers
                     var solution = nextNode.Solutions[agent];
                     var solutionLength = solution.Count;
                     var lastState = solution.Last();
-                    
+
                     solutions[agent] = solution;
                     problems[agent].InitialState = solution.Last();
 
@@ -126,7 +125,7 @@ namespace MaMapF.Handlers
 
 
         private SingleAgentProblem CreateSubProblem(SingleAgentProblem previous, List<MapItem> goals,
-            List<MapItem> solved,Dictionary<char, SingleAgentProblem> problems)
+            List<MapItem> solved, Dictionary<char, SingleAgentProblem> problems)
         {
             var unsolved = goals.Where(goal => !solved.Contains(goal)).ToList();
 
@@ -230,6 +229,8 @@ namespace MaMapF.Handlers
                     var boxNeighbours = Position.GetNeighbours(box.Position);
                     var freeNeighbours = new List<Position>();
 
+                    // TODO MAKE PRIORITY
+
                     foreach (var boxNeighbour in boxNeighbours)
                     {
                         var hasBlock = false;
@@ -239,8 +240,8 @@ namespace MaMapF.Handlers
                             {
                                 hasBlock = true;
                             }
-                            
-                            
+
+
                             if (problems[otherAgent].InitialState.Boxes.Select(b => b.Position).Contains(boxNeighbour))
                             {
                                 hasBlock = true;
