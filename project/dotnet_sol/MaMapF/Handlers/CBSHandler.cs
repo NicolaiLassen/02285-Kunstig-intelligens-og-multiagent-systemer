@@ -16,19 +16,19 @@ namespace MaMapF.Handlers
             var solutions = agents.ToDictionary(agent => agent, agent =>
             {
                 var problem = problems[agent];
-                
-                // if (SearchHandler.COUNTER == 19)
-                // {
-                //     Console.Error.WriteLine(problem);
-                // }
-
                 return SingleAgentSearchHandler.Search(
                     problem,
                     new List<Constraint>()
                 );
-
-                
             });
+
+            foreach (var v in solutions.Values)
+            {
+                foreach (var singleAgentState in v)
+                {
+                    Console.Error.WriteLine(singleAgentState);
+                }
+            }
 
             // Create priority queue and add the initial node
             var initialNode = new Node {Solutions = solutions};
@@ -40,15 +40,15 @@ namespace MaMapF.Handlers
                 // Get the node with lowest cost
                 var node = open.Dequeue();
 
-
                 // If no solutions conflict then return the solutions
                 var conflict = GetConflict(agents, node, solvedAgents);
+                Console.Error.WriteLine($"conflict {conflict}");
+
                 // Console.Error.WriteLine(conflict);
                 if (conflict == null)
                 {
                     return node;
                 }
-
 
                 foreach (var agent in new List<char> {conflict.AgentA, conflict.AgentB})
                 {
@@ -100,7 +100,6 @@ namespace MaMapF.Handlers
 
             var solutions = agents.ToDictionary(agent => agent, agent => node.Solutions[agent].Select(s => s).ToList());
 
-
             // Make all solutions same length as longest
             foreach (var agent in solutions.Keys)
             {
@@ -130,7 +129,10 @@ namespace MaMapF.Handlers
                         var a1 = agents[a1i];
                         var a0s = solutions[a0];
                         var a1s = solutions[a1];
-
+                        if (a0s[0].Color == a1s[0].Color)
+                        {
+                            continue;
+                        }
 
                         // Check that no positions are equal in current step
                         foreach (var a0p in a0s[step].AllPositions)

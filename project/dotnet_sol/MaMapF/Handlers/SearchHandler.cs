@@ -35,9 +35,7 @@ namespace MaMapF.Handlers
             var solutions = agents.ToDictionary(agent => agent, agent => new List<SingleAgentState>());
             var solvedAgents = new List<char>();
 
-
             var totalGoalCount = goals.SelectMany(e => e.Value).Count();
-
 
             var problems = agents.ToDictionary(agent => agent,
                 agent => new SingleAgentProblem(_level.AgentInitialStates[agent]));
@@ -47,13 +45,13 @@ namespace MaMapF.Handlers
                 var solvedGoalsCount = solved.SelectMany(s => s.Value).Count();
                 Console.Error.WriteLine($"{solvedGoalsCount}/{totalGoalCount}");
 
-
                 // Create sub problem for each agent
                 foreach (var agent in agents)
                 {
+                    
                     problems[agent].ResetMods();
                     problems[agent] = CreateSubProblem(problems[agent], goals[agent], solved[agent], problems);
-
+                    Console.Error.WriteLine(problems[agent]);
                     // Console.Error.WriteLine("problems[agent]:");
                     // Console.Error.WriteLine(problems[agent]);
                 }
@@ -62,10 +60,10 @@ namespace MaMapF.Handlers
 
                 if (nextNode == null)
                 {
-                    Console.Error.WriteLine("WTF");
+                    Console.Error.WriteLine("WRONG FORMAT");
                     Environment.Exit(0);
                 }
-                
+
 
                 // foreach (var key in nextNode.Solutions.Keys)
                 // {
@@ -142,8 +140,8 @@ namespace MaMapF.Handlers
                     return goals[agent].Where(g => lastState.AllMapItems.Any(g.Equals)).ToList();
                 });
                 solvedAgents = agents.Where(a => IsAgentDone(a, solved[a])).ToList();
-
-
+                
+                
                 // Console.Error.WriteLine($"MaxMoves: {MaxMoves}");
                 // Console.Error.WriteLine($"minSolutionLength: {minUnsolvedSolutionLength}");
                 // Console.Error.WriteLine($"maxSolutionLength: {maxSolutionLength}");
@@ -153,10 +151,10 @@ namespace MaMapF.Handlers
 
                 //
 
-                // if (COUNTER == 18)
-                // {
-                //     break;
-                // }
+                if (COUNTER == 2)
+                {
+                    break;
+                }
 
                 COUNTER += 1;
             }
@@ -285,12 +283,16 @@ namespace MaMapF.Handlers
                         continue;
                     }
 
+                    var pathExists = HasPathToObject(initialState, initialState.Agent.Position, goal.Position);
+                    if (!pathExists)
+                    {
+                        continue;
+                    }
 
                     var boxNeighbours = Position.GetNeighbours(box.Position);
                     var freeNeighbours = new List<Position>();
 
                     // TODO MAKE PRIORITY
-
                     foreach (var boxNeighbour in boxNeighbours)
                     {
                         var hasBlock = false;
@@ -335,7 +337,7 @@ namespace MaMapF.Handlers
             // Find best neighbour position to selected box
             if (neighbours == null)
             {
-                Console.Error.WriteLine("JNWENWI");
+                Console.Error.WriteLine("neighbours = null");
                 Environment.Exit(0);
             }
 
@@ -370,9 +372,52 @@ namespace MaMapF.Handlers
             return problem;
         }
 
+        public bool HasPathToObject(SingleAgentState state, Position start, Position end)
+        {
+            Queue<Position> struc = new Queue<Position>();
+            var visited = new HashSet<Position>();
+            struc.Enqueue(start);
+
+            while (struc.Count > 0)
+            {
+                var p = struc.Dequeue();
+
+                if (visited.Contains(p))
+                {
+                    continue;
+                }
+
+                if (p.Equals(end))
+                {
+                    return true;
+                }
+
+                visited.Add(p);
+
+                var neighbours = Position.GetNeighbours(p);
+                foreach (var neighbour in neighbours)
+                {
+                    if (state.IsWall(neighbour))
+                    {
+                        continue;
+                    }
+
+                    if (state.IsBox(neighbour))
+                    {
+                        continue;
+                    }
+
+                    struc.Enqueue(neighbour);
+                }
+            }
+
+            return false;
+        }
+
         private bool IsAllAgentsDone(Dictionary<char, List<MapItem>> solved)
         {
-            return _level.Agents.All(agent => IsAgentDone(agent, solved[agent]));
+            return _level.Goals.Values.Select( g => g).Distinct().Count() == solved.Values.Sum( s => s.Count);
+            // return _level.Agents.All(agent => IsAgentDone(agent, solved[agent]));
         }
 
         private bool IsAgentDone(char agent, List<MapItem> solved)

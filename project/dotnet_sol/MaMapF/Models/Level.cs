@@ -45,7 +45,6 @@ namespace MaMapF.Models
             var boxes = new List<MapItem>();
             var walls = new HashSet<string>();
 
-
             for (var row = 0; row < InitialMap.Count; row++)
             {
                 for (var col = 0; col < InitialMap[row].Count; col++)
@@ -95,6 +94,7 @@ namespace MaMapF.Models
                 G = 0,
                 ROWS = rows,
                 COLS = cols,
+                Color = Colors[agent],
                 Agent = new MapItem(agent, agentPosition),
                 Boxes = boxes,
                 Walls = walls,

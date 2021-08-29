@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace MaMapF.Models
@@ -8,6 +9,8 @@ namespace MaMapF.Models
         private int Hash = -1;
         public int ROWS { get; set; }
         public int COLS { get; set; }
+        
+        public String Color { get; set; }
 
         public char AgentName => Agent.Value;
         public MapItem Agent { get; set; }
@@ -16,14 +19,12 @@ namespace MaMapF.Models
 
         public List<MapItem> BoxWalls { get; set; }
 
-
         public SingleAgentState Parent { get; set; }
         public Action Action { get; set; }
         public int G { get; set; } // COST
         public int H { get; set; } // HEURISTIC
         public int F => G + H;
-
-
+        
         public List<MapItem> AllMapItems => BoxWalls.Concat(Boxes.Concat(new[] {Agent}).ToList()).ToList();
         public List<Position> AllPositions => AllMapItems.Select(i => i.Position).ToList();
 

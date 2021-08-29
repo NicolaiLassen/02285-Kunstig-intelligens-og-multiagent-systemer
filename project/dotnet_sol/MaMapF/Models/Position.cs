@@ -55,7 +55,7 @@ namespace MaMapF.Models
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(Row, Column);
+            return Row * 13 + Column * 7;
         }
 
         public static List<Position> GetNeighbours(Position p)

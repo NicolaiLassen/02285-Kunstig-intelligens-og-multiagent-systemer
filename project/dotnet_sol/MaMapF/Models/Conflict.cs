@@ -10,7 +10,7 @@
 
         public override string ToString()
         {
-            return $"CONFLICT: Agent: {AgentA} v {AgentB}, position: {Position}, step: {Step}\n";
+            return $"CONFLICT: Agent: {AgentA} v {AgentB}, position: {Position}, step: {Step}, Type: {Type}\n";
         }
     }
 }
