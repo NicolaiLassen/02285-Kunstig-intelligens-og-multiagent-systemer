@@ -25,6 +25,8 @@ namespace MaMapF.Handlers
             _level = level;
         }
 
+        public static int MaxMoves = 7;
+
         public Dictionary<char, List<SingleAgentState>> Search()
         {
             var agents = _level.Agents;
@@ -55,45 +57,43 @@ namespace MaMapF.Handlers
                     continue;
                 }
 
+                // Console.Error.WriteLine($"nextSolutions: {nextSolutions}");
+                // Environment.Exit(0);
+                
+                
                 var maxSolutionLength = nextSolutions.Solutions.Values.Max(s => s.Count);
                 foreach (var (agent, solution) in nextSolutions.Solutions)
                 {
-                    if (Temp && agent == '2')
+                    // Fix problem where moving to box solves final agent goal
+                    if (problems[agent].Type == SingleAgentProblemType.AgentToBox)
                     {
-                        Console.Error.WriteLine($"UUUUUUUUUUUUUUUUUUUUUUU");
-                        Temp = false;
-                        var sTemp = new List<SingleAgentState> {solution[0]};
-                        for (int i = 0; i < maxSolutionLength; i++)
-                        {
-                            sTemp.Add(SingleAgentSearchHandler.CreateNextState(sTemp[i], Action.NoOp));
-                        }
-                    
-                    
-                        solutions[agent] = sTemp;
-                        // solved.AddRange(problems[agent].Goals);
-                        problems[agent].InitialState = sTemp.Last();
+                        solutions[agent] = solution;
+                        problems[agent].InitialState = solution.Last();
                         continue;
                     }
-
+                    
+                    
                     // Console.Error.WriteLine("AAAAAAAAAAAAAAAAAAA");
                     // problems[agent].Constraints.ForEach(s => Console.Error.WriteLine(s));
                     // solution.ForEach(s => Console.Error.WriteLine(s));
+                    // problems[agent].Goals.ForEach(g => Console.Error.WriteLine(g));
+                    // Environment.Exit(0);
 
 
                     solutions[agent] = solution;
-                    solved.AddRange(problems[agent].Goals);
                     problems[agent].InitialState = solution.Last();
+                    solved.AddRange(problems[agent].Goals);
                 }
             }
 
-            // foreach (var s in solutions.Values)
-            // {
-            //     Console.Error.WriteLine("---------------------------------");
-            //     foreach (var state in s)
-            //     {
-            //         Console.Error.WriteLine(state);
-            //     }
-            // }
+            foreach (var s in solutions.Values)
+            {
+                Console.Error.WriteLine("---------------------------------");
+                foreach (var state in s)
+                {
+                    Console.Error.WriteLine(state);
+                }
+            }
 
             return solutions;
         }
@@ -122,8 +122,10 @@ namespace MaMapF.Handlers
                 problem.Type = SingleAgentProblemType.MoveBlock;
                 problem.Constraints = previous.Constraints;
 
+                var blockPosition = problem.SelectedBox == null ? previous.Constraints.First().Position : previous.Constraints.Last().Position;
+                problem.SelectedBox = initialState.Boxes.FirstOrDefault(b => b.Position.Equals(blockPosition));
+
                 // Select first block constraint and convert all other boxes to walls
-                var blockPosition = previous.Constraints.First().Position;
                 var nonBlockBoxes = allBoxes.Where(b => !blockPosition.Equals(b.Position));
                 foreach (var box in nonBlockBoxes)
                 {

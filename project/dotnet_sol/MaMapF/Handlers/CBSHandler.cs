@@ -32,22 +32,12 @@ namespace MaMapF.Handlers
                 // Get the node with lowest cost
                 var node = open.Dequeue();
 
+
                 // If no solutions conflict then return the solutions
                 var conflict = GetConflict(agents, node);
-                Console.Error.WriteLine(conflict);
+                // Console.Error.WriteLine(conflict);
                 if (conflict == null)
                 {
-                    // Console.Error.WriteLine("PPPPPPPPPPPPPPPPPPPPPPPP");
-                    // foreach (var asd in node.Constraints)
-                    // {
-                    //     Console.Error.WriteLine(asd);
-                    // }
-                    //
-                    // foreach (var s in node.Solutions['2'])
-                    // {
-                    //     Console.Error.WriteLine(s);
-                    // }
-
                     return node;
                 }
 
@@ -59,6 +49,7 @@ namespace MaMapF.Handlers
 
                     // Add constraint to next node
                     var constraint = GetConstraint(agent, conflict);
+                    // Console.Error.WriteLine(constraint);
                     nextNode.Constraints.Add(constraint);
 
                     // Skip if the previous node already contains the new constraint 
@@ -74,22 +65,22 @@ namespace MaMapF.Handlers
                     // Skip if agent solution is null
                     if (solution == null)
                     {
-                        // If constraint is already registered
-                        if (problems[agent].Constraints.Any(c => c.Equals(constraint)))
-                        {
-                            continue;
-                        }
-
-                        // If new constraint position is a WallBox
-                        var wallBox = problems[agent].InitialState.BoxWalls
-                            .FirstOrDefault(w => w.Position.Equals(constraint.Position));
-                        // var agentIsFree = problems[agent].Type != SingleAgentProblemType.MoveBlock;
-                        // var wallBlockConstraint = problems[agent].Constraints.FirstOrDefault(c => c.Equals(constraint));
-                        if (wallBox != null)
-                        {
-                            nextNode.WallBoxConstraint = constraint;
-                            return nextNode;
-                        }
+                        // // If constraint is already registered
+                        // if (problems[agent].Constraints.Any(c => c.Equals(constraint)))
+                        // {
+                        //     continue;
+                        // }
+                        //
+                        // // If new constraint position is a WallBox
+                        // var wallBox = problems[agent].InitialState.BoxWalls
+                        //     .FirstOrDefault(w => w.Position.Equals(constraint.Position));
+                        // // var agentIsFree = problems[agent].Type != SingleAgentProblemType.MoveBlock;
+                        // // var wallBlockConstraint = problems[agent].Constraints.FirstOrDefault(c => c.Equals(constraint));
+                        // if (wallBox != null)
+                        // {
+                        //     nextNode.WallBoxConstraint = constraint;
+                        //     return nextNode;
+                        // }
 
                         continue;
                     }
@@ -112,7 +103,14 @@ namespace MaMapF.Handlers
         private static Conflict GetConflict(List<char> agents, Node node)
         {
             var maxLength = node.Solutions.Max(solution => solution.Value.Count);
+            var minLength = node.Solutions.Min(solution => solution.Value.Count);
             var solutions = new Dictionary<char, List<SingleAgentState>>(node.Solutions);
+
+            if (minLength > SearchHandler.MaxMoves)
+            {
+                return null;
+            }
+
 
             // Make all solutions same length as longest
             foreach (var agent in solutions.Keys)
