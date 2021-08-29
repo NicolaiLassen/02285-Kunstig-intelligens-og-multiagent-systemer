@@ -14,7 +14,8 @@ namespace MaMapF.Models
         // public int Cost => Solutions.Sum(solution => solution.Value.Count) + Constraints.Count;
         public int Cost => Solutions.Sum(solution => solution.Value.Count);
 
-
+        public Blocked Blocked { get; set; }
+        
         public Node Copy()
         {
             return new Node

@@ -14,15 +14,18 @@ namespace MaMapF.Models
         public MapItem Agent { get; set; }
         public List<MapItem> Boxes { get; set; }
 
+        // TODO save actual boxes
+        public List<MapItem> WalledBoxes { get; set; } = new List<MapItem>();
+
         public char AgentName => Agent.Value;
-        
+
         public Action Action { get; set; }
         public int G { get; set; } // COST
         public int H { get; set; } // HEURISTIC
         public int F => G + H;
 
 
-        public List<MapItem> AllMapItems => Boxes.Concat(new[] {Agent}).ToList();
+        public List<MapItem> AllMapItems => WalledBoxes.Concat(Boxes.Concat(new[] {Agent}).ToList()).ToList();
         public List<Position> AllPositions => AllMapItems.Select(i => i.Position).ToList();
 
         public override string ToString()
@@ -51,7 +54,7 @@ namespace MaMapF.Models
         {
             return Boxes.Any(b => b.Position.Equals(position));
         }
-        
+
         public override int GetHashCode()
         {
             if (Hash != -1) return Hash;

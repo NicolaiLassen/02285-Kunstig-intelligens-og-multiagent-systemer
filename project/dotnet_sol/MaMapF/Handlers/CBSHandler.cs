@@ -7,7 +7,7 @@ namespace MaMapF.Handlers
 {
     public class CBSHandler
     {
-        public static Dictionary<char, List<SingleAgentState>> Search(
+        public static Node Search(
             Dictionary<char, SingleAgentProblem> problems
         )
         {
@@ -36,7 +36,7 @@ namespace MaMapF.Handlers
                 var conflict = GetConflict(agents, p);
                 if (conflict == null)
                 {
-                    return p.Solutions;
+                    return p;
                 }
 
                 foreach (var agent in new List<char> {conflict.AgentA, conflict.AgentB})
@@ -59,7 +59,20 @@ namespace MaMapF.Handlers
                     var solution = SingleAgentSearchHandler.Search(problems[agent], constraints);
 
                     // Skip if agent solution is null
-                    if (solution == null) continue;
+                    if (solution == null)
+                    {
+                        if (constraint.Agent == agent)
+                        {
+                            continue;
+                        }
+
+                        nextNode.Blocked = new Blocked
+                        {
+                            Agent = constraint.Agent,
+                            Position = constraint.Position
+                        };
+                        return nextNode;
+                    }
 
                     // Skip if agent solution is equal agent solution in previous node
                     if (solution == nextNode.Solutions[agent])
@@ -182,27 +195,27 @@ namespace MaMapF.Handlers
                 };
             }
 
-            // Agent is follower
-            if (conflict.Type == "follow" && agent == conflict.AgentA)
-            {
-                return new Constraint
-                {
-                    Agent = agent,
-                    Position = conflict.Position,
-                    Step = conflict.Step,
-                };
-            }
-
-            // Agent is leader
-            if (conflict.Type == "follow" && agent == conflict.AgentB)
-            {
-                return new Constraint
-                {
-                    Agent = agent,
-                    Position = conflict.Position,
-                    Step = conflict.Step - 1,
-                };
-            }
+            // // Agent is follower
+            // if (conflict.Type == "follow" && agent == conflict.AgentA)
+            // {
+            //     return new Constraint
+            //     {
+            //         Agent = agent,
+            //         Position = conflict.Position,
+            //         Step = conflict.Step,
+            //     };
+            // }
+            //
+            // // Agent is leader
+            // if (conflict.Type == "follow" && agent == conflict.AgentB)
+            // {
+            //     return new Constraint
+            //     {
+            //         Agent = agent,
+            //         Position = conflict.Position,
+            //         Step = conflict.Step - 1,
+            //     };
+            // }
 
             return null;
         }
