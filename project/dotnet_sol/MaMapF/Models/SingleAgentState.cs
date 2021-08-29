@@ -15,8 +15,7 @@ namespace MaMapF.Models
         public List<MapItem> Boxes { get; set; }
         public HashSet<string> Walls { get; set; }
 
-        // TODO save actual boxes
-        public List<MapItem> WalledBoxes { get; set; } = new List<MapItem>();
+        public List<MapItem> BoxWalls { get; set; }
 
 
         public SingleAgentState Parent { get; set; }
@@ -26,7 +25,7 @@ namespace MaMapF.Models
         public int F => G + H;
 
 
-        public List<MapItem> AllMapItems => WalledBoxes.Concat(Boxes.Concat(new[] {Agent}).ToList()).ToList();
+        public List<MapItem> AllMapItems => BoxWalls.Concat(Boxes.Concat(new[] {Agent}).ToList()).ToList();
         public List<Position> AllPositions => AllMapItems.Select(i => i.Position).ToList();
 
         public override string ToString()

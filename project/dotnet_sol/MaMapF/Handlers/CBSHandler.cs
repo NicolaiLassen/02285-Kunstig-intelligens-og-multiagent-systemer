@@ -34,10 +34,23 @@ namespace MaMapF.Handlers
 
                 // If no solutions conflict then return the solutions
                 var conflict = GetConflict(agents, node);
+                Console.Error.WriteLine(conflict);
                 if (conflict == null)
                 {
+                    // Console.Error.WriteLine("PPPPPPPPPPPPPPPPPPPPPPPP");
+                    // foreach (var asd in node.Constraints)
+                    // {
+                    //     Console.Error.WriteLine(asd);
+                    // }
+                    //
+                    // foreach (var s in node.Solutions['2'])
+                    // {
+                    //     Console.Error.WriteLine(s);
+                    // }
+
                     return node;
                 }
+
 
                 foreach (var agent in new List<char> {conflict.AgentA, conflict.AgentB})
                 {
@@ -61,21 +74,23 @@ namespace MaMapF.Handlers
                     // Skip if agent solution is null
                     if (solution == null)
                     {
-                        // If new constraint position is a wallbox return blocked node
-                        if (problems[agent].InitialState.WalledBoxes.Any(w => w.Position.Equals(constraint.Position)))
+                        // If constraint is already registered
+                        if (problems[agent].Constraints.Any(c => c.Equals(constraint)))
                         {
-                            nextNode.Blocked = new Blocked
-                            {
-                                Agent = constraint.Agent,
-                                Position = constraint.Position
-                            };
+                            continue;
+                        }
+
+                        // If new constraint position is a WallBox
+                        var wallBox = problems[agent].InitialState.BoxWalls
+                            .FirstOrDefault(w => w.Position.Equals(constraint.Position));
+                        // var agentIsFree = problems[agent].Type != SingleAgentProblemType.MoveBlock;
+                        // var wallBlockConstraint = problems[agent].Constraints.FirstOrDefault(c => c.Equals(constraint));
+                        if (wallBox != null)
+                        {
+                            nextNode.WallBoxConstraint = constraint;
                             return nextNode;
                         }
-                        
-                        Console.Error.WriteLine("SOLUTION == NULL");
-                        Console.Error.WriteLine(problems[agent]);
-                        constraints.ForEach(c => Console.Error.WriteLine(c));
-                        
+
                         continue;
                     }
 

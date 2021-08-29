@@ -10,16 +10,15 @@ namespace MaMapF
             var level = ServerHandler.GetServerLevel();
             var searchHandler = new SearchHandler(level);
             var solution = searchHandler.Search();
-            
+
             if (solution == null)
             {
-                Console.Error.WriteLine("SOLUTION WAS NULL");
+                Console.Error.WriteLine("MAIN ERROR");
                 Environment.Exit(0);
             }
 
 
             ServerHandler.SendServerPlan(solution);
         }
-
     }
 }

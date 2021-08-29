@@ -25,7 +25,7 @@ namespace MaMapF.Handlers
             var futureConstraints = Constraints.Where(constraint => constraint.Step > state.G).ToList();
             h += futureConstraints.Count;
 
-            // Add distance boxes included in future constraints
+            // Add distance to boxes included in future constraints
             foreach (var constraint in futureConstraints)
             {
                 foreach (var box in state.Boxes)
@@ -37,7 +37,7 @@ namespace MaMapF.Handlers
                 }
             }
 
-            if (problem.IsMoveBoxToGoalProblem)
+            if (problem.Type == SingleAgentProblemType.BoxToGoal)
             {
                 var currentSelectedBoxPosition = state.Boxes.FirstOrDefault(b => b.UID == problem.SelectedBox.UID);
 

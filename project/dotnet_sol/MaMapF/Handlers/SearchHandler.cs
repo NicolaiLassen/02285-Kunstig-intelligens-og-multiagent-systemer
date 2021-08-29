@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using MaMapF.Models;
+using Action = MaMapF.Models.Action;
 
 //********************
 // Try map A2 to see delegation in action
@@ -15,6 +16,8 @@ namespace MaMapF.Handlers
 {
     public class SearchHandler
     {
+        public static bool Temp = true;
+
         private readonly Level _level;
 
         public SearchHandler(Level level)
@@ -32,8 +35,6 @@ namespace MaMapF.Handlers
             var problems = agents.ToDictionary(agent => agent,
                 agent => new SingleAgentProblem(_level.AgentInitialStates[agent]));
 
-            var blocked = new List<Blocked>();
-
             while (!IsAllMainGoalsSolved(solved))
             {
                 // Create sub problem for each agent
@@ -41,48 +42,89 @@ namespace MaMapF.Handlers
                 {
                     problems[agent].ResetMods();
                     var unsolvedAgentGoals = _level.Goals[agent].Where(goal => !solved.Contains(goal)).ToList();
-                    problems[agent] = CreateSubProblem(problems[agent], unsolvedAgentGoals, solved, blocked);
+                    problems[agent] = CreateSubProblem(problems[agent], unsolvedAgentGoals, solved);
                 }
 
                 var nextSolutions = CBSHandler.Search(problems);
-                Console.Error.WriteLine("CBSCBSCBSCBSCBSCBSCBSCBSCBSCBSCBS");
-                Console.Error.WriteLine(nextSolutions);
 
-                if (nextSolutions.Blocked != null)
+                // If an agent could not finnish because it is blocked by a WallBox
+                var wallBoxConstraint = nextSolutions.WallBoxConstraint;
+                if (wallBoxConstraint != null)
                 {
-                    Console.Error.WriteLine($"nextSolutions.Blocked: {nextSolutions.Blocked}");
-                    blocked.Add(nextSolutions.Blocked);
+                    problems[wallBoxConstraint.Agent].Constraints.Add(wallBoxConstraint);
                     continue;
                 }
 
-                blocked = new List<Blocked>();
-
+                var maxSolutionLength = nextSolutions.Solutions.Values.Max(s => s.Count);
                 foreach (var (agent, solution) in nextSolutions.Solutions)
                 {
+                    if (Temp && agent == '2')
+                    {
+                        Console.Error.WriteLine($"UUUUUUUUUUUUUUUUUUUUUUU");
+                        Temp = false;
+                        var sTemp = new List<SingleAgentState> {solution[0]};
+                        for (int i = 0; i < maxSolutionLength; i++)
+                        {
+                            sTemp.Add(SingleAgentSearchHandler.CreateNextState(sTemp[i], Action.NoOp));
+                        }
+                    
+                    
+                        solutions[agent] = sTemp;
+                        // solved.AddRange(problems[agent].Goals);
+                        problems[agent].InitialState = sTemp.Last();
+                        continue;
+                    }
+
+                    // Console.Error.WriteLine("AAAAAAAAAAAAAAAAAAA");
+                    // problems[agent].Constraints.ForEach(s => Console.Error.WriteLine(s));
+                    // solution.ForEach(s => Console.Error.WriteLine(s));
+
+
                     solutions[agent] = solution;
                     solved.AddRange(problems[agent].Goals);
                     problems[agent].InitialState = solution.Last();
                 }
             }
 
+            // foreach (var s in solutions.Values)
+            // {
+            //     Console.Error.WriteLine("---------------------------------");
+            //     foreach (var state in s)
+            //     {
+            //         Console.Error.WriteLine(state);
+            //     }
+            // }
+
             return solutions;
+        }
+
+        private static bool IsNullSolution(List<SingleAgentState> solution)
+        {
+            var r = solution.Any(s => s.Action != null && s.Action != Action.NoOp);
+            Console.Error.WriteLine(solution.First().AgentName);
+            Console.Error.WriteLine(r);
+            return r;
         }
 
 
         private SingleAgentProblem CreateSubProblem(SingleAgentProblem previous, List<MapItem> unsolved,
-            List<MapItem> solved, List<Blocked> blocked)
+            List<MapItem> solved)
         {
             var agent = previous.InitialState.AgentName;
             var initialState = previous.InitialState;
             var problem = new SingleAgentProblem(previous.InitialState);
+            var allBoxes = problem.InitialState.Boxes;
+
 
             // Sub goal: Remove blocking box for other agent
-            var block = blocked.FirstOrDefault(b => b.Agent == agent);
-            if (block != null)
+            if (previous.Constraints.Any())
             {
-                // Convert all non-block boxes to walls
-                var blockPosition = block.Position;
-                var nonBlockBoxes = initialState.Boxes.Where(b => !blockPosition.Equals(b.Position));
+                problem.Type = SingleAgentProblemType.MoveBlock;
+                problem.Constraints = previous.Constraints;
+
+                // Select first block constraint and convert all other boxes to walls
+                var blockPosition = previous.Constraints.First().Position;
+                var nonBlockBoxes = allBoxes.Where(b => !blockPosition.Equals(b.Position));
                 foreach (var box in nonBlockBoxes)
                 {
                     problem.AddBoxMod(box);
@@ -94,6 +136,12 @@ namespace MaMapF.Handlers
             // Return problem with no goals if no unsolved goals left 
             if (!unsolved.Any())
             {
+                // Convert all boxes to boxes to force blocking problem
+                foreach (var box in allBoxes)
+                {
+                    problem.AddBoxMod(box);
+                }
+
                 return problem;
             }
 
@@ -103,6 +151,7 @@ namespace MaMapF.Handlers
             // Sub goal: Move agent to agent goal position
             if (!unsolvedBoxGoals.Any())
             {
+                problem.Type = SingleAgentProblemType.AgentToGoal;
                 // Convert all boxes to walls to optimize a*
                 foreach (var box in initialState.Boxes)
                 {
@@ -113,17 +162,16 @@ namespace MaMapF.Handlers
                 return problem;
             }
 
-            var allBoxes = problem.InitialState.Boxes;
             var unusedBoxes = allBoxes.Where(box => !solved.Any(box.Equals)).ToList();
 
             // Sub goal: Move previously selected box to goal
-            if (previous.IsGoToBoxProblem)
+            if (previous.Type == SingleAgentProblemType.AgentToBox)
             {
                 // Add goal to problem
+                problem.Type = SingleAgentProblemType.BoxToGoal;
                 problem.Goals.Add(previous.SelectedBoxGoal);
                 problem.SelectedBox = previous.SelectedBox;
                 problem.SelectedBoxGoal = previous.SelectedBoxGoal;
-                problem.IsMoveBoxToGoalProblem = true;
 
                 // Convert all non-selected boxes to walls
                 var otherBoxes = allBoxes.Where(box => !previous.SelectedBox.Equals(box));
@@ -178,15 +226,14 @@ namespace MaMapF.Handlers
             // Console.Error.WriteLine($"bestPosition: {bestPosition}");
 
             // Add agent position goal to problem
+            problem.Type = SingleAgentProblemType.AgentToBox;
             problem.Goals.Add(new MapItem(agent, bestPosition));
             problem.SelectedBox = selectedBox;
             problem.SelectedBoxGoal = selectedGoal;
-            problem.IsGoToBoxProblem = true;
 
-            // convert all boxes to walls
+            // Convert all boxes to walls
             foreach (var box in allBoxes)
             {
-                // Console.Error.WriteLine(box.Position);
                 problem.AddBoxMod(box);
             }
 

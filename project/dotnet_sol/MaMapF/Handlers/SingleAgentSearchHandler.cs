@@ -147,8 +147,11 @@ namespace MaMapF.Handlers
             // use reffernce to walls
             nextState.Walls = state.Walls;
 
+            // OH MY FUCKING GOD, copy all refferences
             nextState.Agent = new MapItem(state.Agent.UID, state.Agent.Value, state.Agent.Position);
             nextState.Boxes = state.Boxes.Select(b => b).ToList();
+            nextState.BoxWalls = state.BoxWalls.Select(b => b).ToList();
+
             // nextState.Map = state.Map.Select(item => item.Select(e => e).ToList()).ToList();
 
 
