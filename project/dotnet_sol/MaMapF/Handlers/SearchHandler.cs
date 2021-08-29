@@ -24,7 +24,7 @@ namespace MaMapF.Handlers
             _level = level;
         }
 
-        public static int MaxMoves = 7;
+        public static int MaxMoves = 10;
 
         public Dictionary<char, List<SingleAgentState>> Search()
         {
@@ -125,16 +125,16 @@ namespace MaMapF.Handlers
                 problem.Type = SingleAgentProblemType.MoveBlock;
                 problem.Constraints = previous.Constraints;
 
-                // var blockPosition = problem.SelectedBox == null ? previous.Constraints.First().Position : previous.Constraints.Last().Position;
-                var blockPosition = previous.Constraints.First().Position;
-                problem.SelectedBox = initialState.Boxes.FirstOrDefault(b => b.Position.Equals(blockPosition));
-
-                // Select first block constraint and convert all other boxes to walls
-                var nonBlockBoxes = allBoxes.Where(b => !blockPosition.Equals(b.Position));
-                foreach (var box in nonBlockBoxes)
-                {
-                    problem.AddBoxMod(box);
-                }
+                // // var blockPosition = problem.SelectedBox == null ? previous.Constraints.First().Position : previous.Constraints.Last().Position;
+                // var blockPosition = previous.Constraints.First().Position;
+                // problem.SelectedBox = initialState.Boxes.FirstOrDefault(b => b.Position.Equals(blockPosition));
+                //
+                // // Select first block constraint and convert all other boxes to walls
+                // var nonBlockBoxes = allBoxes.Where(b => !blockPosition.Equals(b.Position));
+                // foreach (var box in nonBlockBoxes)
+                // {
+                //     problem.AddBoxMod(box);
+                // }
 
                 return problem;
             }
