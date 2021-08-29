@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace MaMapF.Models
@@ -93,6 +92,7 @@ namespace MaMapF.Models
         {
             return Boxes.Any(b => b.Position.Equals(position));
         }
+
 
         public override int GetHashCode()
         {

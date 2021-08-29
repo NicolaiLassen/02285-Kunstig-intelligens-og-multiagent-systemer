@@ -23,7 +23,7 @@ namespace MaMapF.Handlers
 
             // Add future constraint count since every constraint yields 1 extra step
             var futureConstraints = Constraints.Where(constraint => constraint.Step > state.G).ToList();
-            h += futureConstraints.Count;
+            // h += futureConstraints.Count;
 
             // Add distance to boxes included in future constraints
             foreach (var constraint in futureConstraints)

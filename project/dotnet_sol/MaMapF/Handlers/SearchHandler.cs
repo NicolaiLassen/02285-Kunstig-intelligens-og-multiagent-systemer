@@ -25,7 +25,7 @@ namespace MaMapF.Handlers
         }
 
         // TODO FIND A WAY TO INCREMENT THIS IF THERE IS A BLOCKED AGENT
-        public static int MaxMoves = 14;
+        public static int MaxMoves = 2;
 
         public Dictionary<char, List<SingleAgentState>> Search()
         {
@@ -53,6 +53,7 @@ namespace MaMapF.Handlers
 
                 var nextNode = CBSHandler.Search(problems);
 
+
                 // If an agent could not finnish because it is blocked by a WallBox
                 // var wallBoxConstraint = nextNode.WallBoxConstraint;
                 // if (wallBoxConstraint != null)
@@ -66,6 +67,24 @@ namespace MaMapF.Handlers
                 var minUnsolvedSolutionLength = nextNode.Solutions
                     .Where(k => !solvedAgents.Contains(k.Key))
                     .Min(s => s.Value.Count);
+
+                var spinningAgents = solutions.Where(s => !solvedAgents.Contains(s.Key)).Count(s =>
+                    s.Value.Skip(1).Take(minUnsolvedSolutionLength - 1).All(s => s.Action.Type == ActionType.NoOp));
+
+                // if (spinningAgents > 0 && minUnsolvedSolutionLength > 1)
+                // {
+                //     MaxMoves += 1;
+                // }
+
+                if (maxSolutionLength == MaxMoves)
+                {
+                    MaxMoves = 2;
+                }
+                else if (maxSolutionLength > MaxMoves)
+                {
+                    MaxMoves += 1;
+                    continue;
+                }
 
 
                 foreach (var agent in agents)
@@ -113,18 +132,21 @@ namespace MaMapF.Handlers
                 solvedAgents = agents.Where(a => IsAgentDone(a, solved[a])).ToList();
 
 
+
                 Console.Error.WriteLine($"MaxMoves: {MaxMoves}");
                 Console.Error.WriteLine($"minSolutionLength: {minUnsolvedSolutionLength}");
                 Console.Error.WriteLine($"maxSolutionLength: {maxSolutionLength}");
                 Console.Error.WriteLine($"unsolvedAgents: {solvedAgents.Count}");
 
+                // solutions['0'].ForEach(s => Console.Error.WriteLine(s));
 
-                if (COUNTER == 1)
-                {
-                    break;
-                }
-
-                COUNTER += 1;
+                //
+                // if (COUNTER == 1)
+                // {
+                //     break;
+                // }
+                //
+                // COUNTER += 1;
             }
 
             // foreach (var s in solutions.Values)
@@ -177,10 +199,10 @@ namespace MaMapF.Handlers
             if (!unsolved.Any())
             {
                 // Convert all boxes to boxes to force blocking problem
-                foreach (var box in allBoxes)
-                {
-                    problem.AddBoxMod(box);
-                }
+                // foreach (var box in allBoxes)
+                // {
+                //     problem.AddBoxMod(box);
+                // }
 
                 return problem;
             }

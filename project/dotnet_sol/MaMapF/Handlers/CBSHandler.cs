@@ -11,10 +11,6 @@ namespace MaMapF.Handlers
     {
         public static Node Search(Dictionary<char, SingleAgentProblem> problems)
         {
-
-            
-            
-            
             // Create initial solutions for each agent
             var agents = problems.Keys.ToList();
             var solutions = agents.ToDictionary(agent => agent, agent =>
@@ -55,7 +51,6 @@ namespace MaMapF.Handlers
 
                     // Add constraint to next node
                     var constraint = GetConstraint(agent, conflict);
-                    // Console.Error.WriteLine(constraint);
                     nextNode.Constraints.Add(constraint);
 
                     // Skip if the previous node already contains the new constraint 
@@ -71,23 +66,6 @@ namespace MaMapF.Handlers
                     // Skip if agent solution is null
                     if (solution == null)
                     {
-                        // // If constraint is already registered
-                        // if (problems[agent].Constraints.Any(c => c.Equals(constraint)))
-                        // {
-                        //     continue;
-                        // }
-                        //
-                        // // If new constraint position is a WallBox
-                        // var wallBox = problems[agent].InitialState.BoxWalls
-                        //     .FirstOrDefault(w => w.Position.Equals(constraint.Position));
-                        // // var agentIsFree = problems[agent].Type != SingleAgentProblemType.MoveBlock;
-                        // // var wallBlockConstraint = problems[agent].Constraints.FirstOrDefault(c => c.Equals(constraint));
-                        // if (wallBox != null)
-                        // {
-                        //     nextNode.WallBoxConstraint = constraint;
-                        //     return nextNode;
-                        // }
-
                         continue;
                     }
 
@@ -111,22 +89,19 @@ namespace MaMapF.Handlers
             var maxLength = node.Solutions.Max(solution => solution.Value.Count);
             var minLength = node.Solutions.Min(solution => solution.Value.Count);
             var solutions = agents.ToDictionary(agent => agent, agent => node.Solutions[agent].Select(s => s).ToList());
-
-            if (minLength > SearchHandler.MaxMoves)
-            {
-                return null;
-            }
-
+            
+            var maxSteps = Math.Min(SearchHandler.MaxMoves, minLength);
+            
             // Make all solutions same length as longest
             foreach (var agent in solutions.Keys)
             {
                 var solutionLength = solutions[agent].Count;
-                if (solutionLength == maxLength)
+                if (solutionLength >= maxSteps)
                 {
                     continue;
                 }
 
-                var solutionLengthDiff = maxLength - solutionLength;
+                var solutionLengthDiff = maxSteps - solutionLength;
                 var nextState = solutions[agent].Last();
                 for (int i = 0; i < solutionLengthDiff; i++)
                 {
@@ -136,7 +111,7 @@ namespace MaMapF.Handlers
             }
 
 
-            for (var step = 1; step < maxLength; step++)
+            for (var step = 1; step < maxSteps; step++)
             {
                 for (var a0i = 0; a0i < agents.Count; a0i++)
                 {
