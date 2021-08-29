@@ -158,10 +158,11 @@ namespace MaMapF.Handlers
 
                 //
 
-                // if (COUNTER == 2)
-                // {
-                //     break;
-                // }
+                // TODO: KEEP IN MIND THAT WE HAVE A COUNTER BREAK!
+                if (COUNTER == 8)
+                {
+                    break;
+                }
 
                 COUNTER += 1;
             }
@@ -290,8 +291,9 @@ namespace MaMapF.Handlers
                         continue;
                     }
 
-                    var pathExists = BFSToPath(initialState, initialState.Agent.Position, goal.Position);
-                    if (!pathExists)
+                    // Skip if no path to target VIA BFS
+                    // COULD BE USED TO COUNT CORRECT H
+                    if (!BFSToPath(initialState, initialState.Agent.Position, goal.Position))
                     {
                         continue;
                     }
@@ -319,7 +321,6 @@ namespace MaMapF.Handlers
           
             // JUST CHECK IF SPOT IS OPEN
             var neighboursReachable = neighbours.Where(n => !initialState.IsWall(n) && !initialState.IsBox(n));
-            Console.Error.WriteLine(neighboursReachable.Count());
 
             var bestPosition = neighboursReachable.OrderBy(p =>
             {
