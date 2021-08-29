@@ -35,16 +35,14 @@ namespace MaMapF.Handlers
             var solutions = agents.ToDictionary(agent => agent, agent => new List<SingleAgentState>());
             var solvedAgents = new List<char>();
             var solvedSubGoal = new List<char>(_level.Agents);
-
-            var totalGoalCount = goals.SelectMany(e => e.Value).Count();
-
+            
             var problems = agents.ToDictionary(agent => agent,
                 agent => new SingleAgentProblem(_level.AgentInitialStates[agent]));
 
             while (!IsAllAgentsDone(solved))
             {
                 var solvedGoalsCount = solved.SelectMany(s => s.Value).Count();
-                Console.Error.WriteLine($"{solvedGoalsCount}/{totalGoalCount}");
+                Console.Error.WriteLine($"{solvedGoalsCount}/{_level.GoalCount}");
 
                 // Create sub problem for each agent
                 foreach (var agent in agents)
@@ -275,7 +273,7 @@ namespace MaMapF.Handlers
             var minDistance = Int32.MaxValue;
             var selectedBox = unusedBoxes.First();
             var selectedGoal = unsolvedBoxGoals.First();
-            List<Position> neighbours = null;
+            
             foreach (var goal in unsolvedBoxGoals)
             {
                 foreach (var box in unusedBoxes)
@@ -298,37 +296,6 @@ namespace MaMapF.Handlers
                         continue;
                     }
 
-                    var boxNeighbours = Position.GetNeighbours(box.Position);
-                    var freeNeighbours = new List<Position>();
-
-                    // TODO MAKE PRIORITY
-                    foreach (var boxNeighbour in boxNeighbours)
-                    {
-                        var hasBlock = false;
-                        foreach (var otherAgent in problems.Keys)
-                        {
-                            if (problems[otherAgent].InitialState.IsWall(boxNeighbour))
-                            {
-                                hasBlock = true;
-                            }
-
-                            if (problems[otherAgent].InitialState.Boxes.Select(b => b.Position).Contains(boxNeighbour))
-                            {
-                                hasBlock = true;
-                            }
-                        }
-
-                        if (!hasBlock)
-                        {
-                            freeNeighbours.Add(boxNeighbour);
-                        }
-                    }
-
-                    if (freeNeighbours.Count == 0)
-                    {
-                        continue;
-                    }
-
                     var agentBoxDistance = Position.Distance(initialState.Agent, box);
                     var boxGoalDistance = Position.Distance(box, goal);
                     var distance = agentBoxDistance + boxGoalDistance;
@@ -337,24 +304,24 @@ namespace MaMapF.Handlers
                         minDistance = distance;
                         selectedBox = box;
                         selectedGoal = goal;
-                        neighbours = freeNeighbours;
                     }
                 }
             }
 
             // Find best neighbour position to selected box
-            if (neighbours == null)
-            {
-                Console.Error.WriteLine("neighbours = null");
-                Environment.Exit(0);
-            }
+
 
             // var otherAgentsBoxPositions = _level.AgentInitialStates.Values
             //     .Where(s => s.AgentName != agent)
             //     .SelectMany(s => s.Boxes)
             //     .Select(b => b.Position).ToList();
+            var neighbours = Position.GetNeighbours(selectedBox.Position);
+          
+            // JUST CHECK IF SPOT IS OPEN
+            var neighboursReachable = neighbours.Where(n => !initialState.IsWall(n) && !initialState.IsBox(n));
+            Console.Error.WriteLine(neighboursReachable.Count());
 
-            var bestPosition = neighbours.OrderBy(p =>
+            var bestPosition = neighboursReachable.OrderBy(p =>
             {
                 var distance = Position.Distance(initialState.Agent.Position, p);
                 // previous box goal bonus
