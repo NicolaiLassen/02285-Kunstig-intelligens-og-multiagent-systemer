@@ -17,7 +17,7 @@ namespace MaMapF.Handlers
     public class SearchHandler
     {
         private readonly Level _level;
-        public int COUNTER = 0;
+        public static int COUNTER = 0;
 
         public SearchHandler(Level level)
         {
@@ -25,7 +25,7 @@ namespace MaMapF.Handlers
         }
 
         // TODO FIND A WAY TO INCREMENT THIS IF THERE IS A BLOCKED AGENT
-        public static int MaxMoves = 2;
+        // public static int MaxMoves = 100000000;
 
         public Dictionary<char, List<SingleAgentState>> Search()
         {
@@ -36,11 +36,18 @@ namespace MaMapF.Handlers
             var solvedAgents = new List<char>();
 
 
+            var totalGoalCount = goals.SelectMany(e => e.Value).Count();
+
+
             var problems = agents.ToDictionary(agent => agent,
                 agent => new SingleAgentProblem(_level.AgentInitialStates[agent]));
 
             while (!IsAllAgentsDone(solved))
             {
+                var solvedGoalsCount = solved.SelectMany(s => s.Value).Count();
+                Console.Error.WriteLine($"{solvedGoalsCount}/{totalGoalCount}");
+
+
                 // Create sub problem for each agent
                 foreach (var agent in agents)
                 {
@@ -51,7 +58,7 @@ namespace MaMapF.Handlers
                     // Console.Error.WriteLine(problems[agent]);
                 }
 
-                var nextNode = CBSHandler.Search(problems);
+                var nextNode = CBSHandler.Search(problems, solvedAgents);
 
 
                 // If an agent could not finnish because it is blocked by a WallBox
@@ -68,23 +75,13 @@ namespace MaMapF.Handlers
                     .Where(k => !solvedAgents.Contains(k.Key))
                     .Min(s => s.Value.Count);
 
-                var spinningAgents = solutions.Where(s => !solvedAgents.Contains(s.Key)).Count(s =>
-                    s.Value.Skip(1).Take(minUnsolvedSolutionLength - 1).All(s => s.Action.Type == ActionType.NoOp));
+                // var spinningAgents = solutions.Where(s => !solvedAgents.Contains(s.Key)).Count(s =>
+                //     s.Value.Skip(1).Take(minUnsolvedSolutionLength - 1).All(s => s.Action.Type == ActionType.NoOp));
 
                 // if (spinningAgents > 0 && minUnsolvedSolutionLength > 1)
                 // {
                 //     MaxMoves += 1;
                 // }
-
-                if (maxSolutionLength == MaxMoves)
-                {
-                    MaxMoves = 2;
-                }
-                else if (maxSolutionLength > MaxMoves)
-                {
-                    MaxMoves += 1;
-                    continue;
-                }
 
 
                 foreach (var agent in agents)
@@ -132,21 +129,21 @@ namespace MaMapF.Handlers
                 solvedAgents = agents.Where(a => IsAgentDone(a, solved[a])).ToList();
 
 
+                // Console.Error.WriteLine($"MaxMoves: {MaxMoves}");
+                // Console.Error.WriteLine($"minSolutionLength: {minUnsolvedSolutionLength}");
+                // Console.Error.WriteLine($"maxSolutionLength: {maxSolutionLength}");
+                // Console.Error.WriteLine($"solvedAgents: {solvedAgents.Count}");
 
-                Console.Error.WriteLine($"MaxMoves: {MaxMoves}");
-                Console.Error.WriteLine($"minSolutionLength: {minUnsolvedSolutionLength}");
-                Console.Error.WriteLine($"maxSolutionLength: {maxSolutionLength}");
-                Console.Error.WriteLine($"unsolvedAgents: {solvedAgents.Count}");
-
-                // solutions['0'].ForEach(s => Console.Error.WriteLine(s));
+                // solutions['1'].ForEach(s => Console.Error.WriteLine(s));
 
                 //
-                // if (COUNTER == 1)
+
+                // if (COUNTER == 18)
                 // {
                 //     break;
                 // }
-                //
-                // COUNTER += 1;
+
+                COUNTER += 1;
             }
 
             // foreach (var s in solutions.Values)
@@ -198,6 +195,7 @@ namespace MaMapF.Handlers
             // Return problem with no goals if no unsolved goals left 
             if (!unsolved.Any())
             {
+                // problem.Goals.Add(new MapItem(agent, initialState.Agent.Position));
                 // Convert all boxes to boxes to force blocking problem
                 // foreach (var box in allBoxes)
                 // {

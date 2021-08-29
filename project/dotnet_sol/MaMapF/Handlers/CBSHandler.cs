@@ -9,19 +9,25 @@ namespace MaMapF.Handlers
 {
     public class CBSHandler
     {
-        public static Node Search(Dictionary<char, SingleAgentProblem> problems)
+        public static Node Search(Dictionary<char, SingleAgentProblem> problems, List<char> solvedAgents)
         {
             // Create initial solutions for each agent
             var agents = problems.Keys.ToList();
             var solutions = agents.ToDictionary(agent => agent, agent =>
             {
                 var problem = problems[agent];
-                Console.Error.WriteLine(problem);
                 
+                // if (SearchHandler.COUNTER == 19)
+                // {
+                //     Console.Error.WriteLine(problem);
+                // }
+
                 return SingleAgentSearchHandler.Search(
                     problem,
                     new List<Constraint>()
                 );
+
+                
             });
 
             // Create priority queue and add the initial node
@@ -36,7 +42,7 @@ namespace MaMapF.Handlers
 
 
                 // If no solutions conflict then return the solutions
-                var conflict = GetConflict(agents, node);
+                var conflict = GetConflict(agents, node, solvedAgents);
                 // Console.Error.WriteLine(conflict);
                 if (conflict == null)
                 {
@@ -84,14 +90,17 @@ namespace MaMapF.Handlers
             return null;
         }
 
-        private static Conflict GetConflict(List<char> agents, Node node)
+        private static Conflict GetConflict(List<char> agents, Node node, List<char> solvedAgents)
         {
-            var maxLength = node.Solutions.Max(solution => solution.Value.Count);
-            var minLength = node.Solutions.Min(solution => solution.Value.Count);
+            // var maxLength = node.Solutions.Max(solution => solution.Value.Count);
+            var unsolvedMinLength = node.Solutions
+                .Where(s => !solvedAgents.Contains(s.Key))
+                .Min(solution => solution.Value.Count);
+            var maxSteps = unsolvedMinLength;
+
             var solutions = agents.ToDictionary(agent => agent, agent => node.Solutions[agent].Select(s => s).ToList());
-            
-            var maxSteps = Math.Min(SearchHandler.MaxMoves, minLength);
-            
+
+
             // Make all solutions same length as longest
             foreach (var agent in solutions.Keys)
             {

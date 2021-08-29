@@ -14,8 +14,6 @@ namespace MaMapF.Models
         // public int Cost => Solutions.Sum(solution => solution.Value.Count) + Constraints.Count;
         public int Cost => Solutions.Sum(solution => solution.Value.Count);
 
-        public Constraint WallBoxConstraint { get; set; }
-
         public Node Copy()
         {
             return new Node

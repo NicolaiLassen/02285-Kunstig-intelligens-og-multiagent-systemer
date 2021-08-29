@@ -56,6 +56,12 @@ namespace MaMapF.Handlers
                 var state = frontier.Dequeue();
                 explored.Add(state);
 
+
+                if (SearchHandler.COUNTER == 19)
+                {
+                    Console.Error.WriteLine(state);
+                }
+
                 if (PrintProgress)
                 {
                     Console.Error.WriteLine(state);
@@ -66,7 +72,7 @@ namespace MaMapF.Handlers
                     return GetSingleAgentSolutionFromState(state);
                 }
 
-                var expandedStates = ExpandSingleAgentState(state, constraints);
+                var expandedStates = ExpandSingleAgentState(problem, state, constraints);
                 foreach (var s in expandedStates)
                 {
                     // skip if state is already in list of frontiers
@@ -76,7 +82,7 @@ namespace MaMapF.Handlers
                     if (explored.Contains(s)) continue;
 
                     // skip if state is explored with (state.G - MaxNoOp)
-                    if (IsExploredMaxNoOp(explored, s)) continue;
+                    // if (IsExploredMaxNoOp(explored, s)) continue;
 
                     s.H = heuristic.GetHeuristic(problem, s);
                     var priority = GetPriority(s);
@@ -105,8 +111,16 @@ namespace MaMapF.Handlers
 
         private static bool IsGoalState(SingleAgentState state, List<MapItem> goals, List<Constraint> constraints)
         {
+            var futureConstraint = constraints.FirstOrDefault(c => c.Step > state.G);
+
+            if (SearchHandler.COUNTER == 19)
+            {
+                Console.Error.WriteLine($"FUTURE: {futureConstraint}");
+            }
+
+
             // false if there is a future constraint
-            if (constraints.Any(c => c.Step > state.G))
+            if (futureConstraint != null)
             {
                 return false;
             }
@@ -117,7 +131,7 @@ namespace MaMapF.Handlers
         }
 
 
-        private static List<SingleAgentState> ExpandSingleAgentState(SingleAgentState state,
+        private static List<SingleAgentState> ExpandSingleAgentState(SingleAgentProblem problem, SingleAgentState state,
             List<Constraint> constraints)
         {
             var states = new List<SingleAgentState>();
