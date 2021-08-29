@@ -63,14 +63,28 @@ namespace MaMapF.Handlers
 
         public static void SendServerPlan(Dictionary<char, List<SingleAgentState>> plan)
         {
-            var firstKey = plan.First().Key;
-            for (var step = 0; step < plan[firstKey].Count; step++)
+            var maxLength = plan.Values.Max( p => p.Count);
+            for (var step = 0; step < maxLength; step++)
             {
-                var jointActions = plan.Keys.Select(agent => $"{plan[agent][step].Action}").ToList();
+                var jointActions = new List<string>();
+                foreach (var agent in plan.Keys)
+                {
+                    if (plan[agent].Count <= step)
+                    {
+                        jointActions.Add("NoOp");
+                        continue;
+                    }
+
+                    jointActions.Add($"{plan[agent][step].Action}");
+                }
+
                 var command = string.Join("|", jointActions);
 
                 // skip joint action for initial state
-                if (command == "|") continue;
+                if (command.Replace("|", "") == "")
+                {
+                    continue;
+                }
                 Console.WriteLine(command);
             }
         }

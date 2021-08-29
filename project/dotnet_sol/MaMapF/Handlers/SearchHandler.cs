@@ -43,7 +43,7 @@ namespace MaMapF.Handlers
                 foreach (var agent in agents)
                 {
                     problems[agent].ResetMods();
-                    problems[agent] = CreateSubProblem(problems[agent], goals[agent], solved[agent]);
+                    problems[agent] = CreateSubProblem(problems[agent], goals[agent], solved[agent],problems);
                 }
 
                 var nextNode = CBSHandler.Search(problems);
@@ -68,9 +68,9 @@ namespace MaMapF.Handlers
                 });
 
 
-                var unsolvedAgents = agents.Where(a => !IsAgentDone(a, solved[a])).ToList();
-                var blockedUnsolvedAgents = unsolvedAgents.Where(agent => nextNode.Solutions[agent]
-                    .All(state => state.Action == null || state.Action == Action.NoOp)).ToList();
+                // var unsolvedAgents = agents.Where(a => !IsAgentDone(a, solved[a])).ToList();
+                // var blockedUnsolvedAgents = unsolvedAgents.Where(agent => nextNode.Solutions[agent]
+                //     .All(state => state.Action == null || state.Action == Action.NoOp)).ToList();
 
 
                 // Console.Error.WriteLine($"MaxMoves: {MaxMoves}");
@@ -100,6 +100,7 @@ namespace MaMapF.Handlers
                     var solution = nextNode.Solutions[agent];
                     var solutionLength = solution.Count;
                     var lastState = solution.Last();
+                    
                     solutions[agent] = solution;
                     problems[agent].InitialState = solution.Last();
 
@@ -125,7 +126,7 @@ namespace MaMapF.Handlers
 
 
         private SingleAgentProblem CreateSubProblem(SingleAgentProblem previous, List<MapItem> goals,
-            List<MapItem> solved)
+            List<MapItem> solved,Dictionary<char, SingleAgentProblem> problems)
         {
             var unsolved = goals.Where(goal => !solved.Contains(goal)).ToList();
 
@@ -134,7 +135,6 @@ namespace MaMapF.Handlers
             var initialState = previous.InitialState;
             var problem = new SingleAgentProblem(previous.InitialState);
             var allBoxes = problem.InitialState.Boxes;
-
 
             // Sub goal: Remove blocking box for other agent
             if (previous.Constraints.Any())
@@ -152,6 +152,7 @@ namespace MaMapF.Handlers
                 // {
                 //     problem.AddBoxMod(box);
                 // }
+
 
                 return problem;
             }
@@ -216,11 +217,37 @@ namespace MaMapF.Handlers
             var minDistance = Int32.MaxValue;
             var selectedBox = unusedBoxes.First();
             var selectedGoal = unsolvedBoxGoals.First();
+            List<Position> neighbours = null;
             foreach (var goal in unsolvedBoxGoals)
             {
                 foreach (var box in unusedBoxes)
                 {
                     if (goal.Value != box.Value)
+                    {
+                        continue;
+                    }
+
+                    var boxNeighbours = Position.GetNeighbours(box.Position);
+                    var freeNeighbours = new List<Position>();
+
+                    foreach (var boxNeighbour in boxNeighbours)
+                    {
+                        var hasBlock = false;
+                        foreach (var problemsKey in problems.Keys)
+                        {
+                            if (problems[problemsKey].InitialState.AllPositions.Contains(boxNeighbour))
+                            {
+                                hasBlock = true;
+                            }
+                        }
+
+                        if (!hasBlock)
+                        {
+                            freeNeighbours.Add(boxNeighbour);
+                        }
+                    }
+
+                    if (freeNeighbours.Count == 0)
                     {
                         continue;
                     }
@@ -233,13 +260,18 @@ namespace MaMapF.Handlers
                         minDistance = distance;
                         selectedBox = box;
                         selectedGoal = goal;
+                        neighbours = freeNeighbours;
                     }
                 }
             }
 
             // Find best neighbour position to selected box
-            var neighbours = Position.GetNeighbours(selectedBox.Position)
-                .Where(p => !initialState.IsWall(p)).ToList();
+            if (neighbours == null)
+            {
+                Console.Error.WriteLine("JNWENWI");
+                Environment.Exit(0);
+            }
+
             // var otherAgentsBoxPositions = _level.AgentInitialStates.Values
             //     .Where(s => s.AgentName != agent)
             //     .SelectMany(s => s.Boxes)
@@ -253,7 +285,8 @@ namespace MaMapF.Handlers
                 return distance;
             }).First();
 
-            Console.Error.WriteLine($"bestPosition: {bestPosition}");
+            // Find the box with least neighbor block
+            // Console.Error.WriteLine($"bestPosition: {bestPosition}");
 
             // Add agent position goal to problem
             problem.Type = SingleAgentProblemType.AgentToBox;
