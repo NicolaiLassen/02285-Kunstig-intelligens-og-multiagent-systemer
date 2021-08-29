@@ -1,15 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using MaMapF.Models;
 using Priority_Queue;
+using Action = MaMapF.Models.Action;
 
 namespace MaMapF.Handlers
 {
     public class CBSHandler
     {
-        public static Node Search(
-            Dictionary<char, SingleAgentProblem> problems
-        )
+        public static Node Search(Dictionary<char, SingleAgentProblem> problems)
         {
             // Create initial solutions for each agent
             var agents = problems.Keys.ToList();
@@ -30,26 +30,26 @@ namespace MaMapF.Handlers
             while (open.Count != 0)
             {
                 // Get the node with lowest cost
-                var p = open.Dequeue();
+                var node = open.Dequeue();
 
                 // If no solutions conflict then return the solutions
-                var conflict = GetConflict(agents, p);
+                var conflict = GetConflict(agents, node);
                 if (conflict == null)
                 {
-                    return p;
+                    return node;
                 }
 
                 foreach (var agent in new List<char> {conflict.AgentA, conflict.AgentB})
                 {
                     // Create next cbs search node
-                    var nextNode = p.Copy();
+                    var nextNode = node.Copy();
 
                     // Add constraint to next node
                     var constraint = GetConstraint(agent, conflict);
                     nextNode.Constraints.Add(constraint);
 
                     // Skip if the previous node already contains the new constraint 
-                    if (p.Constraints.Contains(constraint))
+                    if (node.Constraints.Contains(constraint))
                     {
                         continue;
                     }
@@ -61,17 +61,22 @@ namespace MaMapF.Handlers
                     // Skip if agent solution is null
                     if (solution == null)
                     {
-                        if (constraint.Agent == agent)
+                        // If new constraint position is a wallbox return blocked node
+                        if (problems[agent].InitialState.WalledBoxes.Any(w => w.Position.Equals(constraint.Position)))
                         {
-                            continue;
+                            nextNode.Blocked = new Blocked
+                            {
+                                Agent = constraint.Agent,
+                                Position = constraint.Position
+                            };
+                            return nextNode;
                         }
-
-                        nextNode.Blocked = new Blocked
-                        {
-                            Agent = constraint.Agent,
-                            Position = constraint.Position
-                        };
-                        return nextNode;
+                        
+                        Console.Error.WriteLine("SOLUTION == NULL");
+                        Console.Error.WriteLine(problems[agent]);
+                        constraints.ForEach(c => Console.Error.WriteLine(c));
+                        
+                        continue;
                     }
 
                     // Skip if agent solution is equal agent solution in previous node
@@ -129,7 +134,6 @@ namespace MaMapF.Handlers
                                 {
                                     return new Conflict
                                     {
-                                        Type = "position",
                                         AgentA = a0,
                                         AgentB = a1,
                                         Position = a0p,
@@ -148,7 +152,6 @@ namespace MaMapF.Handlers
                                 {
                                     return new Conflict
                                     {
-                                        Type = "position",
                                         AgentA = a0,
                                         AgentB = a1,
                                         Position = a0p,
@@ -167,7 +170,6 @@ namespace MaMapF.Handlers
                                 {
                                     return new Conflict
                                     {
-                                        Type = "position",
                                         AgentA = a1,
                                         AgentB = a0,
                                         Position = a1p,
@@ -185,39 +187,12 @@ namespace MaMapF.Handlers
 
         private static Constraint GetConstraint(char agent, Conflict conflict)
         {
-            if (conflict.Type == "position")
+            return new Constraint
             {
-                return new Constraint
-                {
-                    Agent = agent,
-                    Position = conflict.Position,
-                    Step = conflict.Step,
-                };
-            }
-
-            // // Agent is follower
-            // if (conflict.Type == "follow" && agent == conflict.AgentA)
-            // {
-            //     return new Constraint
-            //     {
-            //         Agent = agent,
-            //         Position = conflict.Position,
-            //         Step = conflict.Step,
-            //     };
-            // }
-            //
-            // // Agent is leader
-            // if (conflict.Type == "follow" && agent == conflict.AgentB)
-            // {
-            //     return new Constraint
-            //     {
-            //         Agent = agent,
-            //         Position = conflict.Position,
-            //         Step = conflict.Step - 1,
-            //     };
-            // }
-
-            return null;
+                Agent = agent,
+                Position = conflict.Position,
+                Step = conflict.Step,
+            };
         }
     }
 }

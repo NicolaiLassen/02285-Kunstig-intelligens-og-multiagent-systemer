@@ -36,8 +36,6 @@ namespace MaMapF.Handlers
 
             while (!IsAllMainGoalsSolved(solved))
             {
-                Console.Error.WriteLine($"Goals: {_level.Goals.Values.Sum(g => g.Count(g1 => solved.Any(g1.Equals)))}/{_level.Goals.Values.Sum(e => e.Count)}");
-                
                 // Create sub problem for each agent
                 foreach (var agent in agents)
                 {
@@ -47,13 +45,16 @@ namespace MaMapF.Handlers
                 }
 
                 var nextSolutions = CBSHandler.Search(problems);
+                Console.Error.WriteLine("CBSCBSCBSCBSCBSCBSCBSCBSCBSCBSCBS");
+                Console.Error.WriteLine(nextSolutions);
+
                 if (nextSolutions.Blocked != null)
                 {
-                    Console.Error.WriteLine(nextSolutions.Blocked);
+                    Console.Error.WriteLine($"nextSolutions.Blocked: {nextSolutions.Blocked}");
                     blocked.Add(nextSolutions.Blocked);
                     continue;
                 }
-                
+
                 blocked = new List<Blocked>();
 
                 foreach (var (agent, solution) in nextSolutions.Solutions)
@@ -62,8 +63,6 @@ namespace MaMapF.Handlers
                     solved.AddRange(problems[agent].Goals);
                     problems[agent].InitialState = solution.Last();
                 }
-                
-                Console.Error.WriteLine(solved.Count);
             }
 
             return solutions;
@@ -77,25 +76,21 @@ namespace MaMapF.Handlers
             var initialState = previous.InitialState;
             var problem = new SingleAgentProblem(previous.InitialState);
 
-            // help block first
-            if (blocked.Any())
+            // Sub goal: Remove blocking box for other agent
+            var block = blocked.FirstOrDefault(b => b.Agent == agent);
+            if (block != null)
             {
-                var agentB = blocked.Where(b => b.Agent == agent).Select(b => b.Position);
-                
-                var blockedPosition = agentB.First();
-                Console.Error.WriteLine("blockedPosition:" + blockedPosition);
-                foreach (var box in initialState.Boxes)
+                // Convert all non-block boxes to walls
+                var blockPosition = block.Position;
+                var nonBlockBoxes = initialState.Boxes.Where(b => !blockPosition.Equals(b.Position));
+                foreach (var box in nonBlockBoxes)
                 {
-                    if (blockedPosition.Equals(box.Position))
-                    {
-                        continue;
-                    }
                     problem.AddBoxMod(box);
                 }
-                
+
                 return problem;
             }
-            
+
             // Return problem with no goals if no unsolved goals left 
             if (!unsolved.Any())
             {
@@ -103,7 +98,7 @@ namespace MaMapF.Handlers
             }
 
             var unsolvedBoxGoals = unsolved.Where(goal => char.IsLetter(goal.Value)).ToList();
-            
+
             // If no unsolved box goals then return agent problem
             // Sub goal: Move agent to agent goal position
             if (!unsolvedBoxGoals.Any())
@@ -191,10 +186,10 @@ namespace MaMapF.Handlers
             // convert all boxes to walls
             foreach (var box in allBoxes)
             {
-                Console.Error.WriteLine(box.Position);
+                // Console.Error.WriteLine(box.Position);
                 problem.AddBoxMod(box);
             }
-            
+
             return problem;
         }
 

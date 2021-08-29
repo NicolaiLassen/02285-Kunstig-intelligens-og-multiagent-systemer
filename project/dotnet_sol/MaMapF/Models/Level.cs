@@ -38,6 +38,8 @@ namespace MaMapF.Models
         private SingleAgentState CreateAgentInitialState(char agent)
         {
             var map = InitialMap.Select(r => r.Select(c => c).ToList()).ToList();
+            var rows = InitialMap.Count;
+            var cols = InitialMap.Max(r => r.Count);
             var agentColor = Colors[agent];
             var agentPosition = new Position();
             var boxes = new List<MapItem>();
@@ -91,7 +93,8 @@ namespace MaMapF.Models
             return new SingleAgentState
             {
                 G = 0,
-                // Map = map,
+                ROWS = rows,
+                COLS = cols,
                 Agent = new MapItem(agent, agentPosition),
                 Boxes = boxes,
                 Walls = walls,

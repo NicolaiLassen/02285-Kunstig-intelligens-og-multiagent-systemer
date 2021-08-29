@@ -12,7 +12,7 @@ namespace MaMapF.Models
 
         public MapItem SelectedBox { get; set; }
         public MapItem SelectedBoxGoal { get; set; }
-        
+
         public bool IsGoToBoxProblem { get; set; }
         public bool IsMoveBoxToGoalProblem { get; set; }
 
@@ -54,9 +54,14 @@ namespace MaMapF.Models
         public override string ToString()
         {
             var goalString = string.Join("\n", Goals.Select(g => g.ToString()));
-            return $"SingleAgentProblem\n" +
-                   $"{InitialState}" +
-                   $"GOALS\n{goalString}\n";
+            return $"\n******************************\n" +
+                   $"SingleAgentProblem\n" +
+                   $"{InitialState}\n" +
+                   $"GOALS\n" +
+                   $"IsGoToBoxProblem: {IsGoToBoxProblem}\n" +
+                   $"IsMoveBoxToGoalProblem: {IsMoveBoxToGoalProblem}\n" +
+                   $"{goalString}\n" +
+                   $"******************************\n";
         }
     }
 }

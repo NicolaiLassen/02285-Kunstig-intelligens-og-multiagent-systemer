@@ -25,6 +25,11 @@ namespace MaMapF.Handlers
             List<Constraint> constraints
         )
         {
+            if (PrintProgress)
+            {
+                Console.Error.WriteLine(problem);
+            }
+
             var initialState = problem.InitialState;
             var goals = problem.Goals;
 
@@ -136,6 +141,8 @@ namespace MaMapF.Handlers
             var nextState = new SingleAgentState();
             nextState.Parent = state;
             nextState.Action = action;
+            nextState.ROWS = state.ROWS;
+            nextState.COLS = state.COLS;
 
             // use reffernce to walls
             nextState.Walls = state.Walls;

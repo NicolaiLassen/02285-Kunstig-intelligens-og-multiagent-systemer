@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace MaMapF.Models
@@ -6,19 +7,19 @@ namespace MaMapF.Models
     public class SingleAgentState
     {
         private int Hash = -1;
-        public SingleAgentState Parent { get; set; }
+        public int ROWS { get; set; }
+        public int COLS { get; set; }
 
-        public HashSet<string> Walls { get; set; }
-        // public List<List<char>> Map { get; set; }
-
+        public char AgentName => Agent.Value;
         public MapItem Agent { get; set; }
         public List<MapItem> Boxes { get; set; }
+        public HashSet<string> Walls { get; set; }
 
         // TODO save actual boxes
         public List<MapItem> WalledBoxes { get; set; } = new List<MapItem>();
 
-        public char AgentName => Agent.Value;
 
+        public SingleAgentState Parent { get; set; }
         public Action Action { get; set; }
         public int G { get; set; } // COST
         public int H { get; set; } // HEURISTIC
@@ -30,19 +31,58 @@ namespace MaMapF.Models
 
         public override string ToString()
         {
-            var info = $"Agent {AgentName} at ({Agent.Position}) {Action}\nG: {G}, H: {H}, F: {F}";
-            return $"{info}\n";
-            // var map = string.Join("\n", Map.Select(row => string.Join("", row)));
+            var info = $"Agent {AgentName} at ({Agent.Position}) {Action}\n" +
+                       $"G: {G}, H: {H}, F: {F}\n";
+
+            var map = new string(' ', ROWS).Select(r => new string(' ', COLS).Select(e => e).ToList()).ToList();
+            for (int r = 0; r < ROWS; r++)
+            {
+                // map[r] ??= new List<char>(COLS);
+                for (int c = 0; c < COLS; c++)
+                {
+                    var pos = new Position(r, c);
+                    if (IsWall(pos))
+                    {
+                        map[r][c] = '+';
+                        continue;
+                    }
+
+                    if (IsAgent(pos))
+                    {
+                        map[r][c] = AgentName;
+                        continue;
+                    }
+
+                    var box = Boxes.FirstOrDefault(b => pos.Equals(b.Position));
+                    if (box != null)
+                    {
+                        map[r][c] = box.Value;
+                        continue;
+                    }
+
+                    map[r][c] = ' ';
+                }
+            }
+
+            var mapString = string.Join("\n", map.Select(row => string.Join("", row)));
+
+
+            return $"{info}{mapString}";
             // var map = "";
             // return $"{info}\n{map}\n";
         }
 
         public bool IsFree(Position position)
         {
-            if (Agent.Position.Equals(position)) return false;
+            if (IsAgent(position)) return false;
             if (IsBox(position)) return false;
             if (IsWall(position)) return false;
             return true;
+        }
+
+        public bool IsAgent(Position position)
+        {
+            return Agent.Position.Equals(position);
         }
 
         public bool IsWall(Position position)
