@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using MaMapF.Models;
+using Action = MaMapF.Models.Action;
 
 //********************
 // Try map A2 to see delegation in action
@@ -22,7 +23,8 @@ namespace MaMapF.Handlers
             _level = level;
         }
 
-        public static int MaxMoves = 40;
+        // TODO FIND A WAY TO INCREMENT THIS IF THERE IS A BLOCKED AGENT
+        public static int MaxMoves = 20;
 
         public Dictionary<char, List<SingleAgentState>> Search()
         {
@@ -60,36 +62,44 @@ namespace MaMapF.Handlers
                 {
                     var solution = nextNode.Solutions[agent];
                     var solutionLength = solution.Count;
-                    var lastState = solution[solutionLength - 1];
+                    var lastState = solution.Last();
 
                     return goals[agent].Where(g => lastState.AllMapItems.Any(g.Equals)).ToList();
                 });
 
 
-                Console.Error.WriteLine($"MaxMoves: {MaxMoves}");
-                Console.Error.WriteLine($"minSolutionLength: {minSolutionLength}");
-                Console.Error.WriteLine($"maxSolutionLength: {maxSolutionLength}");
+                var unsolvedAgents = agents.Where(a => !IsAgentDone(a, solved[a])).ToList();
+                var blockedUnsolvedAgents = unsolvedAgents.Where(agent => nextNode.Solutions[agent]
+                    .All(state => state.Action == null || state.Action == Action.NoOp)).ToList();
+
+
+                // Console.Error.WriteLine($"MaxMoves: {MaxMoves}");
+                // Console.Error.WriteLine($"minSolutionLength: {minSolutionLength}");
+                // Console.Error.WriteLine($"maxSolutionLength: {maxSolutionLength}");
+                //
+                // Console.Error.WriteLine($"unsolvedAgents: {unsolvedAgents.Count}");
+                // Console.Error.WriteLine($"blockedUnsolvedAgents: {blockedUnsolvedAgents.Count}");
 
 
                 // TODO
-                // if (minSolutionLength > 1)
+                // if (blockedUnsolvedAgents.Count >= 1)
                 // {
                 //     MaxMoves += 1;
                 //     continue;
                 // }
 
 
+                // Console.Error.WriteLine("AAAAAAAAAAAAAAAAAAA");
                 // problems.Values.ToList().ForEach(p => Console.Error.WriteLine(p));
-                // Console.Error.WriteLine($"nextSolutions: {nextSolutions}");
+                // Console.Error.WriteLine($"{nextNode}");
                 // Environment.Exit(0);
 
-                Console.Error.WriteLine("AAAAAAAAAAAAAAAAAAA");
 
                 foreach (var agent in agents)
                 {
                     var solution = nextNode.Solutions[agent];
                     var solutionLength = solution.Count;
-                    var lastState = solution[solutionLength - 1];
+                    var lastState = solution.Last();
                     solutions[agent] = solution;
                     problems[agent].InitialState = solution.Last();
 
