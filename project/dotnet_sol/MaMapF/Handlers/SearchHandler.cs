@@ -258,10 +258,18 @@ namespace MaMapF.Handlers
             {
                 foreach (var box in unusedBoxes)
                 {
+                    // Skip if goal does not match box
                     if (goal.Value != box.Value)
                     {
                         continue;
                     }
+
+                    // Skip if box is already on goal position
+                    if (goal.Position.Equals(box.Position))
+                    {
+                        continue;
+                    }
+
 
                     var boxNeighbours = Position.GetNeighbours(box.Position);
                     var freeNeighbours = new List<Position>();
