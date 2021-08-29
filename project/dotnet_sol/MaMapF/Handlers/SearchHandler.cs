@@ -34,6 +34,7 @@ namespace MaMapF.Handlers
             var solved = agents.ToDictionary(agent => agent, agent => new List<MapItem>());
             var solutions = agents.ToDictionary(agent => agent, agent => new List<SingleAgentState>());
             var solvedAgents = new List<char>();
+            var solvedSubGoal = new List<char>(_level.Agents);
 
             var totalGoalCount = goals.SelectMany(e => e.Value).Count();
 
@@ -48,13 +49,17 @@ namespace MaMapF.Handlers
                 // Create sub problem for each agent
                 foreach (var agent in agents)
                 {
+                    // Don't change the agent if its still on its path in life
+                    if (!solvedSubGoal.Contains(agent)) continue;
                     
                     problems[agent].ResetMods();
                     problems[agent] = CreateSubProblem(problems[agent], goals[agent], solved[agent], problems);
-                    Console.Error.WriteLine(problems[agent]);
+
                     // Console.Error.WriteLine("problems[agent]:");
                     // Console.Error.WriteLine(problems[agent]);
                 }
+                
+                solvedSubGoal = new List<char>();
 
                 var nextNode = CBSHandler.Search(problems, solvedAgents);
 
@@ -95,12 +100,19 @@ namespace MaMapF.Handlers
                 // {
                 //     MaxMoves += 1;
                 // }
-
-
+                
                 foreach (var agent in agents)
                 {
                     var solution = nextNode.Solutions[agent];
 
+                    Console.Error.WriteLine(solution.Count);
+                    
+                    if (solution.Count == minUnsolvedSolutionLength)
+                    {
+                        Console.Error.WriteLine("agent: " + agent);
+                        solvedSubGoal.Add(agent);
+                    }
+                    
                     // If I'm the guy or I'm still going then cut me off
                     if (solution.Count >= minUnsolvedSolutionLength)
                     {
@@ -151,10 +163,10 @@ namespace MaMapF.Handlers
 
                 //
 
-                if (COUNTER == 2)
-                {
-                    break;
-                }
+                // if (COUNTER == 2)
+                // {
+                //     break;
+                // }
 
                 COUNTER += 1;
             }

@@ -21,15 +21,7 @@ namespace MaMapF.Handlers
                     new List<Constraint>()
                 );
             });
-
-            foreach (var v in solutions.Values)
-            {
-                foreach (var singleAgentState in v)
-                {
-                    Console.Error.WriteLine(singleAgentState);
-                }
-            }
-
+            
             // Create priority queue and add the initial node
             var initialNode = new Node {Solutions = solutions};
             var open = new SimplePriorityQueue<Node>();
@@ -42,7 +34,6 @@ namespace MaMapF.Handlers
 
                 // If no solutions conflict then return the solutions
                 var conflict = GetConflict(agents, node, solvedAgents);
-                Console.Error.WriteLine($"conflict {conflict}");
 
                 // Console.Error.WriteLine(conflict);
                 if (conflict == null)
