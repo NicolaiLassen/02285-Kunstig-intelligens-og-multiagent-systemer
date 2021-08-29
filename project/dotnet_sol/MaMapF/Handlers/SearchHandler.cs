@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using MaMapF.Models;
+using Priority_Queue;
 using Action = MaMapF.Models.Action;
 
 //********************
@@ -35,7 +36,7 @@ namespace MaMapF.Handlers
             var solutions = agents.ToDictionary(agent => agent, agent => new List<SingleAgentState>());
             var solvedAgents = new List<char>();
             var solvedSubGoal = new List<char>(_level.Agents);
-            
+
             var problems = agents.ToDictionary(agent => agent,
                 agent => new SingleAgentProblem(_level.AgentInitialStates[agent]));
 
@@ -159,10 +160,10 @@ namespace MaMapF.Handlers
                 //
 
                 // TODO: KEEP IN MIND THAT WE HAVE A COUNTER BREAK!
-                if (COUNTER == 8)
-                {
-                    break;
-                }
+                // if (COUNTER == 8)
+                // {
+                //     break;
+                // }
 
                 COUNTER += 1;
             }
@@ -271,10 +272,8 @@ namespace MaMapF.Handlers
 
             // Select "unused-box" and "unsolved-goal" with smallest distance
             // distance(agent, box) + distance(box, goal)
-            var minDistance = Int32.MaxValue;
-            var selectedBox = unusedBoxes.First();
-            var selectedGoal = unsolvedBoxGoals.First();
-            
+            var orderedBoxGoals = new SimplePriorityQueue<Tuple<MapItem, MapItem>>();
+
             foreach (var goal in unsolvedBoxGoals)
             {
                 foreach (var box in unusedBoxes)
@@ -293,7 +292,7 @@ namespace MaMapF.Handlers
 
                     // Skip if no path to target VIA BFS
                     // COULD BE USED TO COUNT CORRECT H
-                    if (!BFSToPath(initialState, initialState.Agent.Position, goal.Position))
+                    if (!BFSToPath(initialState, box.Position, initialState.Agent.Position))
                     {
                         continue;
                     }
@@ -301,14 +300,23 @@ namespace MaMapF.Handlers
                     var agentBoxDistance = Position.Distance(initialState.Agent, box);
                     var boxGoalDistance = Position.Distance(box, goal);
                     var distance = agentBoxDistance + boxGoalDistance;
-                    if (distance < minDistance)
-                    {
-                        minDistance = distance;
-                        selectedBox = box;
-                        selectedGoal = goal;
-                    }
+
+                    orderedBoxGoals.Enqueue(new Tuple<MapItem, MapItem>(box, goal), distance);
                 }
             }
+
+            // TODO
+            Tuple<MapItem, MapItem> selectedBoxGoal = null;
+            foreach (var orderedBoxGoal in orderedBoxGoals)
+            {
+                if (!BFSToPath(initialState, orderedBoxGoal.Item1.Position, initialState.Agent.Position)) continue;
+                selectedBoxGoal = orderedBoxGoal;
+                break;
+            }
+
+            var selectedBox = selectedBoxGoal.Item1;
+            var selectedGoal = selectedBoxGoal.Item2;
+
 
             // Find best neighbour position to selected box
 
@@ -318,7 +326,7 @@ namespace MaMapF.Handlers
             //     .SelectMany(s => s.Boxes)
             //     .Select(b => b.Position).ToList();
             var neighbours = Position.GetNeighbours(selectedBox.Position);
-          
+
             // JUST CHECK IF SPOT IS OPEN
             var neighboursReachable = neighbours.Where(n => !initialState.IsWall(n) && !initialState.IsBox(n));
 
