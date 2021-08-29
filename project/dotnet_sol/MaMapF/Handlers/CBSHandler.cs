@@ -63,22 +63,22 @@ namespace MaMapF.Handlers
                     // Skip if agent solution is null
                     if (solution == null)
                     {
-                        // If constraint is already registered
-                        if (problems[agent].Constraints.Any(c => c.Equals(constraint)))
-                        {
-                            continue;
-                        }
-
-                        // If new constraint position is a WallBox
-                        var wallBox = problems[agent].InitialState.BoxWalls
-                            .FirstOrDefault(w => w.Position.Equals(constraint.Position));
-                        // var agentIsFree = problems[agent].Type != SingleAgentProblemType.MoveBlock;
-                        // var wallBlockConstraint = problems[agent].Constraints.FirstOrDefault(c => c.Equals(constraint));
-                        if (wallBox != null)
-                        {
-                            nextNode.WallBoxConstraint = constraint;
-                            return nextNode;
-                        }
+                        // // If constraint is already registered
+                        // if (problems[agent].Constraints.Any(c => c.Equals(constraint)))
+                        // {
+                        //     continue;
+                        // }
+                        //
+                        // // If new constraint position is a WallBox
+                        // var wallBox = problems[agent].InitialState.BoxWalls
+                        //     .FirstOrDefault(w => w.Position.Equals(constraint.Position));
+                        // // var agentIsFree = problems[agent].Type != SingleAgentProblemType.MoveBlock;
+                        // // var wallBlockConstraint = problems[agent].Constraints.FirstOrDefault(c => c.Equals(constraint));
+                        // if (wallBox != null)
+                        // {
+                        //     nextNode.WallBoxConstraint = constraint;
+                        //     return nextNode;
+                        // }
 
                         continue;
                     }
@@ -104,10 +104,10 @@ namespace MaMapF.Handlers
             var minLength = node.Solutions.Min(solution => solution.Value.Count);
             var solutions = agents.ToDictionary(agent => agent, agent => node.Solutions[agent].Select(s => s).ToList());
 
-            // if (minLength > SearchHandler.MaxMoves)
-            // {
-            //     return null;
-            // }
+            if (minLength > SearchHandler.MaxMoves)
+            {
+                return null;
+            }
 
             // Make all solutions same length as longest
             foreach (var agent in solutions.Keys)

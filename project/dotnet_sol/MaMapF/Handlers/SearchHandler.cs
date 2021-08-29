@@ -17,6 +17,7 @@ namespace MaMapF.Handlers
     public class SearchHandler
     {
         private readonly Level _level;
+        public int COUNTER = 0;
 
         public SearchHandler(Level level)
         {
@@ -24,7 +25,7 @@ namespace MaMapF.Handlers
         }
 
         // TODO FIND A WAY TO INCREMENT THIS IF THERE IS A BLOCKED AGENT
-        public static int MaxMoves = 20;
+        public static int MaxMoves = 14;
 
         public Dictionary<char, List<SingleAgentState>> Search()
         {
@@ -49,24 +50,44 @@ namespace MaMapF.Handlers
                 var nextNode = CBSHandler.Search(problems);
 
                 // If an agent could not finnish because it is blocked by a WallBox
-                var wallBoxConstraint = nextNode.WallBoxConstraint;
-                if (wallBoxConstraint != null)
-                {
-                    problems[wallBoxConstraint.Agent].Constraints.Add(wallBoxConstraint);
-                    continue;
-                }
+                // var wallBoxConstraint = nextNode.WallBoxConstraint;
+                // if (wallBoxConstraint != null)
+                // {
+                //     problems[wallBoxConstraint.Agent].Constraints.Add(wallBoxConstraint);
+                //     continue;
+                // }
 
                 var minSolutionLength = nextNode.Solutions.Values.Min(s => s.Count);
                 var maxSolutionLength = nextNode.Solutions.Values.Max(s => s.Count);
-                solved = agents.ToDictionary(agent => agent, agent =>
+                
+
+
+                foreach (var agent in agents)
                 {
                     var solution = nextNode.Solutions[agent];
+                    // if (nextNode.Solutions[agent].Count == minSolutionLength)
+                    // {
+                    //     solution.ForEach(s => Console.Error.WriteLine(s));
+                    // }
+
+
+                    solutions[agent] = solution.GetRange(0, minSolutionLength);
+                    problems[agent].InitialState = solution[minSolutionLength - 1];
+
+
+                    // Console.Error.WriteLine($"NODE.KEY: {agent}");
+                    // Console.Error.WriteLine($"NODE.VAL: {solution}");
+                    // solution.ForEach(s => Console.Error.WriteLine(s));
+                }
+
+                solved = agents.ToDictionary(agent => agent, agent =>
+                {
+                    var solution = solutions[agent];
                     var solutionLength = solution.Count;
                     var lastState = solution.Last();
 
                     return goals[agent].Where(g => lastState.AllMapItems.Any(g.Equals)).ToList();
                 });
-
 
                 var unsolvedAgents = agents.Where(a => !IsAgentDone(a, solved[a])).ToList();
                 var blockedUnsolvedAgents = unsolvedAgents.Where(agent => nextNode.Solutions[agent]
@@ -80,35 +101,13 @@ namespace MaMapF.Handlers
                 Console.Error.WriteLine($"unsolvedAgents: {unsolvedAgents.Count}");
                 Console.Error.WriteLine($"blockedUnsolvedAgents: {blockedUnsolvedAgents.Count}");
 
-
-                // TODO
-                // if (blockedUnsolvedAgents.Count >= 1)
+                
+                //
+                // if (COUNTER == 1)
                 // {
-                //     MaxMoves += 1;
-                //     continue;
+                //     break;
                 // }
-
-
-                // Console.Error.WriteLine("AAAAAAAAAAAAAAAAAAA");
-                // problems.Values.ToList().ForEach(p => Console.Error.WriteLine(p));
-                // Console.Error.WriteLine($"{nextNode}");
-                // Environment.Exit(0);
-
-
-                foreach (var agent in agents)
-                {
-                    var solution = nextNode.Solutions[agent];
-                    var solutionLength = solution.Count;
-                    var lastState = solution.Last();
-
-                    solutions[agent] = solution;
-                    problems[agent].InitialState = solution.Last();
-
-
-                    // Console.Error.WriteLine($"NODE.KEY: {agent}");
-                    // Console.Error.WriteLine($"NODE.VAL: {solution}");
-                    // solution.ForEach(s => Console.Error.WriteLine(s));
-                }
+                // COUNTER += 1;
             }
 
             // foreach (var s in solutions.Values)
