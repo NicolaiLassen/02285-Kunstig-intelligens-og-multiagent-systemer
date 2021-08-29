@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using MaMapF.Models;
-using Action = MaMapF.Models.Action;
 
 //********************
 // Try map A2 to see delegation in action
@@ -25,6 +24,8 @@ namespace MaMapF.Handlers
             _level = level;
         }
 
+        public static int MaxMoves = 7;
+
         public Dictionary<char, List<SingleAgentState>> Search()
         {
             var agents = _level.Agents;
@@ -45,45 +46,54 @@ namespace MaMapF.Handlers
                     problems[agent] = CreateSubProblem(problems[agent], unsolvedAgentGoals, solved);
                 }
 
-                var nextSolutions = CBSHandler.Search(problems);
+                var nextNode = CBSHandler.Search(problems);
 
                 // If an agent could not finnish because it is blocked by a WallBox
-                var wallBoxConstraint = nextSolutions.WallBoxConstraint;
+                var wallBoxConstraint = nextNode.WallBoxConstraint;
                 if (wallBoxConstraint != null)
                 {
+                    // Console.Error.WriteLine("wallBoxConstraint");
+                    // Console.Error.WriteLine(wallBoxConstraint);
+                    // Environment.Exit(0);
                     problems[wallBoxConstraint.Agent].Constraints.Add(wallBoxConstraint);
                     continue;
                 }
 
-                var maxSolutionLength = nextSolutions.Solutions.Values.Max(s => s.Count);
-                foreach (var (agent, solution) in nextSolutions.Solutions)
+                // problems.Values.ToList().ForEach(p => Console.Error.WriteLine(p));
+                // Console.Error.WriteLine($"nextSolutions: {nextSolutions}");
+                // Environment.Exit(0);
+
+                Console.Error.WriteLine("AAAAAAAAAAAAAAAAAAA");
+
+
+                var maxSolutionLength = nextNode.Solutions.Values.Max(s => s.Count);
+
+                solved.Clear();
+                foreach (var agent in agents)
                 {
-                    if (Temp && agent == '2')
+                    var goals = _level.Goals[agent];
+                    var solution = nextNode.Solutions[agent];
+                    var solutionLength = solution.Count;
+                    var lastState = solution[solutionLength - 1];
+
+                    // Check all goals
+                    foreach (var goal in goals)
                     {
-                        Console.Error.WriteLine($"UUUUUUUUUUUUUUUUUUUUUUU");
-                        Temp = false;
-                        var sTemp = new List<SingleAgentState> {solution[0]};
-                        for (int i = 0; i < maxSolutionLength; i++)
+                        if (lastState.AllMapItems.Any(item => goal.Equals(item)))
                         {
-                            sTemp.Add(SingleAgentSearchHandler.CreateNextState(sTemp[i], Action.NoOp));
+                            solved.Add(goal);
                         }
-                    
-                    
-                        solutions[agent] = sTemp;
-                        // solved.AddRange(problems[agent].Goals);
-                        problems[agent].InitialState = sTemp.Last();
-                        continue;
                     }
 
-                    // Console.Error.WriteLine("AAAAAAAAAAAAAAAAAAA");
-                    // problems[agent].Constraints.ForEach(s => Console.Error.WriteLine(s));
-                    // solution.ForEach(s => Console.Error.WriteLine(s));
-
-
                     solutions[agent] = solution;
-                    solved.AddRange(problems[agent].Goals);
                     problems[agent].InitialState = solution.Last();
+
+
+                    Console.Error.WriteLine($"NODE.KEY: {agent}");
+                    Console.Error.WriteLine($"NODE.VAL: {solution}");
+                    solution.ForEach(s => Console.Error.WriteLine(s));
                 }
+
             }
 
             // foreach (var s in solutions.Values)
@@ -95,15 +105,8 @@ namespace MaMapF.Handlers
             //     }
             // }
 
-            return solutions;
-        }
 
-        private static bool IsNullSolution(List<SingleAgentState> solution)
-        {
-            var r = solution.Any(s => s.Action != null && s.Action != Action.NoOp);
-            Console.Error.WriteLine(solution.First().AgentName);
-            Console.Error.WriteLine(r);
-            return r;
+            return solutions;
         }
 
 
@@ -122,8 +125,11 @@ namespace MaMapF.Handlers
                 problem.Type = SingleAgentProblemType.MoveBlock;
                 problem.Constraints = previous.Constraints;
 
-                // Select first block constraint and convert all other boxes to walls
+                // var blockPosition = problem.SelectedBox == null ? previous.Constraints.First().Position : previous.Constraints.Last().Position;
                 var blockPosition = previous.Constraints.First().Position;
+                problem.SelectedBox = initialState.Boxes.FirstOrDefault(b => b.Position.Equals(blockPosition));
+
+                // Select first block constraint and convert all other boxes to walls
                 var nonBlockBoxes = allBoxes.Where(b => !blockPosition.Equals(b.Position));
                 foreach (var box in nonBlockBoxes)
                 {
