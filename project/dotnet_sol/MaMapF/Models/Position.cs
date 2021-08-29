@@ -41,10 +41,8 @@ namespace MaMapF.Models
             return $"{Row},{Column}";
         }
 
-        public override bool Equals(object obj)
+        public bool Equals(Position other)
         {
-            if (obj == null) return false;
-            if (!(obj is Position other)) return false;
             return Row == other.Row && Column == other.Column;
         }
 
