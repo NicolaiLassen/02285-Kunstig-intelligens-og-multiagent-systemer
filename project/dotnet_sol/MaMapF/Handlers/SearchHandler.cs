@@ -180,6 +180,8 @@ namespace MaMapF.Handlers
                     problem.AddBoxMod(box);
                 }
 
+                
+                Console.Error.WriteLine($"prevBox: {problem.SelectedBox}");
                 return problem;
             }
 
@@ -195,6 +197,11 @@ namespace MaMapF.Handlers
             {
                 foreach (var box in unusedBoxes)
                 {
+                    if (goal.Value != box.Value)
+                    {
+                        continue;
+                    }
+                    
                     var agentBoxDistance = Position.Distance(initialState.Agent, box);
                     var boxGoalDistance = Position.Distance(box, goal);
                     var distance = agentBoxDistance + boxGoalDistance;
@@ -223,7 +230,7 @@ namespace MaMapF.Handlers
                 return distance;
             }).First();
 
-            // Console.Error.WriteLine($"bestPosition: {bestPosition}");
+            Console.Error.WriteLine($"bestPosition: {bestPosition}");
 
             // Add agent position goal to problem
             problem.Type = SingleAgentProblemType.AgentToBox;
