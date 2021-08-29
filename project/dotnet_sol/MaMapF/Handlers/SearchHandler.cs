@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using MaMapF.Models;
+using Action = MaMapF.Models.Action;
 
 //********************
 // Try map A2 to see delegation in action
@@ -67,17 +68,17 @@ namespace MaMapF.Handlers
                 });
 
 
-                // var unsolvedAgents = agents.Where(a => !IsAgentDone(a, solved[a])).ToList();
-                // var blockedUnsolvedAgents = unsolvedAgents.Where(agent => nextNode.Solutions[agent]
-                //     .All(state => state.Action == null || state.Action == Action.NoOp)).ToList();
+                var unsolvedAgents = agents.Where(a => !IsAgentDone(a, solved[a])).ToList();
+                var blockedUnsolvedAgents = unsolvedAgents.Where(agent => nextNode.Solutions[agent]
+                    .All(state => state.Action == null || state.Action == Action.NoOp)).ToList();
 
 
-                // Console.Error.WriteLine($"MaxMoves: {MaxMoves}");
-                // Console.Error.WriteLine($"minSolutionLength: {minSolutionLength}");
-                // Console.Error.WriteLine($"maxSolutionLength: {maxSolutionLength}");
-                //
-                // Console.Error.WriteLine($"unsolvedAgents: {unsolvedAgents.Count}");
-                // Console.Error.WriteLine($"blockedUnsolvedAgents: {blockedUnsolvedAgents.Count}");
+                Console.Error.WriteLine($"MaxMoves: {MaxMoves}");
+                Console.Error.WriteLine($"minSolutionLength: {minSolutionLength}");
+                Console.Error.WriteLine($"maxSolutionLength: {maxSolutionLength}");
+
+                Console.Error.WriteLine($"unsolvedAgents: {unsolvedAgents.Count}");
+                Console.Error.WriteLine($"blockedUnsolvedAgents: {blockedUnsolvedAgents.Count}");
 
 
                 // TODO
