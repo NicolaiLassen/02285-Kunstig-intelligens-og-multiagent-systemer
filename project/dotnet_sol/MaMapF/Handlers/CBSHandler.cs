@@ -65,22 +65,22 @@ namespace MaMapF.Handlers
                     // Skip if agent solution is null
                     if (solution == null)
                     {
-                        // // If constraint is already registered
-                        // if (problems[agent].Constraints.Any(c => c.Equals(constraint)))
-                        // {
-                        //     continue;
-                        // }
-                        //
-                        // // If new constraint position is a WallBox
-                        // var wallBox = problems[agent].InitialState.BoxWalls
-                        //     .FirstOrDefault(w => w.Position.Equals(constraint.Position));
-                        // // var agentIsFree = problems[agent].Type != SingleAgentProblemType.MoveBlock;
-                        // // var wallBlockConstraint = problems[agent].Constraints.FirstOrDefault(c => c.Equals(constraint));
-                        // if (wallBox != null)
-                        // {
-                        //     nextNode.WallBoxConstraint = constraint;
-                        //     return nextNode;
-                        // }
+                        // If constraint is already registered
+                        if (problems[agent].Constraints.Any(c => c.Equals(constraint)))
+                        {
+                            continue;
+                        }
+                        
+                        // If new constraint position is a WallBox
+                        var wallBox = problems[agent].InitialState.BoxWalls
+                            .FirstOrDefault(w => w.Position.Equals(constraint.Position));
+                        // var agentIsFree = problems[agent].Type != SingleAgentProblemType.MoveBlock;
+                        // var wallBlockConstraint = problems[agent].Constraints.FirstOrDefault(c => c.Equals(constraint));
+                        if (wallBox != null)
+                        {
+                            nextNode.WallBoxConstraint = constraint;
+                            return nextNode;
+                        }
 
                         continue;
                     }
