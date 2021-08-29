@@ -15,8 +15,6 @@ namespace MaMapF.Handlers
 {
     public class SearchHandler
     {
-        public static bool Temp = true;
-
         private readonly Level _level;
 
         public SearchHandler(Level level)
@@ -24,26 +22,26 @@ namespace MaMapF.Handlers
             _level = level;
         }
 
-        public static int MaxMoves = 10;
+        public static int MaxMoves = 40;
 
         public Dictionary<char, List<SingleAgentState>> Search()
         {
             var agents = _level.Agents;
-            var solved = new List<MapItem>();
+            var goals = _level.Goals;
+            var solved = agents.ToDictionary(agent => agent, agent => new List<MapItem>());
             var solutions = agents.ToDictionary(agent => agent, agent => new List<SingleAgentState>());
 
 
             var problems = agents.ToDictionary(agent => agent,
                 agent => new SingleAgentProblem(_level.AgentInitialStates[agent]));
 
-            while (!IsAllMainGoalsSolved(solved))
+            while (!IsAllAgentsDone(solved))
             {
                 // Create sub problem for each agent
                 foreach (var agent in agents)
                 {
                     problems[agent].ResetMods();
-                    var unsolvedAgentGoals = _level.Goals[agent].Where(goal => !solved.Contains(goal)).ToList();
-                    problems[agent] = CreateSubProblem(problems[agent], unsolvedAgentGoals, solved);
+                    problems[agent] = CreateSubProblem(problems[agent], goals[agent], solved[agent]);
                 }
 
                 var nextNode = CBSHandler.Search(problems);
@@ -52,12 +50,34 @@ namespace MaMapF.Handlers
                 var wallBoxConstraint = nextNode.WallBoxConstraint;
                 if (wallBoxConstraint != null)
                 {
-                    // Console.Error.WriteLine("wallBoxConstraint");
-                    // Console.Error.WriteLine(wallBoxConstraint);
-                    // Environment.Exit(0);
                     problems[wallBoxConstraint.Agent].Constraints.Add(wallBoxConstraint);
                     continue;
                 }
+
+                var minSolutionLength = nextNode.Solutions.Values.Min(s => s.Count);
+                var maxSolutionLength = nextNode.Solutions.Values.Max(s => s.Count);
+                solved = agents.ToDictionary(agent => agent, agent =>
+                {
+                    var solution = nextNode.Solutions[agent];
+                    var solutionLength = solution.Count;
+                    var lastState = solution[solutionLength - 1];
+
+                    return goals[agent].Where(g => lastState.AllMapItems.Any(g.Equals)).ToList();
+                });
+
+
+                Console.Error.WriteLine($"MaxMoves: {MaxMoves}");
+                Console.Error.WriteLine($"minSolutionLength: {minSolutionLength}");
+                Console.Error.WriteLine($"maxSolutionLength: {maxSolutionLength}");
+
+
+                // TODO
+                // if (minSolutionLength > 1)
+                // {
+                //     MaxMoves += 1;
+                //     continue;
+                // }
+
 
                 // problems.Values.ToList().ForEach(p => Console.Error.WriteLine(p));
                 // Console.Error.WriteLine($"nextSolutions: {nextSolutions}");
@@ -65,35 +85,19 @@ namespace MaMapF.Handlers
 
                 Console.Error.WriteLine("AAAAAAAAAAAAAAAAAAA");
 
-
-                var maxSolutionLength = nextNode.Solutions.Values.Max(s => s.Count);
-
-                solved.Clear();
                 foreach (var agent in agents)
                 {
-                    var goals = _level.Goals[agent];
                     var solution = nextNode.Solutions[agent];
                     var solutionLength = solution.Count;
                     var lastState = solution[solutionLength - 1];
-
-                    // Check all goals
-                    foreach (var goal in goals)
-                    {
-                        if (lastState.AllMapItems.Any(item => goal.Equals(item)))
-                        {
-                            solved.Add(goal);
-                        }
-                    }
-
                     solutions[agent] = solution;
                     problems[agent].InitialState = solution.Last();
 
 
-                    Console.Error.WriteLine($"NODE.KEY: {agent}");
-                    Console.Error.WriteLine($"NODE.VAL: {solution}");
-                    solution.ForEach(s => Console.Error.WriteLine(s));
+                    // Console.Error.WriteLine($"NODE.KEY: {agent}");
+                    // Console.Error.WriteLine($"NODE.VAL: {solution}");
+                    // solution.ForEach(s => Console.Error.WriteLine(s));
                 }
-
             }
 
             // foreach (var s in solutions.Values)
@@ -110,9 +114,12 @@ namespace MaMapF.Handlers
         }
 
 
-        private SingleAgentProblem CreateSubProblem(SingleAgentProblem previous, List<MapItem> unsolved,
+        private SingleAgentProblem CreateSubProblem(SingleAgentProblem previous, List<MapItem> goals,
             List<MapItem> solved)
         {
+            var unsolved = goals.Where(goal => !solved.Contains(goal)).ToList();
+
+
             var agent = previous.InitialState.AgentName;
             var initialState = previous.InitialState;
             var problem = new SingleAgentProblem(previous.InitialState);
@@ -186,7 +193,7 @@ namespace MaMapF.Handlers
                     problem.AddBoxMod(box);
                 }
 
-                
+
                 Console.Error.WriteLine($"prevBox: {problem.SelectedBox}");
                 return problem;
             }
@@ -207,7 +214,7 @@ namespace MaMapF.Handlers
                     {
                         continue;
                     }
-                    
+
                     var agentBoxDistance = Position.Distance(initialState.Agent, box);
                     var boxGoalDistance = Position.Distance(box, goal);
                     var distance = agentBoxDistance + boxGoalDistance;
@@ -253,18 +260,15 @@ namespace MaMapF.Handlers
             return problem;
         }
 
-        private bool IsAllMainGoalsSolved(List<MapItem> solved)
+        private bool IsAllAgentsDone(Dictionary<char, List<MapItem>> solved)
         {
-            var allSolved = true;
-            foreach (var goal in _level.Goals.Values)
-            {
-                if (!goal.All(solved.Contains))
-                {
-                    allSolved = false;
-                }
-            }
+            return _level.Agents.All(agent => IsAgentDone(agent, solved[agent]));
+        }
 
-            return allSolved;
+        private bool IsAgentDone(char agent, List<MapItem> solved)
+        {
+            var goals = _level.Goals[agent];
+            return goals.All(g => solved.Any(g.Equals));
         }
     }
 }
