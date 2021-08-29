@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using MaMapF.Models;
 using Priority_Queue;
+using Action = MaMapF.Models.Action;
 
 namespace MaMapF.Handlers
 {
@@ -9,11 +11,17 @@ namespace MaMapF.Handlers
     {
         public static Node Search(Dictionary<char, SingleAgentProblem> problems)
         {
+
+            
+            
+            
             // Create initial solutions for each agent
             var agents = problems.Keys.ToList();
             var solutions = agents.ToDictionary(agent => agent, agent =>
             {
                 var problem = problems[agent];
+                Console.Error.WriteLine(problem);
+                
                 return SingleAgentSearchHandler.Search(
                     problem,
                     new List<Constraint>()
@@ -149,6 +157,7 @@ namespace MaMapF.Handlers
                                 {
                                     return new Conflict
                                     {
+                                        Type = "position",
                                         AgentA = a0,
                                         AgentB = a1,
                                         Position = a0p,
@@ -167,6 +176,7 @@ namespace MaMapF.Handlers
                                 {
                                     return new Conflict
                                     {
+                                        Type = "follow",
                                         AgentA = a0,
                                         AgentB = a1,
                                         Position = a0p,
@@ -185,6 +195,7 @@ namespace MaMapF.Handlers
                                 {
                                     return new Conflict
                                     {
+                                        Type = "follow",
                                         AgentA = a1,
                                         AgentB = a0,
                                         Position = a1p,
@@ -202,12 +213,39 @@ namespace MaMapF.Handlers
 
         private static Constraint GetConstraint(char agent, Conflict conflict)
         {
-            return new Constraint
+            if (conflict.Type == "position")
             {
-                Agent = agent,
-                Position = conflict.Position,
-                Step = conflict.Step,
-            };
+                return new Constraint
+                {
+                    Agent = agent,
+                    Position = conflict.Position,
+                    Step = conflict.Step,
+                };
+            }
+
+            // Agent is follower
+            if (conflict.Type == "follow" && agent == conflict.AgentA)
+            {
+                return new Constraint
+                {
+                    Agent = agent,
+                    Position = conflict.Position,
+                    Step = conflict.Step,
+                };
+            }
+
+            // Agent is leader
+            if (conflict.Type == "follow" && agent == conflict.AgentB)
+            {
+                return new Constraint
+                {
+                    Agent = agent,
+                    Position = conflict.Position,
+                    Step = conflict.Step - 1,
+                };
+            }
+
+            return null;
         }
     }
 }

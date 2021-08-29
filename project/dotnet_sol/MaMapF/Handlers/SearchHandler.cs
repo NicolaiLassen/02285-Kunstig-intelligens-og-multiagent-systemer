@@ -33,6 +33,7 @@ namespace MaMapF.Handlers
             var goals = _level.Goals;
             var solved = agents.ToDictionary(agent => agent, agent => new List<MapItem>());
             var solutions = agents.ToDictionary(agent => agent, agent => new List<SingleAgentState>());
+            var solvedAgents = new List<char>();
 
 
             var problems = agents.ToDictionary(agent => agent,
@@ -45,6 +46,9 @@ namespace MaMapF.Handlers
                 {
                     problems[agent].ResetMods();
                     problems[agent] = CreateSubProblem(problems[agent], goals[agent], solved[agent], problems);
+
+                    // Console.Error.WriteLine("problems[agent]:");
+                    // Console.Error.WriteLine(problems[agent]);
                 }
 
                 var nextNode = CBSHandler.Search(problems);
@@ -57,22 +61,42 @@ namespace MaMapF.Handlers
                 //     continue;
                 // }
 
-                var minSolutionLength = nextNode.Solutions.Values.Min(s => s.Count);
+
                 var maxSolutionLength = nextNode.Solutions.Values.Max(s => s.Count);
-                
+                var minUnsolvedSolutionLength = nextNode.Solutions
+                    .Where(k => !solvedAgents.Contains(k.Key))
+                    .Min(s => s.Value.Count);
 
 
                 foreach (var agent in agents)
                 {
                     var solution = nextNode.Solutions[agent];
-                    // if (nextNode.Solutions[agent].Count == minSolutionLength)
-                    // {
-                    //     solution.ForEach(s => Console.Error.WriteLine(s));
-                    // }
+
+                    // If I'm the guy or I'm still going then cut me off
+                    if (solution.Count >= minUnsolvedSolutionLength)
+                    {
+                        solutions[agent] = solution.GetRange(0, minUnsolvedSolutionLength);
+                        problems[agent].InitialState = solutions[agent].Last();
+                        continue;
+                    }
+
+                    // I'm done then fill me up
+                    var solutionDiff = Math.Abs(solution.Count - minUnsolvedSolutionLength);
+                    solutions[agent] = solution.GetRange(0, solution.Count);
+                    var nextState = solutions[agent].Last();
+                    for (int i = 0; i < solutionDiff; i++)
+                    {
+                        nextState = SingleAgentSearchHandler.CreateNextState(nextState, Action.NoOp);
+                        solutions[agent].Add(nextState);
+                    }
+
+                    problems[agent].InitialState = solutions[agent].Last();
 
 
-                    solutions[agent] = solution.GetRange(0, minSolutionLength);
-                    problems[agent].InitialState = solution[minSolutionLength - 1];
+                    // Console.Error.WriteLine($"Solution.count: {solution.Count}");
+                    // Console.Error.WriteLine($"minSolutionLength - 1: {minSolutionLength - 1}");
+
+                    // solution.ForEach(s => Console.Error.WriteLine(s));
 
 
                     // Console.Error.WriteLine($"NODE.KEY: {agent}");
@@ -83,31 +107,24 @@ namespace MaMapF.Handlers
                 solved = agents.ToDictionary(agent => agent, agent =>
                 {
                     var solution = solutions[agent];
-                    var solutionLength = solution.Count;
                     var lastState = solution.Last();
-
                     return goals[agent].Where(g => lastState.AllMapItems.Any(g.Equals)).ToList();
                 });
-
-                var unsolvedAgents = agents.Where(a => !IsAgentDone(a, solved[a])).ToList();
-                var blockedUnsolvedAgents = unsolvedAgents.Where(agent => nextNode.Solutions[agent]
-                    .All(state => state.Action == null || state.Action == Action.NoOp)).ToList();
+                solvedAgents = agents.Where(a => IsAgentDone(a, solved[a])).ToList();
 
 
                 Console.Error.WriteLine($"MaxMoves: {MaxMoves}");
-                Console.Error.WriteLine($"minSolutionLength: {minSolutionLength}");
+                Console.Error.WriteLine($"minSolutionLength: {minUnsolvedSolutionLength}");
                 Console.Error.WriteLine($"maxSolutionLength: {maxSolutionLength}");
+                Console.Error.WriteLine($"unsolvedAgents: {solvedAgents.Count}");
 
-                Console.Error.WriteLine($"unsolvedAgents: {unsolvedAgents.Count}");
-                Console.Error.WriteLine($"blockedUnsolvedAgents: {blockedUnsolvedAgents.Count}");
 
-                
-                //
-                // if (COUNTER == 1)
-                // {
-                //     break;
-                // }
-                // COUNTER += 1;
+                if (COUNTER == 1)
+                {
+                    break;
+                }
+
+                COUNTER += 1;
             }
 
             // foreach (var s in solutions.Values)

@@ -2,6 +2,7 @@
 {
     public class Conflict
     {
+        public string Type { get; set; }
         public char AgentA { get; set; }
         public char AgentB { get; set; }
         public Position Position { get; set; }
