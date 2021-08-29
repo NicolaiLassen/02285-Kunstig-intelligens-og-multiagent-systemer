@@ -16,8 +16,7 @@ namespace MaMapF
                 Console.Error.WriteLine("MAIN ERROR");
                 Environment.Exit(0);
             }
-
-
+            
             ServerHandler.SendServerPlan(solution);
         }
     }
