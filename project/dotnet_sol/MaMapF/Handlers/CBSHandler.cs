@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using MaMapF.Models;
 using Priority_Queue;
-using Action = MaMapF.Models.Action;
 
 namespace MaMapF.Handlers
 {
@@ -21,7 +19,7 @@ namespace MaMapF.Handlers
                     new List<Constraint>()
                 );
             });
-            
+
             // Create priority queue and add the initial node
             var initialNode = new Node {Solutions = solutions};
             var open = new SimplePriorityQueue<Node>();
@@ -34,7 +32,7 @@ namespace MaMapF.Handlers
 
                 // If no solutions conflict then return the solutions
                 var conflict = GetConflict(agents, node, solvedAgents);
-                
+
                 if (conflict == null)
                 {
                     return node;
@@ -99,6 +97,7 @@ namespace MaMapF.Handlers
                     continue;
                 }
 
+                // Fill agents with NoOp to handle future constraints in same delegation
                 var solutionLengthDiff = maxSteps - solutionLength;
                 var nextState = solutions[agent].Last();
                 for (int i = 0; i < solutionLengthDiff; i++)
@@ -107,7 +106,7 @@ namespace MaMapF.Handlers
                     solutions[agent].Add(nextState);
                 }
             }
-            
+
             for (var step = 1; step < maxSteps; step++)
             {
                 for (var a0i = 0; a0i < agents.Count; a0i++)
@@ -188,6 +187,7 @@ namespace MaMapF.Handlers
 
         private static Constraint GetConstraint(char agent, Conflict conflict)
         {
+            // Position that should be untouched
             if (conflict.Type == "position")
             {
                 return new Constraint
