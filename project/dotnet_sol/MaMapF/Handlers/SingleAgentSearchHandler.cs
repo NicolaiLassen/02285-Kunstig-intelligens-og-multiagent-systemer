@@ -104,15 +104,8 @@ namespace MaMapF.Handlers
 
         private static bool IsGoalState(SingleAgentState state, List<MapItem> goals, List<Constraint> constraints)
         {
-            var futureConstraint = constraints.FirstOrDefault(c => c.Step > state.G);
-
-            if (SearchHandler.COUNTER == 19)
-            {
-                Console.Error.WriteLine($"FUTURE: {futureConstraint}");
-            }
-
-
             // false if there is a future constraint
+            var futureConstraint = constraints.FirstOrDefault(c => c.Step > state.G);
             if (futureConstraint != null)
             {
                 return false;

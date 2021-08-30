@@ -84,7 +84,7 @@ namespace MaMapF.Handlers
                         continue;
                     }
 
-                    // I'm done then fill me up
+                    // I'm done then fill me up with NoOps
                     var solutionDiff = Math.Abs(solution.Count - minUnsolvedSolutionLength);
                     solutions[agent] = solution.GetRange(0, solution.Count);
                     var nextState = solutions[agent].Last();
@@ -104,10 +104,6 @@ namespace MaMapF.Handlers
                     return goals[agent].Where(g => lastState.AllMapItems.Any(g.Equals)).ToList();
                 });
                 solvedAgents = agents.Where(a => IsAgentDone(a, solved[a])).ToList();
-
-                // Count goal progression
-                var solvedGoalsCount = solved.SelectMany(s => s.Value).Count();
-                Console.Error.WriteLine($"{solvedGoalsCount}/{_level.GoalCount}");
 
                 // TODO: KEEP IN MIND THAT WE HAVE A COUNTER BREAK!
                 // if (COUNTER == 8)
@@ -172,7 +168,6 @@ namespace MaMapF.Handlers
                     problem.AddBoxMod(box);
                 }
 
-
                 // Console.Error.WriteLine($"prevBox: {problem.SelectedBox}");
                 return problem;
             }
@@ -181,7 +176,7 @@ namespace MaMapF.Handlers
             // Sub goal: Move agent to a box
             // Select "unused-box" and "unsolved-goal" with smallest distance
             // distance(agent, box) + distance(box, goal)
-            var orderedBoxGoals = new SimplePriorityQueue<Tuple<MapItem, MapItem>>();
+            var orderedBoxGoals = new SimplePriorityQueue<BoxGoal>();
 
             foreach (var goal in unsolvedBoxGoals)
             {
@@ -199,8 +194,7 @@ namespace MaMapF.Handlers
                         continue;
                     }
 
-                    // Skip if no path to target VIA BFS
-                    // COULD BE USED TO COUNT CORRECT DIST
+                    // Skip if no path to target best first
                     if (!IsReachableBest(initialState, box.Position, initialState.Agent.Position))
                     {
                         continue;
@@ -209,27 +203,20 @@ namespace MaMapF.Handlers
                     var agentBoxDistance = Position.Distance(initialState.Agent, box);
                     var boxGoalDistance = Position.Distance(box, goal);
                     var distance = agentBoxDistance + boxGoalDistance;
-
-                    orderedBoxGoals.Enqueue(new Tuple<MapItem, MapItem>(box, goal), distance);
+                    orderedBoxGoals.Enqueue(    new BoxGoal{Box = box, Goal = goal}, distance);
                 }
             }
 
-            // TODO
-            Tuple<MapItem, MapItem> selectedBoxGoal = null;
-            foreach (var orderedBoxGoal in orderedBoxGoals)
-            {
-                if (!IsReachableBest(initialState, orderedBoxGoal.Item1.Position, initialState.Agent.Position)) continue;
-                selectedBoxGoal = orderedBoxGoal;
-                break;
-            }
-
-            var selectedBox = selectedBoxGoal.Item1;
-            var selectedGoal = selectedBoxGoal.Item2;
+            var boxGoal =
+                // ReSharper disable once PossibleNullReferenceException
+                // SHOULD NOT BE NULL
+                orderedBoxGoals.FirstOrDefault(orderedBoxGoal =>
+                    IsReachableBest(initialState, orderedBoxGoal.Box.Position, initialState.Agent.Position));
 
             // JUST SELECT CLOSEST POS THEN
 
             // Find best neighbour position to selected box
-            var neighbours = Position.GetNeighbours(selectedBox.Position);
+            var neighbours = Position.GetNeighbours(boxGoal.Box.Position);
 
             // JUST CHECK IF SPOT IS OPEN
             var neighboursReachable = neighbours.Where(n => !initialState.IsWall(n) && !initialState.IsBox(n));
@@ -248,8 +235,8 @@ namespace MaMapF.Handlers
             // Add agent position goal to problem
             problem.Type = SingleAgentProblemType.AgentToBox;
             problem.Goals.Add(new MapItem(agent, bestPosition));
-            problem.SelectedBox = selectedBox;
-            problem.SelectedBoxGoal = selectedGoal;
+            problem.SelectedBox = boxGoal.Box;
+            problem.SelectedBoxGoal = boxGoal.Goal;
 
             // Convert all boxes to walls
             foreach (var box in allBoxes)
