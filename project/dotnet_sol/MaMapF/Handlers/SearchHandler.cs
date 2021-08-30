@@ -35,70 +35,37 @@ namespace MaMapF.Handlers
             var solved = agents.ToDictionary(agent => agent, agent => new List<MapItem>());
             var solutions = agents.ToDictionary(agent => agent, agent => new List<SingleAgentState>());
             var solvedAgents = new List<char>();
-            var solvedSubGoal = new List<char>(_level.Agents);
+            var agentsToDelegate = new List<char>(_level.Agents);
 
             var problems = agents.ToDictionary(agent => agent,
                 agent => new SingleAgentProblem(_level.AgentInitialStates[agent]));
 
             while (!IsAllAgentsDone(solved))
             {
-                var solvedGoalsCount = solved.SelectMany(s => s.Value).Count();
-                Console.Error.WriteLine($"{solvedGoalsCount}/{_level.GoalCount}");
-
                 // Create sub problem for each agent
                 foreach (var agent in agents)
                 {
                     // Don't change the agent if its still on its path in life
-                    if (!solvedSubGoal.Contains(agent)) continue;
+                    if (!agentsToDelegate.Contains(agent)) continue;
 
                     problems[agent].ResetMods();
                     problems[agent] = CreateSubProblem(problems[agent], goals[agent], solved[agent], problems);
-
-                    // Console.Error.WriteLine("problems[agent]:");
-                    // Console.Error.WriteLine(problems[agent]);
                 }
 
-                solvedSubGoal = new List<char>();
+                // Reset for next round trip
+                agentsToDelegate = new List<char>();
 
                 var nextNode = CBSHandler.Search(problems, solvedAgents);
 
                 if (nextNode == null)
                 {
-                    Console.Error.WriteLine("WRONG FORMAT");
+                    Console.Error.WriteLine("!NO SOLUTION FOUND!");
                     Environment.Exit(0);
                 }
 
-
-                // foreach (var key in nextNode.Solutions.Keys)
-                // {
-                //     if (nextNode.Solutions[key] == null)
-                //     {
-                //         nextNode.Solutions[key] = new List<SingleAgentState>() {problems[key].InitialState};
-                //     }
-                // }
-
-
-                // If an agent could not finnish because it is blocked by a WallBox
-                // var wallBoxConstraint = nextNode.WallBoxConstraint;
-                // if (wallBoxConstraint != null)
-                // {
-                //     problems[wallBoxConstraint.Agent].Constraints.Add(wallBoxConstraint);
-                //     continue;
-                // }
-
-
-                var maxSolutionLength = nextNode.Solutions.Values.Max(s => s.Count);
                 var minUnsolvedSolutionLength = nextNode.Solutions
                     .Where(k => !solvedAgents.Contains(k.Key))
                     .Min(s => s.Value.Count);
-
-                // var spinningAgents = solutions.Where(s => !solvedAgents.Contains(s.Key)).Count(s =>
-                //     s.Value.Skip(1).Take(minUnsolvedSolutionLength - 1).All(s => s.Action.Type == ActionType.NoOp));
-
-                // if (spinningAgents > 0 && minUnsolvedSolutionLength > 1)
-                // {
-                //     MaxMoves += 1;
-                // }
 
                 foreach (var agent in agents)
                 {
@@ -106,7 +73,7 @@ namespace MaMapF.Handlers
 
                     if (solution.Count == minUnsolvedSolutionLength)
                     {
-                        solvedSubGoal.Add(agent);
+                        agentsToDelegate.Add(agent);
                     }
 
                     // If I'm the guy or I'm still going then cut me off
@@ -128,17 +95,6 @@ namespace MaMapF.Handlers
                     }
 
                     problems[agent].InitialState = solutions[agent].Last();
-
-
-                    // Console.Error.WriteLine($"Solution.count: {solution.Count}");
-                    // Console.Error.WriteLine($"minSolutionLength - 1: {minSolutionLength - 1}");
-
-                    // solution.ForEach(s => Console.Error.WriteLine(s));
-
-
-                    // Console.Error.WriteLine($"NODE.KEY: {agent}");
-                    // Console.Error.WriteLine($"NODE.VAL: {solution}");
-                    // solution.ForEach(s => Console.Error.WriteLine(s));
                 }
 
                 solved = agents.ToDictionary(agent => agent, agent =>
@@ -148,16 +104,8 @@ namespace MaMapF.Handlers
                     return goals[agent].Where(g => lastState.AllMapItems.Any(g.Equals)).ToList();
                 });
                 solvedAgents = agents.Where(a => IsAgentDone(a, solved[a])).ToList();
-
-
-                // Console.Error.WriteLine($"MaxMoves: {MaxMoves}");
-                // Console.Error.WriteLine($"minSolutionLength: {minUnsolvedSolutionLength}");
-                // Console.Error.WriteLine($"maxSolutionLength: {maxSolutionLength}");
-                // Console.Error.WriteLine($"solvedAgents: {solvedAgents.Count}");
-
-                // solutions['1'].ForEach(s => Console.Error.WriteLine(s));
-
-                //
+                var solvedGoalsCount = solved.SelectMany(s => s.Value).Count();
+                Console.Error.WriteLine($"{solvedGoalsCount}/{_level.GoalCount}");
 
                 // TODO: KEEP IN MIND THAT WE HAVE A COUNTER BREAK!
                 // if (COUNTER == 8)
@@ -168,16 +116,6 @@ namespace MaMapF.Handlers
                 COUNTER += 1;
             }
 
-            // foreach (var s in solutions.Values)
-            // {
-            //     Console.Error.WriteLine("---------------------------------");
-            //     foreach (var state in s)
-            //     {
-            //         Console.Error.WriteLine(state);
-            //     }
-            // }
-
-
             return solutions;
         }
 
@@ -186,44 +124,14 @@ namespace MaMapF.Handlers
             List<MapItem> solved, Dictionary<char, SingleAgentProblem> problems)
         {
             var unsolved = goals.Where(goal => !solved.Contains(goal)).ToList();
-
-
             var agent = previous.InitialState.AgentName;
             var initialState = previous.InitialState;
             var problem = new SingleAgentProblem(previous.InitialState);
             var allBoxes = problem.InitialState.Boxes;
 
-            // Sub goal: Remove blocking box for other agent
-            // if (previous.Constraints.Any())
-            // {
-            //     problem.Type = SingleAgentProblemType.MoveBlock;
-            //     problem.Constraints = previous.Constraints;
-            //
-            //     // // var blockPosition = problem.SelectedBox == null ? previous.Constraints.First().Position : previous.Constraints.Last().Position;
-            //     // var blockPosition = previous.Constraints.First().Position;
-            //     // problem.SelectedBox = initialState.Boxes.FirstOrDefault(b => b.Position.Equals(blockPosition));
-            //     //
-            //     // // Select first block constraint and convert all other boxes to walls
-            //     // var nonBlockBoxes = allBoxes.Where(b => !blockPosition.Equals(b.Position));
-            //     // foreach (var box in nonBlockBoxes)
-            //     // {
-            //     //     problem.AddBoxMod(box);
-            //     // }
-            //
-            //
-            //     return problem;
-            // }
-
             // Return problem with no goals if no unsolved goals left 
             if (!unsolved.Any())
             {
-                // problem.Goals.Add(new MapItem(agent, initialState.Agent.Position));
-                // Convert all boxes to boxes to force blocking problem
-                // foreach (var box in allBoxes)
-                // {
-                //     problem.AddBoxMod(box);
-                // }
-
                 return problem;
             }
 
@@ -291,7 +199,7 @@ namespace MaMapF.Handlers
                     }
 
                     // Skip if no path to target VIA BFS
-                    // COULD BE USED TO COUNT CORRECT H
+                    // COULD BE USED TO COUNT CORRECT DIST
                     if (!BFSToPath(initialState, box.Position, initialState.Agent.Position))
                     {
                         continue;
@@ -317,14 +225,9 @@ namespace MaMapF.Handlers
             var selectedBox = selectedBoxGoal.Item1;
             var selectedGoal = selectedBoxGoal.Item2;
 
+            // JUST SELECT CLOSEST POS THEN
 
             // Find best neighbour position to selected box
-
-
-            // var otherAgentsBoxPositions = _level.AgentInitialStates.Values
-            //     .Where(s => s.AgentName != agent)
-            //     .SelectMany(s => s.Boxes)
-            //     .Select(b => b.Position).ToList();
             var neighbours = Position.GetNeighbours(selectedBox.Position);
 
             // JUST CHECK IF SPOT IS OPEN

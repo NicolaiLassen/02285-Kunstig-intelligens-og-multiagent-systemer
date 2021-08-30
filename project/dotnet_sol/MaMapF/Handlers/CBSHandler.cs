@@ -34,8 +34,7 @@ namespace MaMapF.Handlers
 
                 // If no solutions conflict then return the solutions
                 var conflict = GetConflict(agents, node, solvedAgents);
-
-                // Console.Error.WriteLine(conflict);
+                
                 if (conflict == null)
                 {
                     return node;
@@ -108,8 +107,7 @@ namespace MaMapF.Handlers
                     solutions[agent].Add(nextState);
                 }
             }
-
-
+            
             for (var step = 1; step < maxSteps; step++)
             {
                 for (var a0i = 0; a0i < agents.Count; a0i++)
