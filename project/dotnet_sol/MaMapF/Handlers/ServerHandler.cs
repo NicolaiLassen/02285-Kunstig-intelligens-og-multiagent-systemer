@@ -36,6 +36,33 @@ namespace MaMapF.Handlers
             var initialRangeCount = (goalIndex - initialIndex) - 1;
             var initialLines = LinesToCharMatrix(serverLines.GetRange(initialIndex + 1, initialRangeCount));
 
+            
+            for (var row = 0; row < initialLines.Count; row++)
+            {
+                for (var col = 0; col < initialLines[row].Count; col++)
+                {
+                    var c = initialLines[row][col];
+                    if (c == ' ')
+                    {
+                        continue;
+                    }
+
+                    if (c == '+')
+                    {
+                        continue;
+                    }
+
+                    if (char.IsLetter(c))
+                    {
+                        var agentInsSameColorsAsBox = agents.Any(a => colors[a] == colors[c]);
+                        if (!agentInsSameColorsAsBox)
+                        {
+                            initialLines[row][col] = '+';
+                        }
+                    }
+                }
+            }
+            
             var goalRangeCount = (endIndex - goalIndex) - 1;
             var goalLines = LinesToCharMatrix(serverLines.GetRange(goalIndex + 1, goalRangeCount));
 

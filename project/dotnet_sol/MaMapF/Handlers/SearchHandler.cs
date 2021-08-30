@@ -105,6 +105,8 @@ namespace MaMapF.Handlers
                 });
                 solvedAgents = agents.Where(a => IsAgentDone(a, solved[a])).ToList();
 
+                // Console.Error.WriteLine(solvedAgents.Count);
+                
                 // TODO: KEEP IN MIND THAT WE HAVE A COUNTER BREAK!
                 // if (COUNTER == 8)
                 // {
@@ -214,6 +216,10 @@ namespace MaMapF.Handlers
                     IsReachableBest(initialState, orderedBoxGoal.Box.Position, initialState.Agent.Position));
 
             // JUST SELECT CLOSEST POS THEN
+            if (boxGoal == null)
+            {
+                Console.Error.WriteLine(agent);
+            }
 
             // Find best neighbour position to selected box
             var neighbours = Position.GetNeighbours(boxGoal.Box.Position);

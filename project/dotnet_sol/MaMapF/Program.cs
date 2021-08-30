@@ -10,6 +10,7 @@ namespace MaMapF
             var level = ServerHandler.GetServerLevel();
             var searchHandler = new SearchHandler(level);
             var solution = searchHandler.Search();
+            
             if (solution == null)
             {
                 throw new NullReferenceException("Main.solution == null");

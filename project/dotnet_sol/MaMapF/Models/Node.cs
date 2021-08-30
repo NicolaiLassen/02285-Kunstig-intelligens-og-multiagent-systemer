@@ -10,9 +10,7 @@ namespace MaMapF.Models
         public Dictionary<char, List<SingleAgentState>> Solutions { get; set; } =
             new Dictionary<char, List<SingleAgentState>>();
 
-
-        // public int Cost => Solutions.Sum(solution => solution.Value.Count) + Constraints.Count;
-        public int Cost => Solutions.Sum(solution => solution.Value.Count);
+        public int Cost => Solutions.Max(solution => solution.Value.Count) + Constraints.Count;
 
         public Node Copy()
         {
