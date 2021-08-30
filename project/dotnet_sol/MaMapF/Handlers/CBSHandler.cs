@@ -100,7 +100,7 @@ namespace MaMapF.Handlers
                 // Fill agents with NoOp to handle future constraints in same delegation
                 var solutionLengthDiff = maxSteps - solutionLength;
                 var nextState = solutions[agent].Last();
-                for (int i = 0; i < solutionLengthDiff; i++)
+                for (var i = 0; i < solutionLengthDiff; i++)
                 {
                     nextState = SingleAgentSearchHandler.CreateNextState(nextState, Action.NoOp);
                     solutions[agent].Add(nextState);

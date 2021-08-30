@@ -16,9 +16,9 @@ namespace MaMapF.Handlers
 
     public class SingleAgentSearchHandler
     {
+        // public static readonly int MaxActionRepeat = -1; // Does not make sense for ASTAR
         public static readonly SearchType SearchType = SearchType.ASTAR;
-        public static readonly int MaxActionRepeat = -1; // does not make sense for ASTAR
-        public static readonly bool PrintProgress = false; // warning: very slow
+        public static readonly bool PrintProgress = false; // Check map progress, warning: very slow 
 
         public static List<SingleAgentState> Search(
             SingleAgentProblem problem,
@@ -43,7 +43,6 @@ namespace MaMapF.Handlers
                 }
             }
 
-
             var heuristic = new SingleAgentHeuristic(goals, constraints);
 
             var frontier = new SimplePriorityQueue<SingleAgentState>();
@@ -55,12 +54,6 @@ namespace MaMapF.Handlers
             {
                 var state = frontier.Dequeue();
                 explored.Add(state);
-
-
-                if (SearchHandler.COUNTER == 19)
-                {
-                    Console.Error.WriteLine(state);
-                }
 
                 if (PrintProgress)
                 {
@@ -93,13 +86,13 @@ namespace MaMapF.Handlers
             return null;
         }
 
-        private static bool IsExploredMaxNoOp(HashSet<SingleAgentState> explored, SingleAgentState state)
-        {
-            if (MaxActionRepeat == -1) return false;
-            var s = CreateNextState(state, Action.NoOp);
-            s.G -= MaxActionRepeat;
-            return explored.Contains(s);
-        }
+        // private static bool IsExploredMaxNoOp(HashSet<SingleAgentState> explored, SingleAgentState state)
+        // {
+        //     if (MaxActionRepeat == -1) return false;
+        //     var s = CreateNextState(state, Action.NoOp);
+        //     s.G -= MaxActionRepeat;
+        //     return explored.Contains(s);
+        // }
 
         private static int GetPriority(SingleAgentState s)
         {

@@ -104,6 +104,8 @@ namespace MaMapF.Handlers
                     return goals[agent].Where(g => lastState.AllMapItems.Any(g.Equals)).ToList();
                 });
                 solvedAgents = agents.Where(a => IsAgentDone(a, solved[a])).ToList();
+
+                // Count goal progression
                 var solvedGoalsCount = solved.SelectMany(s => s.Value).Count();
                 Console.Error.WriteLine($"{solvedGoalsCount}/{_level.GoalCount}");
 
@@ -177,7 +179,6 @@ namespace MaMapF.Handlers
 
 
             // Sub goal: Move agent to a box
-
             // Select "unused-box" and "unsolved-goal" with smallest distance
             // distance(agent, box) + distance(box, goal)
             var orderedBoxGoals = new SimplePriorityQueue<Tuple<MapItem, MapItem>>();
@@ -200,7 +201,7 @@ namespace MaMapF.Handlers
 
                     // Skip if no path to target VIA BFS
                     // COULD BE USED TO COUNT CORRECT DIST
-                    if (!BFSToPath(initialState, box.Position, initialState.Agent.Position))
+                    if (!IsReachableBest(initialState, box.Position, initialState.Agent.Position))
                     {
                         continue;
                     }
@@ -217,7 +218,7 @@ namespace MaMapF.Handlers
             Tuple<MapItem, MapItem> selectedBoxGoal = null;
             foreach (var orderedBoxGoal in orderedBoxGoals)
             {
-                if (!BFSToPath(initialState, orderedBoxGoal.Item1.Position, initialState.Agent.Position)) continue;
+                if (!IsReachableBest(initialState, orderedBoxGoal.Item1.Position, initialState.Agent.Position)) continue;
                 selectedBoxGoal = orderedBoxGoal;
                 break;
             }
@@ -259,15 +260,15 @@ namespace MaMapF.Handlers
             return problem;
         }
 
-        public bool BFSToPath(SingleAgentState state, Position start, Position end)
+        private bool IsReachableBest(SingleAgentState state, Position start, Position end)
         {
-            Queue<Position> struc = new Queue<Position>();
+            var queue = new SimplePriorityQueue<Position>();
             var visited = new HashSet<Position>();
-            struc.Enqueue(start);
+            queue.Enqueue(start, 0);
 
-            while (struc.Count > 0)
+            while (queue.Count > 0)
             {
-                var p = struc.Dequeue();
+                var p = queue.Dequeue();
 
                 if (visited.Contains(p))
                 {
@@ -282,19 +283,10 @@ namespace MaMapF.Handlers
                 visited.Add(p);
 
                 var neighbours = Position.GetNeighbours(p);
-                foreach (var neighbour in neighbours)
+                foreach (var neighbour in neighbours.Where(neighbour => !state.IsWall(neighbour))
+                    .Where(neighbour => !state.IsBox(neighbour)))
                 {
-                    if (state.IsWall(neighbour))
-                    {
-                        continue;
-                    }
-
-                    if (state.IsBox(neighbour))
-                    {
-                        continue;
-                    }
-
-                    struc.Enqueue(neighbour);
+                    queue.Enqueue(neighbour, Position.Distance(neighbour, end));
                 }
             }
 
