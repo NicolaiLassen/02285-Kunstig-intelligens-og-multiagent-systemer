@@ -106,7 +106,6 @@ namespace MaMapF.Handlers
             return s.G;
         }
 
-
         private static bool IsGoalState(SingleAgentState state, List<MapItem> goals, List<Constraint> constraints)
         {
             // false if there is a future constraint

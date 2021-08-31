@@ -24,23 +24,23 @@ namespace MaMapF.Handlers
         {
             _level = level;
         }
-        
+
         public Dictionary<char, List<SingleAgentState>> Search()
         {
             var agents = _level.Agents;
             var goals = _level.Goals;
-            var solved = 
+            var solved =
                 agents.ToDictionary(agent => agent, agent => new List<MapItem>());
-            var solutions = 
+            var solutions =
                 agents.ToDictionary(agent => agent, agent => new List<SingleAgentState>());
-            
+
             var solvedAgents = new List<char>();
             var agentsToDelegate = new List<char>(_level.Agents);
             var pastSolutionLength = 1;
-            
+
             // 
             var cbsHorizonMinimum = 2;
-            
+
             var problems = agents.ToDictionary(agent => agent,
                 agent => new SingleAgentProblem(_level.AgentInitialStates[agent]));
 
@@ -69,7 +69,7 @@ namespace MaMapF.Handlers
                 var minUnsolvedSolutionLength = nextNode.Solutions
                     .Where(k => !solvedAgents.Contains(k.Key))
                     .Min(s => s.Value.Count);
-                
+
                 // minUnsolvedSolutionLength =
                 //     Math.Min(minUnsolvedSolutionLength, pastSolutionLength + cbsHorizonMinimum);
 
@@ -89,7 +89,7 @@ namespace MaMapF.Handlers
                         problems[agent].InitialState = solutions[agent].Last();
                         continue;
                     }
-                    
+
                     // I'm done then fill me up with NoOps
                     var solutionDiff = Math.Abs(solution.Count - minUnsolvedSolutionLength);
                     solutions[agent] = solution.GetRange(0, solution.Count);
@@ -117,7 +117,7 @@ namespace MaMapF.Handlers
                 // Console.Error.WriteLine(solved.Values.Sum(s => s.Count) + "/" + _level.GoalCount);
 
                 // TODO: KEEP IN MIND THAT WE HAVE A BREAK!
-                // if (COUNTER == 40)
+                // if (COUNTER == 5)
                 // {
                 //     break;
                 // }
@@ -210,14 +210,15 @@ namespace MaMapF.Handlers
                     }
 
                     // Skip if no path to target best first
-                    if (!IsReachableBest(initialState, box.Position, initialState.Agent.Position))
+                    if (!IsReachableBest(initialState,
+                        box.Position,
+                        initialState.Agent.Position
+                    ))
                     {
                         continue;
                     }
 
-                    // var agentBoxDistance = Position.Distance(initialState.Agent, box);
                     var boxGoalDistance = Position.Distance(box, goal);
-                    // var distance = agentBoxDistance + boxGoalDistance;
                     orderedBoxGoals.Enqueue(new BoxGoal {Box = box, Goal = goal}, boxGoalDistance);
                 }
             }
@@ -225,8 +226,10 @@ namespace MaMapF.Handlers
             var boxGoal =
                 // ReSharper disable once PossibleNullReferenceException
                 // SHOULD NOT BE NULL
-                orderedBoxGoals.LastOrDefault(orderedBoxGoal =>
-                    IsReachableBest(initialState, orderedBoxGoal.Box.Position, initialState.Agent.Position));
+                orderedBoxGoals.FirstOrDefault(orderedBoxGoal =>
+                    IsReachableBest(initialState,
+                        orderedBoxGoal.Box.Position,
+                        initialState.Agent.Position));
 
             // JUST SELECT CLOSEST POS THEN
             if (boxGoal == null)
@@ -238,7 +241,8 @@ namespace MaMapF.Handlers
             var neighbours = Position.GetNeighbours(boxGoal.Box.Position);
 
             // JUST CHECK IF SPOT IS OPEN
-            var neighboursReachable = neighbours.Where(n => !initialState.IsWall(n) && !initialState.IsBox(n));
+            var neighboursReachable =
+                neighbours.Where(n => !initialState.IsWall(n) && !initialState.IsBox(n));
 
             var bestPosition = neighboursReachable.OrderBy(p =>
             {
