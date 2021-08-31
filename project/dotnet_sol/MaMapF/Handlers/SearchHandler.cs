@@ -215,23 +215,23 @@ namespace MaMapF.Handlers
                         continue;
                     }
 
-                    var agentBoxDistance = Position.Distance(initialState.Agent, box);
+                    // var agentBoxDistance = Position.Distance(initialState.Agent, box);
                     var boxGoalDistance = Position.Distance(box, goal);
-                    var distance = agentBoxDistance + boxGoalDistance;
-                    orderedBoxGoals.Enqueue(new BoxGoal {Box = box, Goal = goal}, distance);
+                    // var distance = agentBoxDistance + boxGoalDistance;
+                    orderedBoxGoals.Enqueue(new BoxGoal {Box = box, Goal = goal}, boxGoalDistance);
                 }
             }
 
             var boxGoal =
                 // ReSharper disable once PossibleNullReferenceException
                 // SHOULD NOT BE NULL
-                orderedBoxGoals.FirstOrDefault(orderedBoxGoal =>
+                orderedBoxGoals.LastOrDefault(orderedBoxGoal =>
                     IsReachableBest(initialState, orderedBoxGoal.Box.Position, initialState.Agent.Position));
 
             // JUST SELECT CLOSEST POS THEN
             if (boxGoal == null)
             {
-                Console.Error.WriteLine(agent);
+                return problem;
             }
 
             // Find best neighbour position to selected box

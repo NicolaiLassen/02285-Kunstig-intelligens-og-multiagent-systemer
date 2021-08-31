@@ -16,8 +16,7 @@ namespace MaMapF.Handlers
 
     public class SingleAgentSearchHandler
     {
-        // public static readonly int MaxActionRepeat = -1; // Does not make sense for ASTAR
-        public static readonly SearchType SearchType = SearchType.GREEDY;
+        public static readonly SearchType SearchType = SearchType.ASTAR;
         public static readonly bool PrintProgress = false; // Check map progress, warning: very slow 
 
         public static List<SingleAgentState> Search(
@@ -82,7 +81,7 @@ namespace MaMapF.Handlers
                     return GetSingleAgentSolutionFromState(state);
                 }
 
-                var expandedStates = ExpandSingleAgentState(problem, state, constraints);
+                var expandedStates = ExpandSingleAgentState(state, constraints);
                 foreach (var s in expandedStates)
                 {
                     // skip if state is already in list of frontiers
@@ -123,7 +122,7 @@ namespace MaMapF.Handlers
         }
 
 
-        private static List<SingleAgentState> ExpandSingleAgentState(SingleAgentProblem problem, SingleAgentState state,
+        private static List<SingleAgentState> ExpandSingleAgentState(SingleAgentState state,
             List<Constraint> constraints)
         {
             var states = new List<SingleAgentState>();
@@ -131,8 +130,10 @@ namespace MaMapF.Handlers
             {
                 if (IsValidAction(state, action))
                 {
-                    // Console.Error.WriteLine(pastConstraints);
+                    var lastPastConstraint = constraints.LastOrDefault(c => c.Step <= state.G);
                     var nextState = CreateNextState(state, action);
+                    
+                    nextState.PastConstraint = lastPastConstraint;
                     
                     if (!BreaksConstraint(nextState, constraints))
                     {
@@ -152,25 +153,18 @@ namespace MaMapF.Handlers
             nextState.ROWS = state.ROWS;
             nextState.COLS = state.COLS;
 
-            // use reffernce to walls
+            // Use reference to walls
             nextState.Walls = state.Walls;
 
-            // OH MY FUCKING GOD, copy all refferences
+            // OH MY FUCKING GOD, copy all reference
             nextState.Agent = new MapItem(state.Agent.UID, state.Agent.Value, state.Agent.Position);
             nextState.Boxes = state.Boxes.Select(b => b).ToList();
             nextState.BoxWalls = state.BoxWalls.Select(b => b).ToList();
-
-            // nextState.Map = state.Map.Select(item => item.Select(e => e).ToList()).ToList();
-
-
+            
             // if (action.Type == ActionType.NoOp)
             if (action.Type == ActionType.Move)
             {
                 nextState.Agent.Position = state.Agent.Position.Next(action.AgentRowDelta, action.AgentColumnDelta);
-
-                // Update map
-                // nextState.Map[nextState.AgentPosition.Row][nextState.AgentPosition.Column] = state.Agent;
-                // nextState.Map[state.AgentPosition.Row][state.AgentPosition.Column] = ' ';
             }
 
             if (action.Type == ActionType.Push)
@@ -180,13 +174,6 @@ namespace MaMapF.Handlers
                 nextState.Boxes = state.Boxes.Select(b => b.Position.Equals(nextState.Agent.Position)
                     ? new MapItem(b.UID, b.Value, nextBoxPosition)
                     : b).ToList();
-
-
-                // update map
-                // var boxValue = state.Map[nextState.AgentPosition.Row][nextState.AgentPosition.Column];
-                // nextState.Map[nextBoxPosition.Row][nextBoxPosition.Column] = boxValue;
-                // nextState.Map[nextState.AgentPosition.Row][nextState.AgentPosition.Column] = state.Agent;
-                // nextState.Map[state.AgentPosition.Row][state.AgentPosition.Column] = ' ';
             }
 
             if (action.Type == ActionType.Pull)
@@ -197,20 +184,11 @@ namespace MaMapF.Handlers
                 nextState.Boxes = state.Boxes.Select(b => b.Position.Equals(boxPosition)
                     ? new MapItem(b.UID, b.Value, nextBoxPosition)
                     : b).ToList();
-
-                // update map
-                // var boxValue = state.Map[boxPosition.Row][boxPosition.Column];
-                // nextState.Map[nextState.AgentPosition.Row][nextState.AgentPosition.Column] = state.Agent;
-                // nextState.Map[state.AgentPosition.Row][state.AgentPosition.Column] = boxValue;
-                // nextState.Map[boxPosition.Row][boxPosition.Column] = ' ';
             }
 
             nextState.G = state.G + 1;
-
             // CALC LATER hmmmm
             nextState.H = 0;
-
-            // Console.Error.WriteLine(nextState);
 
             return nextState;
         }

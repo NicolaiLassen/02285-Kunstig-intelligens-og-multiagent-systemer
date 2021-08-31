@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace MaMapF.Models
@@ -10,8 +9,8 @@ namespace MaMapF.Models
         public int ROWS { get; set; }
         public int COLS { get; set; }
         public string Color { get; set; }
-        
-        public int ReacedConstraints { get; set; }
+
+        public Constraint PastConstraint { get; set; }
 
         public char AgentName => Agent.Value;
         public MapItem Agent { get; set; }
@@ -99,6 +98,11 @@ namespace MaMapF.Models
 
             var prime = 31;
             var hash = prime * 1;
+            if (PastConstraint != null)
+            {
+                hash = hash + PastConstraint.GetHashCode();
+            }
+
             // hash = hash * prime + G * 23;
             hash = hash * prime * AllMapItems.Sum(item =>
                 item.Value.GetHashCode() + item.Position.Row * 11 + item.Position.Column * 13);
@@ -112,6 +116,10 @@ namespace MaMapF.Models
             if (!(obj is SingleAgentState other)) return false;
 
             // If the time is different
+            if (PastConstraint != null && other.PastConstraint != null)
+            {
+                if (!PastConstraint.Equals(other.PastConstraint)) return false;
+            }
             // if (G != other.G) return false;
 
             // If my agent is the same as the other state
