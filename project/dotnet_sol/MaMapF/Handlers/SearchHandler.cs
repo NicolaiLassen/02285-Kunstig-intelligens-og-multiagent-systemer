@@ -24,19 +24,23 @@ namespace MaMapF.Handlers
         {
             _level = level;
         }
-
-        // TODO FIND A WAY TO INCREMENT THIS IF THERE IS A BLOCKED AGENT
-        // public static int MaxMoves = 100000000;
-
+        
         public Dictionary<char, List<SingleAgentState>> Search()
         {
             var agents = _level.Agents;
             var goals = _level.Goals;
-            var solved = agents.ToDictionary(agent => agent, agent => new List<MapItem>());
-            var solutions = agents.ToDictionary(agent => agent, agent => new List<SingleAgentState>());
+            var solved = 
+                agents.ToDictionary(agent => agent, agent => new List<MapItem>());
+            var solutions = 
+                agents.ToDictionary(agent => agent, agent => new List<SingleAgentState>());
+            
             var solvedAgents = new List<char>();
             var agentsToDelegate = new List<char>(_level.Agents);
-
+            var pastSolutionLength = 1;
+            
+            // 
+            var cbsHorizonMinimum = 2;
+            
             var problems = agents.ToDictionary(agent => agent,
                 agent => new SingleAgentProblem(_level.AgentInitialStates[agent]));
 
@@ -55,8 +59,7 @@ namespace MaMapF.Handlers
                 // Reset for next round trip
                 agentsToDelegate = new List<char>();
 
-                var nextNode = CBSHandler.Search(problems, solvedAgents);
-
+                var nextNode = CBSHandler.Search(problems, solvedAgents, pastSolutionLength);
                 if (nextNode == null)
                 {
                     Console.Error.WriteLine("!NO SOLUTION FOUND!");
@@ -66,6 +69,9 @@ namespace MaMapF.Handlers
                 var minUnsolvedSolutionLength = nextNode.Solutions
                     .Where(k => !solvedAgents.Contains(k.Key))
                     .Min(s => s.Value.Count);
+                
+                // minUnsolvedSolutionLength =
+                //     Math.Min(minUnsolvedSolutionLength, pastSolutionLength + cbsHorizonMinimum);
 
                 foreach (var agent in agents)
                 {
@@ -83,7 +89,7 @@ namespace MaMapF.Handlers
                         problems[agent].InitialState = solutions[agent].Last();
                         continue;
                     }
-
+                    
                     // I'm done then fill me up with NoOps
                     var solutionDiff = Math.Abs(solution.Count - minUnsolvedSolutionLength);
                     solutions[agent] = solution.GetRange(0, solution.Count);
@@ -103,12 +109,15 @@ namespace MaMapF.Handlers
                     var lastState = solution.Last();
                     return goals[agent].Where(g => lastState.AllMapItems.Any(g.Equals)).ToList();
                 });
-                solvedAgents = agents.Where(a => IsAgentDone(a, solved[a])).ToList();
 
-                // Console.Error.WriteLine(solvedAgents.Count);
-                
-                // TODO: KEEP IN MIND THAT WE HAVE A COUNTER BREAK!
-                // if (COUNTER == 8)
+                solvedAgents = agents.Where(a => IsAgentDone(a, solved[a])).ToList();
+                pastSolutionLength = minUnsolvedSolutionLength;
+                Console.Error.WriteLine(solvedAgents.Count);
+
+                // Console.Error.WriteLine(solved.Values.Sum(s => s.Count) + "/" + _level.GoalCount);
+
+                // TODO: KEEP IN MIND THAT WE HAVE A BREAK!
+                // if (COUNTER == 40)
                 // {
                 //     break;
                 // }
@@ -132,6 +141,11 @@ namespace MaMapF.Handlers
             // Return problem with no goals if no unsolved goals left 
             if (!unsolved.Any())
             {
+                foreach (var box in initialState.Boxes)
+                {
+                    problem.AddBoxMod(box);
+                }
+
                 return problem;
             }
 
@@ -174,7 +188,6 @@ namespace MaMapF.Handlers
                 return problem;
             }
 
-
             // Sub goal: Move agent to a box
             // Select "unused-box" and "unsolved-goal" with smallest distance
             // distance(agent, box) + distance(box, goal)
@@ -205,7 +218,7 @@ namespace MaMapF.Handlers
                     var agentBoxDistance = Position.Distance(initialState.Agent, box);
                     var boxGoalDistance = Position.Distance(box, goal);
                     var distance = agentBoxDistance + boxGoalDistance;
-                    orderedBoxGoals.Enqueue(    new BoxGoal{Box = box, Goal = goal}, distance);
+                    orderedBoxGoals.Enqueue(new BoxGoal {Box = box, Goal = goal}, distance);
                 }
             }
 

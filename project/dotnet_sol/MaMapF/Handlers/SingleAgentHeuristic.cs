@@ -19,27 +19,19 @@ namespace MaMapF.Handlers
 
         public int GetHeuristic(SingleAgentProblem problem, SingleAgentState state)
         {
-            var h = 0;
-
             // Add future constraint count since every constraint yields 1 extra step
             var futureConstraints = Constraints.Where(constraint => constraint.Step > state.G).ToList();
-            // h += futureConstraints.Count;
 
             // Add distance to boxes included in future constraints
-            foreach (var constraint in futureConstraints)
-            {
-                foreach (var box in state.Boxes)
-                {
-                    if (constraint.Position.Equals(box.Position))
-                    {
-                        h += Position.Distance(state.Agent, box);
-                    }
-                }
-            }
+            var h = (from constraint in futureConstraints
+                from box in state.Boxes
+                where constraint.Position.Equals(box.Position)
+                select Position.Distance(state.Agent, box)).Sum();
 
             if (problem.Type == SingleAgentProblemType.BoxToGoal)
             {
-                var currentSelectedBoxPosition = state.Boxes.FirstOrDefault(b => b.UID == problem.SelectedBox.UID);
+                var currentSelectedBoxPosition =
+                    state.Boxes.FirstOrDefault(b => b.UID == problem.SelectedBox.UID);
 
                 // Add distance from agent to selectedBox
                 h += Position.Distance(state.Agent, currentSelectedBoxPosition);
@@ -48,14 +40,13 @@ namespace MaMapF.Handlers
                 h += Position.Distance(currentSelectedBoxPosition, problem.SelectedBoxGoal);
             }
 
-
             // Add distance from agent to agent goal position
             if (AgentGoal != null)
             {
                 h += Position.Distance(AgentGoal, state.Agent);
             }
 
-            return h;
+            return h * 2;
         }
     }
 }

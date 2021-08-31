@@ -17,7 +17,7 @@ namespace MaMapF.Handlers
     public class SingleAgentSearchHandler
     {
         // public static readonly int MaxActionRepeat = -1; // Does not make sense for ASTAR
-        public static readonly SearchType SearchType = SearchType.ASTAR;
+        public static readonly SearchType SearchType = SearchType.GREEDY;
         public static readonly bool PrintProgress = false; // Check map progress, warning: very slow 
 
         public static List<SingleAgentState> Search(
@@ -34,6 +34,8 @@ namespace MaMapF.Handlers
             var goals = problem.Goals;
 
             // Skip node has unreachable constraints
+            var maxDistanceConstraint = 0;
+            var maxConstraintStep = 0;
             foreach (var constraint in constraints)
             {
                 var distanceToConstraint = Position.Distance(initialState.Agent.Position, constraint.Position);
@@ -41,6 +43,11 @@ namespace MaMapF.Handlers
                 {
                     return null;
                 }
+
+                if (maxDistanceConstraint >= distanceToConstraint) continue;
+
+                maxDistanceConstraint = distanceToConstraint;
+                maxConstraintStep = constraint.Step;
             }
 
             var heuristic = new SingleAgentHeuristic(goals, constraints);
@@ -54,6 +61,16 @@ namespace MaMapF.Handlers
             {
                 var state = frontier.Dequeue();
                 explored.Add(state);
+
+                if (problem.Type == SingleAgentProblemType.NULL)
+                {
+                    if (maxConstraintStep > state.G + maxDistanceConstraint)
+                    {
+                        var nextNoOpState = CreateNextState(state, Action.NoOp);
+                        frontier.Enqueue(nextNoOpState, maxConstraintStep - state.G);
+                        continue;
+                    }
+                }
 
                 if (PrintProgress)
                 {
@@ -74,9 +91,6 @@ namespace MaMapF.Handlers
                     // skip if state is already explored
                     if (explored.Contains(s)) continue;
 
-                    // skip if state is explored with (state.G - MaxNoOp)
-                    // if (IsExploredMaxNoOp(explored, s)) continue;
-
                     s.H = heuristic.GetHeuristic(problem, s);
                     var priority = GetPriority(s);
                     frontier.Enqueue(s, priority);
@@ -85,14 +99,6 @@ namespace MaMapF.Handlers
 
             return null;
         }
-
-        // private static bool IsExploredMaxNoOp(HashSet<SingleAgentState> explored, SingleAgentState state)
-        // {
-        //     if (MaxActionRepeat == -1) return false;
-        //     var s = CreateNextState(state, Action.NoOp);
-        //     s.G -= MaxActionRepeat;
-        //     return explored.Contains(s);
-        // }
 
         private static int GetPriority(SingleAgentState s)
         {
@@ -125,7 +131,9 @@ namespace MaMapF.Handlers
             {
                 if (IsValidAction(state, action))
                 {
+                    // Console.Error.WriteLine(pastConstraints);
                     var nextState = CreateNextState(state, action);
+                    
                     if (!BreaksConstraint(nextState, constraints))
                     {
                         states.Add(nextState);

@@ -19,6 +19,8 @@ namespace MaMapF.Models
         {
             Value = value;
             Position = position;
+            
+            // Item identifier of starting position
             UID = $"{value}.{position.Row}.{position.Column}";
         }
 

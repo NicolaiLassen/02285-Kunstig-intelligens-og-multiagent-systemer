@@ -9,22 +9,21 @@ namespace MaMapF.Models
         private int Hash = -1;
         public int ROWS { get; set; }
         public int COLS { get; set; }
+        public string Color { get; set; }
         
-        public String Color { get; set; }
+        public int ReacedConstraints { get; set; }
 
         public char AgentName => Agent.Value;
         public MapItem Agent { get; set; }
         public List<MapItem> Boxes { get; set; }
         public HashSet<string> Walls { get; set; }
-
         public List<MapItem> BoxWalls { get; set; }
-
         public SingleAgentState Parent { get; set; }
         public Action Action { get; set; }
         public int G { get; set; } // COST
         public int H { get; set; } // HEURISTIC
         public int F => G + H;
-        
+
         public List<MapItem> AllMapItems => BoxWalls.Concat(Boxes.Concat(new[] {Agent}).ToList()).ToList();
         public List<Position> AllPositions => AllMapItems.Select(i => i.Position).ToList();
 
@@ -94,14 +93,13 @@ namespace MaMapF.Models
             return Boxes.Any(b => b.Position.Equals(position));
         }
 
-
         public override int GetHashCode()
         {
             if (Hash != -1) return Hash;
 
             var prime = 31;
             var hash = prime * 1;
-            hash = hash * prime + G * 23;
+            // hash = hash * prime + G * 23;
             hash = hash * prime * AllMapItems.Sum(item =>
                 item.Value.GetHashCode() + item.Position.Row * 11 + item.Position.Column * 13);
             Hash = hash;
@@ -114,7 +112,7 @@ namespace MaMapF.Models
             if (!(obj is SingleAgentState other)) return false;
 
             // If the time is different
-            if (G != other.G) return false;
+            // if (G != other.G) return false;
 
             // If my agent is the same as the other state
             if (!Agent.Equals(other.Agent)) return false;

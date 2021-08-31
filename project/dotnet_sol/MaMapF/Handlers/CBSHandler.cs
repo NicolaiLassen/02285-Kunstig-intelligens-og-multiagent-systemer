@@ -9,7 +9,7 @@ namespace MaMapF.Handlers
 {
     public class CBSHandler
     {
-        public static Node Search(Dictionary<char, SingleAgentProblem> problems, List<char> solvedAgents)
+        public static Node Search(Dictionary<char, SingleAgentProblem> problems, List<char> solvedAgents, int pastSolutionLength)
         {
             // Create initial solutions for each agent
             var agents = problems.Keys.ToList();
@@ -29,11 +29,12 @@ namespace MaMapF.Handlers
 
             while (open.Count != 0)
             {
+                // Console.Error.WriteLine(open.Count);
                 // Get the node with lowest cost
                 var node = open.Dequeue();
 
                 // If no solutions conflict then return the solutions
-                var conflict = GetConflict(agents, node, solvedAgents);
+                var conflict = GetConflict(agents, node, solvedAgents, pastSolutionLength);
 
                 if (conflict == null)
                 {
@@ -80,16 +81,22 @@ namespace MaMapF.Handlers
             return null;
         }
 
-        private static Conflict GetConflict(List<char> agents, Node node, List<char> solvedAgents)
+        private static Conflict GetConflict(
+            List<char> agents,
+            Node node,
+            List<char> solvedAgents,
+            int pastSolutionLength
+        )
         {
             // var maxLength = node.Solutions.Max(solution => solution.Value.Count);
             var unsolvedMinLength = node.Solutions
                 .Where(s => !solvedAgents.Contains(s.Key))
                 .Min(solution => solution.Value.Count);
+
             var maxSteps = unsolvedMinLength;
-
-            var solutions = agents.ToDictionary(agent => agent, agent => node.Solutions[agent].Select(s => s).ToList());
-
+            var solutions = agents
+                .ToDictionary(agent => agent, agent => node.Solutions[agent].Select(s => s).ToList());
+            
             // Make all solutions same length as longest
             foreach (var agent in solutions.Keys)
             {
@@ -109,7 +116,7 @@ namespace MaMapF.Handlers
                 }
             }
 
-            for (var step = 1; step < maxSteps; step++)
+            for (var step = pastSolutionLength; step < maxSteps; step++)
             {
                 for (var a0i = 0; a0i < agents.Count; a0i++)
                 {
@@ -119,6 +126,8 @@ namespace MaMapF.Handlers
                         var a1 = agents[a1i];
                         var a0s = solutions[a0];
                         var a1s = solutions[a1];
+
+                        // It not a conflict if its myself
                         if (a0s[0].Color == a1s[0].Color)
                         {
                             continue;
