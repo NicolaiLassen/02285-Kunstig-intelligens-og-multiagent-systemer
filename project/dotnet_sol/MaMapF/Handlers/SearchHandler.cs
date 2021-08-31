@@ -5,14 +5,6 @@ using MaMapF.Models;
 using Priority_Queue;
 using Action = MaMapF.Models.Action;
 
-//********************
-// Try map A2 to see delegation in action
-//*******************
-
-// Remove waiting time for other agents to finnish their sub goals
-// Improve search time for levels with corridor
-
-
 namespace MaMapF.Handlers
 {
     public class SearchHandler
@@ -37,9 +29,6 @@ namespace MaMapF.Handlers
             var solvedAgents = new List<char>();
             var agentsToDelegate = new List<char>(_level.Agents);
             var pastSolutionLength = 1;
-
-            // 
-            var cbsHorizonMinimum = 2;
 
             var problems = agents.ToDictionary(agent => agent,
                 agent => new SingleAgentProblem(_level.AgentInitialStates[agent]));
@@ -112,17 +101,13 @@ namespace MaMapF.Handlers
 
                 solvedAgents = agents.Where(a => IsAgentDone(a, solved[a])).ToList();
                 pastSolutionLength = minUnsolvedSolutionLength;
-                Console.Error.WriteLine(solvedAgents.Count);
 
-                // Console.Error.WriteLine(solved.Values.Sum(s => s.Count) + "/" + _level.GoalCount);
-
-                // TODO: KEEP IN MIND THAT WE HAVE A BREAK!
-                // if (COUNTER == 5)
+                // if (COUNTER == 6)
                 // {
                 //     break;
                 // }
-
-                COUNTER += 1;
+                //
+                // COUNTER += 1;
             }
 
             return solutions;
@@ -145,7 +130,6 @@ namespace MaMapF.Handlers
                 {
                     problem.AddBoxMod(box);
                 }
-
                 return problem;
             }
 
@@ -156,6 +140,7 @@ namespace MaMapF.Handlers
             if (!unsolvedBoxGoals.Any())
             {
                 problem.Type = SingleAgentProblemType.AgentToGoal;
+
                 // Convert all boxes to walls to optimize a*
                 foreach (var box in initialState.Boxes)
                 {
@@ -184,7 +169,6 @@ namespace MaMapF.Handlers
                     problem.AddBoxMod(box);
                 }
 
-                // Console.Error.WriteLine($"prevBox: {problem.SelectedBox}");
                 return problem;
             }
 
@@ -234,6 +218,12 @@ namespace MaMapF.Handlers
             // JUST SELECT CLOSEST POS THEN
             if (boxGoal == null)
             {
+                // Convert all boxes to walls
+                foreach (var box in allBoxes)
+                {
+                    problem.AddBoxMod(box);
+                }
+
                 return problem;
             }
 
@@ -293,8 +283,9 @@ namespace MaMapF.Handlers
                 visited.Add(p);
 
                 var neighbours = Position.GetNeighbours(p);
-                foreach (var neighbour in neighbours.Where(neighbour => !state.IsWall(neighbour))
-                    .Where(neighbour => !state.IsBox(neighbour)))
+                foreach (var neighbour in
+                    neighbours.Where(neighbour => !state.IsWall(neighbour))
+                        .Where(neighbour => !state.IsBox(neighbour)))
                 {
                     queue.Enqueue(neighbour, Position.Distance(neighbour, end));
                 }

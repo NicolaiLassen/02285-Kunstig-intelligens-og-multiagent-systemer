@@ -24,13 +24,13 @@ namespace MaMapF.Handlers
             List<Constraint> constraints
         )
         {
+            var initialState = problem.InitialState;
+            var goals = problem.Goals;
+            
             if (PrintProgress)
             {
                 Console.Error.WriteLine(problem);
             }
-
-            var initialState = problem.InitialState;
-            var goals = problem.Goals;
 
             // Skip node has unreachable constraints
             var maxDistanceConstraint = 0;
@@ -131,9 +131,9 @@ namespace MaMapF.Handlers
                 {
                     var lastPastConstraint = constraints.LastOrDefault(c => c.Step <= state.G);
                     var nextState = CreateNextState(state, action);
-                    
+
                     nextState.PastConstraint = lastPastConstraint;
-                    
+
                     if (!BreaksConstraint(nextState, constraints))
                     {
                         states.Add(nextState);
@@ -159,7 +159,7 @@ namespace MaMapF.Handlers
             nextState.Agent = new MapItem(state.Agent.UID, state.Agent.Value, state.Agent.Position);
             nextState.Boxes = state.Boxes.Select(b => b).ToList();
             nextState.BoxWalls = state.BoxWalls.Select(b => b).ToList();
-            
+
             // if (action.Type == ActionType.NoOp)
             if (action.Type == ActionType.Move)
             {
