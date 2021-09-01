@@ -46,7 +46,7 @@ namespace MaMapF.Handlers
                 h += Position.Distance(AgentGoal, state.Agent);
             }
 
-            return h * 2;
+            return h;
         }
     }
 }
