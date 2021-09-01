@@ -32,7 +32,7 @@ namespace MaMapF.Handlers
                 // Console.Error.WriteLine(open.Count);
                 // Get the node with lowest cost
                 var node = open.Dequeue();
-                
+
                 // If no solutions conflict then return the solutions
                 var conflict = GetConflict(agents, node, solvedAgents, pastSolutionLength);
 
@@ -58,6 +58,7 @@ namespace MaMapF.Handlers
                     
                     // Create agent solution with new constraint
                     var constraints = nextNode.Constraints.Where(c => c.Agent == agent).ToList();
+
                     var solution = SingleAgentSearchHandler.Search(problems[agent], constraints);
 
                     // Skip if agent solution is null

@@ -100,7 +100,7 @@ namespace MaMapF.Models
             var hash = prime * 1;
             if (PastConstraint != null)
             {
-                hash = hash + PastConstraint.GetHashCode();
+                hash = hash + PastConstraint.GetHashCode() * 13;
             }
 
             // hash = hash * prime + G * 23;

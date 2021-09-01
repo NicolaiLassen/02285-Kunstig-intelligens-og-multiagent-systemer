@@ -102,7 +102,7 @@ namespace MaMapF.Handlers
                 solvedAgents = agents.Where(a => IsAgentDone(a, solved[a])).ToList();
                 pastSolutionLength = minUnsolvedSolutionLength;
 
-                // if (COUNTER == 6)
+                // if (COUNTER == 7)
                 // {
                 //     break;
                 // }
@@ -130,6 +130,7 @@ namespace MaMapF.Handlers
                 {
                     problem.AddBoxMod(box);
                 }
+
                 return problem;
             }
 
@@ -232,15 +233,17 @@ namespace MaMapF.Handlers
 
             // JUST CHECK IF SPOT IS OPEN
             var neighboursReachable =
-                neighbours.Where(n => !initialState.IsWall(n) && !initialState.IsBox(n));
+                neighbours.Where(n =>
+                    !initialState.IsWall(n) &&
+                    !initialState.IsBox(n));
 
             var bestPosition = neighboursReachable.OrderBy(p =>
             {
-                var distance = Position.Distance(initialState.Agent.Position, p);
+                var distance = Position.Distance(boxGoal.Goal.Position, p);
                 // previous box goal bonus
                 // other agent box penalty
                 return distance;
-            }).First();
+            }).FirstOrDefault();
 
             // Find the box with least neighbor block
             // Console.Error.WriteLine($"bestPosition: {bestPosition}");

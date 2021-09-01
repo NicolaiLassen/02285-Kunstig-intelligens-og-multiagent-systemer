@@ -82,6 +82,7 @@ namespace MaMapF.Handlers
                 }
 
                 var expandedStates = ExpandSingleAgentState(state, constraints);
+
                 foreach (var s in expandedStates)
                 {
                     // skip if state is already in list of frontiers
@@ -124,16 +125,17 @@ namespace MaMapF.Handlers
         private static List<SingleAgentState> ExpandSingleAgentState(SingleAgentState state,
             List<Constraint> constraints)
         {
+            
+      
             var states = new List<SingleAgentState>();
             foreach (var action in Action.AllActions)
             {
                 if (IsValidAction(state, action))
                 {
-                    var lastPastConstraint = constraints.LastOrDefault(c => c.Step <= state.G);
                     var nextState = CreateNextState(state, action);
-
+                    var lastPastConstraint = constraints.LastOrDefault(c => c.Step <= nextState.G);
                     nextState.PastConstraint = lastPastConstraint;
-
+                    
                     if (!BreaksConstraint(nextState, constraints))
                     {
                         states.Add(nextState);
