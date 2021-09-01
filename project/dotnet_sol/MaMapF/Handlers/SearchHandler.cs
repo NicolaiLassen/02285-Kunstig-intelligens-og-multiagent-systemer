@@ -102,7 +102,7 @@ namespace MaMapF.Handlers
                 solvedAgents = agents.Where(a => IsAgentDone(a, solved[a])).ToList();
                 pastSolutionLength = minUnsolvedSolutionLength;
 
-                // if (COUNTER == 7)
+                // if (COUNTER == 6)
                 // {
                 //     break;
                 // }
@@ -130,7 +130,6 @@ namespace MaMapF.Handlers
                 {
                     problem.AddBoxMod(box);
                 }
-
                 return problem;
             }
 
@@ -224,7 +223,6 @@ namespace MaMapF.Handlers
                 {
                     problem.AddBoxMod(box);
                 }
-
                 return problem;
             }
 

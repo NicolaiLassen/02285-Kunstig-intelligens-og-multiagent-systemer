@@ -26,7 +26,32 @@ namespace MaMapF.Handlers
         {
             var initialState = problem.InitialState;
             var goals = problem.Goals;
-            
+
+            // Fix block
+            // if (problem.Type == SingleAgentProblemType.NULL)
+            // {
+            //     var block = constraints.LastOrDefault();
+            //     if (block != null)
+            //     {
+            //         MapItem selectedBoxWall = null;
+            //         foreach (var boxWall in initialState.BoxWalls)
+            //         {
+            //             if (boxWall.Position.Equals(block.Position))
+            //             {
+            //                 selectedBoxWall = boxWall;
+            //                 break;
+            //             }
+            //         }
+            //
+            //         if (selectedBoxWall != null)
+            //         {
+            //             initialState.Boxes.Add(selectedBoxWall);
+            //             initialState.BoxWalls.Remove(selectedBoxWall);
+            //             initialState.Walls.Remove($"{selectedBoxWall.Position.Row},{selectedBoxWall.Position.Column}");
+            //         }
+            //     }
+            // }
+
             if (PrintProgress)
             {
                 Console.Error.WriteLine(problem);
@@ -60,7 +85,6 @@ namespace MaMapF.Handlers
             {
                 var state = frontier.Dequeue();
                 explored.Add(state);
-
                 if (problem.Type == SingleAgentProblemType.NULL)
                 {
                     if (maxConstraintStep > state.G + maxDistanceConstraint)
@@ -121,12 +145,9 @@ namespace MaMapF.Handlers
             return counter == goals.Count;
         }
 
-
         private static List<SingleAgentState> ExpandSingleAgentState(SingleAgentState state,
             List<Constraint> constraints)
         {
-            
-      
             var states = new List<SingleAgentState>();
             foreach (var action in Action.AllActions)
             {
@@ -135,7 +156,7 @@ namespace MaMapF.Handlers
                     var nextState = CreateNextState(state, action);
                     var lastPastConstraint = constraints.LastOrDefault(c => c.Step <= nextState.G);
                     nextState.PastConstraint = lastPastConstraint;
-                    
+
                     if (!BreaksConstraint(nextState, constraints))
                     {
                         states.Add(nextState);
