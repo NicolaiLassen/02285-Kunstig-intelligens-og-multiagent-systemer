@@ -101,8 +101,8 @@ namespace MaMapF.Handlers
 
                 solvedAgents = agents.Where(a => IsAgentDone(a, solved[a])).ToList();
                 pastSolutionLength = minUnsolvedSolutionLength;
-
-                // if (COUNTER == 6)
+                
+                // if (COUNTER == 0)
                 // {
                 //     break;
                 // }
@@ -193,15 +193,6 @@ namespace MaMapF.Handlers
                         continue;
                     }
 
-                    // Skip if no path to target best first
-                    if (!IsReachableBest(initialState,
-                        box.Position,
-                        initialState.Agent.Position
-                    ))
-                    {
-                        continue;
-                    }
-
                     var boxGoalDistance = Position.Distance(box, goal);
                     orderedBoxGoals.Enqueue(new BoxGoal {Box = box, Goal = goal}, boxGoalDistance);
                 }
@@ -225,7 +216,7 @@ namespace MaMapF.Handlers
                 }
                 return problem;
             }
-
+            
             // Find best neighbour position to selected box
             var neighbours = Position.GetNeighbours(boxGoal.Box.Position);
 
@@ -234,18 +225,15 @@ namespace MaMapF.Handlers
                 neighbours.Where(n =>
                     !initialState.IsWall(n) &&
                     !initialState.IsBox(n));
-
+            
             var bestPosition = neighboursReachable.OrderBy(p =>
             {
                 var distance = Position.Distance(boxGoal.Goal.Position, p);
                 // previous box goal bonus
                 // other agent box penalty
                 return distance;
-            }).FirstOrDefault();
-
-            // Find the box with least neighbor block
-            // Console.Error.WriteLine($"bestPosition: {bestPosition}");
-
+            }).LastOrDefault();
+            
             // Add agent position goal to problem
             problem.Type = SingleAgentProblemType.AgentToBox;
             problem.Goals.Add(new MapItem(agent, bestPosition));

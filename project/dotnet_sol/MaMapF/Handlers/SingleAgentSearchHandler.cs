@@ -27,30 +27,36 @@ namespace MaMapF.Handlers
             var initialState = problem.InitialState;
             var goals = problem.Goals;
 
-            // Fix block
-            // if (problem.Type == SingleAgentProblemType.NULL)
-            // {
-            //     var block = constraints.LastOrDefault();
-            //     if (block != null)
-            //     {
-            //         MapItem selectedBoxWall = null;
-            //         foreach (var boxWall in initialState.BoxWalls)
-            //         {
-            //             if (boxWall.Position.Equals(block.Position))
-            //             {
-            //                 selectedBoxWall = boxWall;
-            //                 break;
-            //             }
-            //         }
-            //
-            //         if (selectedBoxWall != null)
-            //         {
-            //             initialState.Boxes.Add(selectedBoxWall);
-            //             initialState.BoxWalls.Remove(selectedBoxWall);
-            //             initialState.Walls.Remove($"{selectedBoxWall.Position.Row},{selectedBoxWall.Position.Column}");
-            //         }
-            //     }
-            // }
+            // Fix block - 2 slow find another way
+            if (problem.Type == SingleAgentProblemType.NULL)
+            {
+                // Don't test new constraint if its a block
+                // just test the first to unblock
+                if (constraints.Count == 1)
+                {
+                    var block = constraints.FirstOrDefault();
+                    if (block != null)
+                    {
+                        MapItem selectedBoxWall = null;
+                        foreach (var boxWall in initialState.BoxWalls)
+                        {
+                            if (boxWall.Position.Equals(block.Position))
+                            {
+                                selectedBoxWall = boxWall;
+                                break;
+                            }
+                        }
+
+                        if (selectedBoxWall != null)
+                        {
+                            initialState.Boxes.Add(selectedBoxWall);
+                            initialState.BoxWalls.Remove(selectedBoxWall);
+                            initialState.Walls.Remove(
+                                $"{selectedBoxWall.Position.Row},{selectedBoxWall.Position.Column}");
+                        }
+                    }
+                }
+            }
 
             if (PrintProgress)
             {
