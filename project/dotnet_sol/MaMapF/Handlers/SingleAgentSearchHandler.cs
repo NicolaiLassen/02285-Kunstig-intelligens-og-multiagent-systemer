@@ -154,6 +154,8 @@ namespace MaMapF.Handlers
                 if (IsValidAction(state, action))
                 {
                     var nextState = CreateNextState(state, action);
+
+                    // If the constraint is new reset the explored set with a new hash
                     var lastPastConstraint = constraints.LastOrDefault(c => c.Step <= nextState.G);
                     nextState.PastConstraint = lastPastConstraint;
 
